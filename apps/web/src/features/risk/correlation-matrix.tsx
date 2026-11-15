@@ -65,7 +65,8 @@ function MatrixRow({ symbol, row, format }: { symbol: string; row: number[]; for
                     style={cellStyle(value)}
                     className={cn(
                         "flex h-11 items-center justify-center rounded-sm text-body-medium",
-                        Math.abs(value) >= 0.5 && "text-primary-foreground",
+                        // Texte blanc sur fond soutenu, dans les deux thèmes (comme le badge `destructive`)
+                        Math.abs(value) >= 0.5 && "text-white",
                     )}
                 >
                     {format(value)}

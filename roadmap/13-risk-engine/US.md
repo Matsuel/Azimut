@@ -42,13 +42,13 @@
 **En tant que** utilisateur, **je veux** voir la corrélation entre mes actifs et leur part réelle du risque **afin de** comprendre que diversifier, c'est surtout avoir des actifs qui ne bougent pas ensemble.
 
 Critères d’acceptation :
-- [ ] La matrice de corrélation (actifs en lignes et en colonnes, ordre de l'allocation) est affichée, deux décimales, diagonale `1,00`, symétrique.
-- [ ] Jeu connu : `[1, 2, 3]` et `[2, 4, 6]` → `1` ; `[1, 2, 3]` et `[3, 2, 1]` → `−1` ; `[1, −1, 1, −1]` et `[1, 1, −1, −1]` → `0`.
-- [ ] Les contributions au risque somment à 100 %. Jeu connu : deux actifs non corrélés, poids 50/50, volatilités 10 % et 20 % → contributions `0,2` et `0,8`.
-- [ ] La concentration est affichée : HHI et actifs effectifs. Jeu connu : poids 30/30/30/10 → HHI `0,28`, `3,6` actifs effectifs, poids maximal `30 %`.
-- [ ] Les valeurs sont celles du backend ; le web ne recalcule rien.
-- [ ] Les phrases de lecture (paire la plus corrélée, actif contribuant le plus) sont des textes i18n FR / EN dont les valeurs viennent du backend (D14).
-- [ ] La volatilité annualisée porte sur toute la période, pastille « période » (D13).
+- [x] La matrice de corrélation (actifs en lignes et en colonnes, ordre de l'allocation) est affichée, deux décimales, diagonale `1,00`, symétrique.
+- [x] Jeu connu : `[1, 2, 3]` et `[2, 4, 6]` → `1` ; `[1, 2, 3]` et `[3, 2, 1]` → `−1` ; `[1, −1, 1, −1]` et `[1, 1, −1, −1]` → `0`.
+- [x] Les contributions au risque somment à 100 %. Jeu connu : deux actifs non corrélés, poids 50/50, volatilités 10 % et 20 % → contributions `0,2` et `0,8`.
+- [x] La concentration est affichée : HHI et actifs effectifs. Jeu connu : poids 30/30/30/10 → HHI `0,28`, `3,6` actifs effectifs, poids maximal `30 %`.
+- [x] Les valeurs sont celles du backend ; le web ne recalcule rien.
+- [x] Les phrases de lecture (paire la plus corrélée, actif contribuant le plus) sont des textes i18n FR / EN dont les valeurs viennent du backend (D14).
+- [x] La volatilité annualisée porte sur toute la période, pastille « période » (D13).
 
 Tâches : T-01, T-03, T-04, T-06, T-10 (détail dans `TASKS.md`).
 
@@ -59,10 +59,10 @@ Tâches : T-01, T-03, T-04, T-06, T-10 (détail dans `TASKS.md`).
 **En tant que** utilisateur, **je veux** voir la VaR et la CVaR à 95 % **afin de** mesurer le risque au-delà du drawdown.
 
 Critères d’acceptation :
-- [ ] VaR et CVaR à 95 % sont affichées en pourcentage, avec la mention « historique, un jour » (D1).
-- [ ] Jeu connu : 100 rendements `k / 100` pour `k` de −50 à 49 → `k = 5`, VaR `−0,46`, CVaR `−0,48`.
-- [ ] Sous 250 jours de cotation communs, aucun risque n'est calculé : la page affiche le seul message « données insuffisantes », sans carte partielle (D6, D16).
-- [ ] Un backtest antérieur à la feature, en cours ou en échec n'a pas de risque : message d'état et bouton « Relancer le backtest », sans recalcul (D10, D17).
+- [x] VaR et CVaR à 95 % sont affichées en pourcentage, avec la mention « historique, un jour » (D1).
+- [x] Jeu connu : 100 rendements `k / 100` pour `k` de −50 à 49 → `k = 5`, VaR `−0,46`, CVaR `−0,48`.
+- [x] Sous 250 jours de cotation communs, aucun risque n'est calculé : la page affiche le seul message « données insuffisantes », sans carte partielle (D6, D16).
+- [x] Un backtest antérieur à la feature, en cours ou en échec n'a pas de risque : message d'état et bouton « Relancer le backtest », sans recalcul (D10, D17).
 
 Tâches : T-02, T-04, T-06, T-10 (détail dans `TASKS.md`).
 
@@ -75,13 +75,13 @@ Tâches : T-02, T-04, T-06, T-10 (détail dans `TASKS.md`).
 **En tant que** utilisateur, **je veux** fixer un drawdown maximal et voir s'il est respecté **afin de** savoir si la stratégie historique respecte ma limite.
 
 Critères d’acceptation :
-- [ ] Je saisis un entier de 1 % à 99 % (champ vide au départ) ; le seuil est enregistré avec le backtest et modifiable à tout moment (D9).
-- [ ] Le résultat indique « Respectée » ou « Non respectée » avec la valeur mesurée. Jeux connus : `maxDrawdown` `−0,214`, limite `0,15` → non respectée ; limite `0,25` → respectée ; limite `0,214` → respectée.
-- [ ] Hors plage (0 %, 100 %, texte, vide) : erreur 400, message traduit FR / EN, seuil inchangé.
-- [ ] Changer le seuil ne relance pas l'engine : `core-backend` réévalue à partir du `maxDrawdown` stocké.
-- [ ] Sans seuil saisi, pas de ligne « Actuelle ».
-- [ ] Les 2 dernières vérifications sont conservées avec le backtest : « Actuelle » et « Précédente » ; la première vérification n'a pas de « Précédente » (D12).
-- [ ] La mention « Le passé ne garantit pas l’avenir : une limite respectée sur l’historique peut être dépassée demain. » accompagne le résultat.
+- [x] Je saisis un entier de 1 % à 99 % (champ vide au départ) ; le seuil est enregistré avec le backtest et modifiable à tout moment (D9).
+- [x] Le résultat indique « Respectée » ou « Non respectée » avec la valeur mesurée. Jeux connus : `maxDrawdown` `−0,214`, limite `0,15` → non respectée ; limite `0,25` → respectée ; limite `0,214` → respectée.
+- [x] Hors plage (0 %, 100 %, texte, vide) : erreur 400, message traduit FR / EN, seuil inchangé.
+- [x] Changer le seuil ne relance pas l'engine : `core-backend` réévalue à partir du `maxDrawdown` stocké.
+- [x] Sans seuil saisi, pas de ligne « Actuelle ».
+- [x] Les 2 dernières vérifications sont conservées avec le backtest : « Actuelle » et « Précédente » ; la première vérification n'a pas de « Précédente » (D12).
+- [x] La mention « Le passé ne garantit pas l’avenir : une limite respectée sur l’historique peut être dépassée demain. » accompagne le résultat.
 
 Tâches : T-04, T-05, T-07 (détail dans `TASKS.md`).
 
@@ -94,11 +94,12 @@ Tâches : T-04, T-05, T-07 (détail dans `TASKS.md`).
 **En tant que** utilisateur, **je veux** ouvrir la page Risque depuis le menu ou depuis un résultat **afin de** consulter le risque d'un backtest choisi.
 
 Critères d’acceptation :
-- [ ] La page est `/app/risk?backtest=<id>` ; entrée « Risque » dans le groupe « Analyse » de la barre latérale (D11).
-- [ ] Le bouton « Risque » de l'en-tête du résultat (contour, après « Robustesse ») ouvre la page du backtest affiché.
-- [ ] Sans `backtest` : état vide et bouton « Choisir un backtest » ; backtest d'un autre utilisateur ou inconnu : erreur traduite.
-- [ ] Badge `Calculé` seulement quand le risque est présent ; la pastille « Données au … » n'existe pas (D15).
-- [ ] États : vide, chargement, données insuffisantes, sans risque (message + « Relancer le backtest »), erreur ; thème sombre et mobile.
+- [x] La page est `/app/risk?backtest=<id>` ; entrée « Risque » dans le groupe « Analyse » de la barre latérale (D11).
+- [x] Le bouton « Risque » de l'en-tête du résultat (contour, après « Robustesse ») ouvre la page du backtest affiché.
+- [x] Sans `backtest` : état vide et bouton « Choisir un backtest » ; backtest d'un autre utilisateur ou inconnu : erreur traduite.
+- [x] Badge `Calculé` seulement quand le risque est présent ; la pastille « Données au … » n'existe pas (D15).
+- [x] États : vide, chargement, données insuffisantes, sans risque (message + « Relancer le backtest »), erreur ; mobile (375 à 1440 px).
+- [x] Thème sombre : capturé, lisible.
 
 Tâches : T-06, T-09 (détail dans `TASKS.md`).
 
