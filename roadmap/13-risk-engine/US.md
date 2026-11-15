@@ -6,8 +6,9 @@
 
 | Couche | Existant | Manque |
 | --- | --- | --- |
-| `apps/backtest-engine/engine/backtest.utils.ts` | `createDrawdownTracker`, `annualizedVolatility`, `sharpeRatio`. | Corrélation, VaR, CVaR, contributions, concentration (`engine/risk.ts`). |
-| `packages/contracts/src/backtest.ts` | `maxDrawdown`, `volatility` dans `backtestCompletedPayloadSchema`. | Schéma de risque (fichier dédié), seuil de drawdown, codes d'erreur. |
+| `apps/backtest-engine/engine/backtest.utils.ts` | `createDrawdownTracker`, `annualizedVolatility`, `sharpeRatio`. | Rien : le risque vit dans le nouveau service `apps/risk-engine` (D22). |
+| `apps/risk-engine` | Absent. | Service, `engine/risk.engine.ts` et `risk.utils.ts` : corrélation, VaR, CVaR, contributions, concentration. |
+| `packages/contracts/src/backtest.ts` | `maxDrawdown`, `volatility` dans `backtestCompletedPayloadSchema`. | `risk.ts` (topic `risk.completed`, schéma de risque), `allocations` et dates dans `backtest.completed`, seuil de drawdown, codes d'erreur. |
 | `apps/core-backend/` | `backtest.service.ts`, `portfolio.service.ts`. | `risk.service.ts`, colonnes nullables (risque, seuil), route du seuil. |
 | `apps/web/src/app/(base)/risk` | Dossier vide (pas de page). | Page Risque (`features/risk/`), bouton « Risque » du détail d'un backtest. |
 
@@ -49,7 +50,7 @@ Critères d’acceptation :
 - [ ] Les phrases de lecture (paire la plus corrélée, actif contribuant le plus) sont des textes i18n FR / EN dont les valeurs viennent du backend (D14).
 - [ ] La volatilité annualisée porte sur toute la période, pastille « période » (D13).
 
-Tâches : T-01, T-03, T-04, T-06 (détail dans `TASKS.md`).
+Tâches : T-01, T-03, T-04, T-06, T-10 (détail dans `TASKS.md`).
 
 ---
 
@@ -63,7 +64,7 @@ Critères d’acceptation :
 - [ ] Sous 250 jours de cotation communs, aucun risque n'est calculé : la page affiche le seul message « données insuffisantes », sans carte partielle (D6, D16).
 - [ ] Un backtest antérieur à la feature, en cours ou en échec n'a pas de risque : message d'état et bouton « Relancer le backtest », sans recalcul (D10, D17).
 
-Tâches : T-02, T-04, T-06 (détail dans `TASKS.md`).
+Tâches : T-02, T-04, T-06, T-10 (détail dans `TASKS.md`).
 
 ---
 
@@ -107,7 +108,7 @@ L'écran regroupe les US ci-dessus : page Risque (maquette 33, six blocs) et bou
 
 | US | Titre | Priorité | Lot | Couches |
 | --- | --- | --- | --- | --- |
-| US-01 | Voir comment mes actifs bougent ensemble | MUST | 1 | backtest-engine, contracts, core-backend, web |
-| US-02 | Connaître la perte qu'un mauvais jour peut coûter | MUST | 1 | backtest-engine, contracts, core-backend, web |
+| US-01 | Voir comment mes actifs bougent ensemble | MUST | 1 | risk-engine, contracts, core-backend, web |
+| US-02 | Connaître la perte qu'un mauvais jour peut coûter | MUST | 1 | risk-engine, contracts, core-backend, web |
 | US-03 | Vérifier une contrainte de risque | SHOULD | 2 | contracts, core-backend, web |
 | US-04 | Ouvrir la page Risque d'un backtest | SHOULD | 3 | web |

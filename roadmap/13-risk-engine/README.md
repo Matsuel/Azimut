@@ -4,7 +4,7 @@
 - **Roadmap** : Mois 6 — Mois 6 — Risk Engine (corrélations, VaR / CVaR, contribution au risque, contraintes)
 - **Période** : à fixer au démarrage de la feature
 - **Branche / PR** : `feat/risk-engine` — PR à ouvrir
-- **Points** : 37 (MUST 24, SHOULD 13) — prévus (25 avant l'affinage du 2026-11-13)
+- **Points** : 42 (MUST 29, SHOULD 13) — prévus (25 avant l'affinage du 2026-11-13, 37 avant le microservice D22)
 - **Maquettes** : `33 · Risque` (créée, node `454:12126`), décrite dans [`MAQUETTE.md`](MAQUETTE.md)
 - **Écrans modifiés** : `13 · Résultat d’un backtest` (node `350:7214`) : bouton « Risque » vers `/app/risk?backtest=<id>` (décision : pas de bloc dans le résultat) — dessiné dans la copie `à modifier (F13)` ; l’original est mis à jour au codage
 - **Dépend de** : 11 (rendements corrects). Gèle le moteur de simulation à la fin de cette feature.
@@ -15,7 +15,7 @@ L'utilisateur voit où vient le risque de son portefeuille : corrélations, pert
 
 ## Comment
 
-Fonctions pures dans `backtest-engine/engine/risk.ts`, calculées à chaque backtest sur les rendements journaliers des actifs en EUR pondérés aux poids cibles, publiées dans l'événement `backtest.completed` (schéma de `contracts`) et stockées avec le résultat. `core-backend` stocke le seuil de drawdown et évalue la contrainte à partir du drawdown maximal déjà calculé, sans relancer l'engine ; le web affiche. Le moteur de simulation est gelé à la fin (roadmap mois 6).
+Nouveau microservice `apps/risk-engine` (D22), worker Kafka calqué sur `backtest-engine` : il consomme `backtest.completed`, lit les cours auprès de market-service, calcule le risque (fonctions pures dans `risk-engine/engine/`) sur les rendements journaliers des actifs en EUR pondérés aux poids cibles, et publie `risk.completed` (schéma de `contracts`). `core-backend` consomme `risk.completed` et stocke le risque avec le résultat ; il stocke aussi le seuil de drawdown et évalue la contrainte à partir du drawdown maximal déjà calculé, sans relancer l'engine ; le web affiche. Le moteur de simulation (`backtest-engine`) est gelé à la fin (roadmap mois 6).
 
 ## Décisions
 
@@ -43,9 +43,11 @@ Fonctions pures dans `backtest-engine/engine/risk.ts`, calculées à chaque back
 | D20 | **Un seul actif** : matrice affichée telle quelle (`1,00`) | Pas de cas particulier à coder. | PO, 2026-11-13 |
 | D21 | **Actifs sans historique sur la période** (cas limite de D6) : aucun traitement particulier ; l'intersection des jours communs se réduit et, sous 250 jours, c'est « données insuffisantes » (D16). Aucun actif n'est écarté pour sauver le calcul | Même règle pour tous, rien à coder en plus ; l'utilisateur retire l'actif ou change de période. | PO, 2026-11-13 |
 
+| D22 | **Microservice `apps/risk-engine`** : consomme `backtest.completed`, publie `risk.completed` ; `backtest-engine` ne calcule pas le risque | Un propriétaire par calcul et un moteur de simulation gelé. `backtest.completed` recopie `allocations`, `startDate` et `endDate` de la requête pour que risk-engine reste sans état. Le risque arrive après le résultat : tant que `risk.completed` n'est pas reçu, la page affiche l'état « sans risque » (D17). Rendements de cours en EUR, sans dividendes. | PO, 2026-11-14 |
+
 ### Encore à trancher
 
-Rien : tous les points ouverts sont tranchés (D1 à D21).
+Rien : tous les points ouverts sont tranchés (D1 à D22).
 
 ## Écarts au plan
 
