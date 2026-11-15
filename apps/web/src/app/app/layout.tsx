@@ -10,7 +10,8 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
     return (
         <SidebarProvider>
             <AppSidebar user={session.user} isAdmin={hasAdminRole(session.user.role)} />
-            <SidebarInset>
+            {/* min-w-0 : une table large défile dans sa carte au lieu d'élargir la page (tablette, sidebar ouverte) */}
+            <SidebarInset className="min-w-0">
                 <AppHeader />
                 {children}
             </SidebarInset>

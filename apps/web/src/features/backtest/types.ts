@@ -135,4 +135,5 @@ export type BacktestListStats = BacktestStats
 export interface BacktestDetails extends Backtest {
     executions: BacktestExecution[] // toutes, la plus récente en premier
     result: BacktestResult | null // dernier résultat terminé
+    hasDividendDetails: boolean // dividendes ou effet de change à détailler, décidé par core-backend
 }

@@ -5,8 +5,6 @@ import type { ReactNode } from "react"
 import fr from "../messages/fr.json"
 import { DividendsTable } from "../src/features/backtest/result/dividends-table"
 import { ReturnBreakdownCard } from "../src/features/backtest/result/return-breakdown"
-import type { BacktestResult } from "../src/features/backtest/types"
-import { hasDividendDetails } from "../src/features/backtest/utils"
 
 afterEach(cleanup)
 
@@ -17,17 +15,7 @@ const inFrench = (node: ReactNode) =>
         </NextIntlClientProvider>,
     )
 
-const result = (extra: Partial<BacktestResult>) => extra as BacktestResult
 const breakdown = { price: 1.898, dividends: 0.186, local: 2.084, fx: 0.064 }
-
-test("hasDividendDetails : dividendes ou change à détailler, jamais pour un résultat antérieur", () => {
-    expect(hasDividendDetails(result({ returnBreakdown: breakdown, dividendTotal: "0" }))).toBe(true)
-    expect(hasDividendDetails(result({ returnBreakdown: { ...breakdown, fx: null }, dividendTotal: "12.5" }))).toBe(
-        true,
-    )
-    expect(hasDividendDetails(result({ returnBreakdown: { ...breakdown, fx: null }, dividendTotal: "0" }))).toBe(false)
-    expect(hasDividendDetails(result({ dividendTotal: "12.5" }))).toBe(false)
-})
 
 test("la décomposition affiche les cinq lignes quand il y a un effet de change", () => {
     inFrench(<ReturnBreakdownCard breakdown={breakdown} totalReturn={2.148} />)

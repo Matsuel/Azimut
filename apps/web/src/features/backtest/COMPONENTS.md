@@ -21,7 +21,7 @@
 ### BacktestDividends
 
 - **Import** : `import { BacktestDividends } from "@/features/backtest/result/backtest-dividends"`.
-- **Rôle** : écran « Dividendes et change » (maquette 31, route `routes.backtestDividends(id)`), ouvert par le bouton « Dividendes et change » du détail (toujours affiché avec un résultat) : quatre `StatCard` (valeur finale, rendement total avec le cours seul, dividendes perçus, effet de change si hors EUR), `ReturnBreakdown`, courbe avec et sans dividendes (`ValueDrawdownCharts` sans drawdown ; absente sans `priceOnlyValue`) et `DividendsTable`. Un résultat antérieur ou sans dividende ni change affiche un `EmptyCard`. Instancie `useBacktest`.
+- **Rôle** : écran « Dividendes et change » (maquette 31, route `routes.backtestDividends(id)`), ouvert par le bouton « Dividendes et change » du détail (toujours affiché avec un résultat) : quatre `StatCard` (valeur finale, rendement total avec le cours seul, dividendes perçus, effet de change si hors EUR), `ReturnBreakdown`, courbe avec et sans dividendes (`ValueDrawdownCharts` sans drawdown ; absente sans `priceOnlyValue`) et `DividendsTable`. Un résultat antérieur ou sans dividende ni change (`hasDividendDetails` faux, décidé par core-backend) affiche un `EmptyCard`. Instancie `useBacktest`.
 - **Props** :
   - `id` : Id du backtest.
 - **Source** : `src/features/backtest/result/backtest-dividends.tsx`.

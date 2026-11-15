@@ -355,3 +355,15 @@ test("backtest.completed : la recopie `request` destinée à risk-engine n'est p
     expect(completed[0]).toMatchObject({ finalValue: 1100 })
     expect(completed[0]).not.toHaveProperty("request")
 })
+
+test("hasDividendDetails : dividendes ou change à détailler, jamais sans résultat ni pour un résultat antérieur", async () => {
+    const { hasDividendDetails } = await import("../services/backtest.service")
+    const decimal = (value: number) => ({ toNumber: () => value }) as never
+    const breakdown = { price: 1.898, dividends: 0.186, local: 2.084, fx: 0.064 }
+
+    expect(hasDividendDetails({ returnBreakdown: breakdown, dividendTotal: decimal(0) })).toBe(true)
+    expect(hasDividendDetails({ returnBreakdown: { ...breakdown, fx: null }, dividendTotal: decimal(12.5) })).toBe(true)
+    expect(hasDividendDetails({ returnBreakdown: { ...breakdown, fx: null }, dividendTotal: decimal(0) })).toBe(false)
+    expect(hasDividendDetails({ returnBreakdown: null, dividendTotal: decimal(12.5) })).toBe(false)
+    expect(hasDividendDetails(null)).toBe(false)
+})

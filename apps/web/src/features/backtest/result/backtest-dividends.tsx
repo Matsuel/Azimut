@@ -16,7 +16,7 @@ import { trendOf } from "@/lib/trend"
 import { useBacktest } from "../hook"
 import { StatusBadge } from "../status-badge"
 import type { BacktestResult } from "../types"
-import { formatAmount, fromDecimal, getExecution, hasDividendDetails } from "../utils"
+import { formatAmount, fromDecimal, getExecution } from "../utils"
 import { DividendValueChart } from "./dividend-value-chart"
 import { DividendsTable } from "./dividends-table"
 import { ReturnBreakdownCard } from "./return-breakdown"
@@ -109,7 +109,7 @@ export function BacktestDividends({ id }: { id: string }) {
                 description={t("description")}
                 actions={back}
             />
-            {result?.returnBreakdown && totalReturn != null && hasDividendDetails(result) ? (
+            {result?.returnBreakdown && totalReturn != null && backtest.hasDividendDetails ? (
                 <>
                     <DividendStats result={result} />
                     <div className="grid gap-4 lg:grid-cols-2">
