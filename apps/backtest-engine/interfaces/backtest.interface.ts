@@ -41,4 +41,4 @@ export type BacktestParams = Pick<
 >;
 
 // Résultat calculé par l'engine : le payload complet, sans ce que le service ajoute (identifiant, horloge, provenance des cours)
-export type BacktestOutcome = Omit<BacktestCompletedPayload, "executionId" | "finishedAt" | "dataSource">;
+export type BacktestOutcome = Omit<BacktestCompletedPayload, "executionId" | "finishedAt" | "request" | "dataSource">;

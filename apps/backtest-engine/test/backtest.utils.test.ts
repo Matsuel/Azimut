@@ -7,16 +7,8 @@ import {
     createDrawdownTracker,
     fingerprintMarket,
     fingerprintPrices,
-    round,
     sharpeRatio,
 } from "../engine/backtest.utils";
-
-describe("round", () => {
-    test("arrondit au nombre de décimales demandé", () => {
-        expect(round(1.23456, 2)).toBe(1.23);
-        expect(round(0.0333333, 6)).toBe(0.033333);
-    });
-});
 
 describe("periodKey", () => {
     test("semaine : du lundi au dimanche", () => {

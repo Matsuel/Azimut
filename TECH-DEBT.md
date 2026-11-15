@@ -51,3 +51,4 @@ Registre de la dette connue, à corriger avant qu'elle ne grossisse. La règle q
 | TD-33 | 2026-11-13 | `807b125` |
 | TD-34 | 2026-11-13 | `2c0379e` |
 | TD-36 | 2026-11-13 | `61a4cba` |
+| TD-37 | 2026-11-14 | feat/13-risk-engine (non committé) |

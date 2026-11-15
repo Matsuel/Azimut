@@ -1,32 +1,12 @@
 import type { Dividend } from "@azimut/contracts";
+import { REFERENCE_CURRENCY, fxPairSymbol, rateOn } from "@azimut/utils";
 import BacktestError from "../errors/backtest.error";
 import type { Currencies, MarketInput, PricePoint, PriceSeries } from "../interfaces/backtest.interface";
-
-// Devise de référence (D3) : les versements, valeurs et frais d'un backtest sont en euros
-export const REFERENCE_CURRENCY = "EUR";
-
-/** Symbole yahoo de la paire qui cote 1 € en `currency` (`EURUSD=X` = dollars par euro). */
-export const fxPairSymbol = (currency: string) => `${REFERENCE_CURRENCY}${currency}=X`;
 
 /** Devises à convertir, sans doublon : celles des symboles qui ne cotent pas en euros. */
 export const foreignCurrencies = (symbols: string[], currencies: Currencies) => [
     ...new Set(symbols.map((symbol) => currencies[symbol]).filter((currency): currency is string => !!currency && currency !== REFERENCE_CURRENCY)),
 ];
-
-/**
- * Taux du jour `date` : dernier taux connu à cette date, ou le premier de la série si `date` le précède
- * (un départ un week-end n'a pas de taux la veille). `rates` triés par date, non vide.
- */
-function rateOn(rates: PricePoint[], date: string): number {
-    let low = 0;
-    let high = rates.length;
-    while (low < high) {
-        const middle = (low + high) >> 1;
-        if (rates[middle]!.date <= date) low = middle + 1;
-        else high = middle;
-    }
-    return rates[Math.max(low - 1, 0)]!.close;
-}
 
 /**
  * Convertit en euros les cours et dividendes des symboles cotés dans une autre devise, au taux du jour (D3) :

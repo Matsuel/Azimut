@@ -1,7 +1,7 @@
 import { addYears, median } from "@azimut/utils";
 import { ROLLING_WINDOW_YEARS, type RollingWindow } from "@azimut/contracts";
 import type { TwrPoint } from "../interfaces/backtest.interface";
-import { round } from "./backtest.utils";
+import { round } from "@azimut/utils";
 
 /**
  * Rendement annualisé de l'indice TWR (hors versements, ratio annuel : `0.08` = +8 %/an) sur chaque fenêtre glissante de

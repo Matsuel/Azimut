@@ -307,6 +307,8 @@ class BacktestService {
     async complete({
         executionId,
         finishedAt,
+        // Recopie de la requête destinée à risk-engine : pas une colonne du résultat
+        request: _request,
         maxDrawdownDate,
         maxDrawdownPeakDate,
         maxDrawdownRecoveryDate,

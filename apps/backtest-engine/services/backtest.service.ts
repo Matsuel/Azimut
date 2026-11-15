@@ -1,8 +1,8 @@
-import { Logger } from "@azimut/utils";
+import { Logger, fxPairSymbol } from "@azimut/utils";
 import type { BacktestRequestedPayload } from "@azimut/contracts";
 import BacktestError from "../errors/backtest.error";
 import runBacktest from "../engine/backtest.engine";
-import { foreignCurrencies, fxPairSymbol } from "../engine/backtest.fx";
+import { foreignCurrencies } from "../engine/backtest.fx";
 import { fingerprintMarket } from "../engine/backtest.utils";
 import type { IBacktestPublisher } from "../publishers/backtest.publisher";
 import MarketRepository, { type IMarketRepository } from "../repositories/market.repository";
@@ -48,7 +48,8 @@ class BacktestService {
             };
             const outcome = runBacktest(request, prices, { dividends, currencies, fxRates });
 
-            await this.publisher.completed({ executionId, finishedAt: new Date().toISOString(), ...outcome, dataSource });
+            const { allocations, startDate, endDate } = request;
+            await this.publisher.completed({ executionId, finishedAt: new Date().toISOString(), request: { allocations, startDate, endDate }, ...outcome, dataSource });
             logger.info("Backtest completed", { executionId, finalValue: outcome.finalValue });
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);

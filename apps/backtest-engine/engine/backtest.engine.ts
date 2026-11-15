@@ -1,11 +1,11 @@
 import type { EquityPoint } from "@azimut/contracts";
-import { periodKey } from "@azimut/utils";
+import { periodKey, round } from "@azimut/utils";
 import { foreignCurrencies, toReferenceCurrency } from "./backtest.fx";
 import { createPortfolio } from "./backtest.portfolio";
 import { rollingSummary } from "./backtest.rolling";
 import BacktestError from "../errors/backtest.error";
 import type { BacktestOutcome, BacktestParams, MarketExtras, MarketInput, PriceSeries, TwrPoint } from "../interfaces/backtest.interface";
-import { annualizedReturn, annualizedVolatility, createDrawdownTracker, RISK_FREE_RATE, round, sharpeRatio } from "./backtest.utils";
+import { annualizedReturn, annualizedVolatility, createDrawdownTracker, RISK_FREE_RATE, sharpeRatio } from "./backtest.utils";
 
 // Une simulation, avec l'indice TWR dont `fullOutcome` tire les fenêtres glissantes (publiées pour la seule stratégie)
 type Simulation = Omit<

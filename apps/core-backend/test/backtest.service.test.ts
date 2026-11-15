@@ -330,3 +330,28 @@ test("restartBatch recrée la stratégie du lot à de nouvelles dates dans un no
     const error = await service.restartBatch("l1", "u1", { startDates: [new Date("2018-01-01"), new Date("2025-12-31")] }).catch((e) => e)
     expect(error).toMatchObject({ code: "START_TOO_CLOSE_TO_END", statusCode: 400 })
 })
+
+test("backtest.completed : la recopie `request` destinée à risk-engine n'est pas écrite dans le résultat", async () => {
+    const completed: Record<string, unknown>[] = []
+    const { repo } = fakeRepo({
+        completeExecution: async (_id: string, _from: BacktestStatus[], data: Record<string, unknown>) => {
+            completed.push(data)
+            return true
+        },
+    })
+    const service = new BacktestService()
+    service.repo = repo
+
+    await service.complete({
+        executionId: "e1",
+        finishedAt: "2024-01-01T00:00:00.000Z",
+        request: { allocations: [{ symbol: "AAPL", weight: 1 }], startDate: "2023-01-01T00:00:00.000Z", endDate: "2024-01-01T00:00:00.000Z" },
+        maxDrawdownDate: null,
+        maxDrawdownPeakDate: null,
+        maxDrawdownRecoveryDate: null,
+        finalValue: 1100,
+    } as never)
+
+    expect(completed[0]).toMatchObject({ finalValue: 1100 })
+    expect(completed[0]).not.toHaveProperty("request")
+})
