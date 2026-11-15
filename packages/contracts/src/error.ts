@@ -14,6 +14,7 @@ export const API_ERROR_CODES = {
     BACKTEST_NO_RESULT: "BACKTEST_NO_RESULT",
     EXECUTION_IN_PROGRESS: "EXECUTION_IN_PROGRESS",
     BACKTEST_QUEUE_FAILED: "BACKTEST_QUEUE_FAILED",
+    INVALID_RISK_LIMIT: "INVALID_RISK_LIMIT",
     // Issues de validation personnalisées (refine)
     SYMBOLS_NOT_UNIQUE: "SYMBOLS_NOT_UNIQUE",
     WEIGHTS_NOT_100: "WEIGHTS_NOT_100",
@@ -42,6 +43,7 @@ export const API_ERROR_MESSAGES: Record<ApiErrorCode, string> = {
     BACKTEST_NO_RESULT: "Backtest has no completed result",
     EXECUTION_IN_PROGRESS: "An execution is already in progress",
     BACKTEST_QUEUE_FAILED: "Backtest could not be queued",
+    INVALID_RISK_LIMIT: "Drawdown limit must be a whole percent from 1 to 99",
     SYMBOLS_NOT_UNIQUE: "Symbols must be unique",
     WEIGHTS_NOT_100: "Weights must sum to 100",
     END_BEFORE_START: "Must be after start",

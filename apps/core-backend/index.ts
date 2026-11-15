@@ -8,10 +8,12 @@ import authRouter from './routes/auth';
 import portfolioRouter from './routes/portfolio';
 import marketRouter from './routes/market';
 import backtestRouter from './routes/backtest';
+import riskRouter from './routes/risk';
 import { Logger, onShutdown } from '@azimut/utils';
-import { BACKTEST_TOPICS } from '@azimut/contracts';
+import { BACKTEST_TOPICS, RISK_TOPICS } from '@azimut/contracts';
 import { consumer, kafkaClient, producer } from './lib/kafka';
 import BacktestConsumer from './consumers/backtest.consumer';
+import RiskConsumer from './consumers/risk.consumer';
 import BacktestService from './services/backtest.service';
 import { STALE_SWEEP_INTERVAL_MS } from './constants/backtest.constants';
 import { JSON_BODY_LIMIT } from './constants/http.constants';
@@ -52,6 +54,7 @@ app.use(portfolioRouter);
 
 app.use('/api/backtest', backtestCreateRateLimit);
 app.use(backtestRouter);
+app.use(riskRouter);
 
 app.use(errorMiddleware);
 
@@ -63,13 +66,17 @@ async function main(): Promise<void> {
     const server = app.listen(env.PORT, () => logger.info(`Server is running on port ${env.PORT}`));
     onShutdown(() => new Promise<void>((resolve) => server.close(() => resolve())));
 
-    await kafkaClient.ensureTopics(Object.values(BACKTEST_TOPICS));
+    await kafkaClient.ensureTopics([...Object.values(BACKTEST_TOPICS), ...Object.values(RISK_TOPICS)]);
     await producer.connect();
     await consumer.connect();
     await consumer.subscribe(BACKTEST_TOPICS.started);
     await consumer.subscribe(BACKTEST_TOPICS.completed);
     await consumer.subscribe(BACKTEST_TOPICS.failed);
-    await consumer.consume(new BacktestConsumer().handle);
+    await consumer.subscribe(RISK_TOPICS.completed);
+    const backtestConsumer = new BacktestConsumer();
+    const riskConsumer = new RiskConsumer();
+    // Un seul consumer Kafka : le topic route le message vers le consommateur du domaine
+    await consumer.consume((message, context) => (context.topic === RISK_TOPICS.completed ? riskConsumer : backtestConsumer).handle(message, context));
     onShutdown(() => consumer.disconnect());
     onShutdown(() => producer.disconnect());
 

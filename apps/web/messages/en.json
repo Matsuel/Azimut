@@ -20,6 +20,7 @@
         "BACKTEST_NO_RESULT": "This backtest has no completed result yet.",
         "EXECUTION_IN_PROGRESS": "An execution is already in progress for this backtest.",
         "BACKTEST_QUEUE_FAILED": "The backtest could not be queued. Run it again.",
+        "INVALID_RISK_LIMIT": "The drawdown limit must be a whole number from 1% to 99%.",
         "SYMBOLS_NOT_UNIQUE": "Each asset can only appear once.",
         "WEIGHTS_NOT_100": "Weights must add up to 100%.",
         "END_BEFORE_START": "The end date must be after the start date.",

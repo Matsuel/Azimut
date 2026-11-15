@@ -20,6 +20,7 @@
         "BACKTEST_NO_RESULT": "Ce backtest n’a pas encore de résultat terminé.",
         "EXECUTION_IN_PROGRESS": "Une exécution est déjà en cours pour ce backtest.",
         "BACKTEST_QUEUE_FAILED": "Le backtest n’a pas pu être mis en file d’attente. Relancez-le.",
+        "INVALID_RISK_LIMIT": "Le seuil de drawdown doit être un entier de 1 % à 99 %.",
         "SYMBOLS_NOT_UNIQUE": "Chaque actif ne peut apparaître qu’une fois.",
         "WEIGHTS_NOT_100": "Les poids doivent totaliser 100 %.",
         "END_BEFORE_START": "La date de fin doit être postérieure à la date de début.",
