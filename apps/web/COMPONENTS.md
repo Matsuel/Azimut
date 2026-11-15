@@ -162,6 +162,21 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/market/constants.ts`](src/features/market/COMPONENTS.md#featuresmarketconstantsts) : exports `MARKET_CURRENCY`, `MIN_SEARCH_LENGTH`, `periods`
   - [`features/market/column.tsx`](src/features/market/COMPONENTS.md#featuresmarketcolumntsx) : exports `useMarketColumns()`
   - [`features/market/types.ts`](src/features/market/COMPONENTS.md#featuresmarkettypests) : exports `Period`, `MarketAsset`, `MarketDetails`, `MarketData`
+- [`features/risk`](src/features/risk/COMPONENTS.md)
+  - [BacktestRisk](src/features/risk/COMPONENTS.md#backtestrisk) : écran Risque (maquette 33, route `routes.backtestRisk(id)`) et ses états
+  - [BacktestPicker](src/features/risk/COMPONENTS.md#backtestpicker) : bouton « Choisir un backtest » et menu des backtests terminés
+  - [RiskStats](src/features/risk/COMPONENTS.md#riskstats) : quatre cartes volatilité, VaR, CVaR, concentration
+  - [CorrelationMatrix](src/features/risk/COMPONENTS.md#correlationmatrix) : carte de chaleur des corrélations
+  - [RiskContributions](src/features/risk/COMPONENTS.md#riskcontributions) : barres de contribution au risque
+  - [DrawdownConstraint](src/features/risk/COMPONENTS.md#drawdownconstraint) : saisie et vérifications de la limite de drawdown
+  - [AssetExposures](src/features/risk/COMPONENTS.md#assetexposures) : tableau des expositions par actif
+  - [RiskStateCard](src/features/risk/COMPONENTS.md#riskstatecard) : carte d'état (vide, insuffisant, sans risque, erreur)
+  - [`features/risk/api.ts`](src/features/risk/COMPONENTS.md#featuresriskapits) : exports `getRisk`, `setRiskLimit`
+  - [`features/risk/hook.ts`](src/features/risk/COMPONENTS.md#featuresriskhookts) : exports `useRisk`, `useSetRiskLimit`
+  - [`features/risk/schema.ts`](src/features/risk/COMPONENTS.md#featuresriskschemats) : exports `createRiskLimitSchema(t)` / `RiskLimitValues`
+  - [`features/risk/constants.ts`](src/features/risk/COMPONENTS.md#featuresriskconstantsts) : exports `RISK_LIMIT_PERCENT`, `RISK_PICKER_LIMIT`, `RISK_POLL_MS`, `RISK_WAIT_MS`
+  - [`features/risk/utils.ts`](src/features/risk/COMPONENTS.md#featuresriskutilsts) : exports `riskPollMs`
+  - [`features/risk/types.ts`](src/features/risk/COMPONENTS.md#featuresrisktypests) : réexports des types de risque du contrat
 - [`features/settings`](src/features/settings/COMPONENTS.md)
   - [SettingsTabs](src/features/settings/COMPONENTS.md#settingstabs) : barre d'onglets des paramètres (`ui/tabs`) 
   - [SettingsCard](src/features/settings/COMPONENTS.md#settingscard) : carte d'un réglage (maquette `06.2`) 
@@ -176,7 +191,7 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 - `ui/button.tsx` : variant `hint` avec la taille `inline` : libellé souligné en pointillés qui garde la typographie du parent, déclencheur d'`InfoHint`. Taille `inline` : sans hauteur ni marge. Variant `tile` (avec `inline`) : tuile cliquable sans fond ni survol, contenu libre (aperçus de `ThemeCard`).
 - `ui/card.tsx` : taille `compact` (`<Card size="compact">`) : titre `text-body-semibold`, description `text-small` ; cartes de données (indicateurs, graphiques, récapitulatif).
 - `ui/table.tsx` : `TableRow` `variant` `static` (sans survol, ligne d'état) et `plain` (sans bordure ni survol) ; `TableHead` `variant` `caption` (en-tête discret) et `row` (libellé de ligne) ; `TableCell` `variant` `strong` et `muted`. Utilisés par `DataTable` et `MetricBlock`.
-- `ui/progress.tsx` (ajouté par `shadcn add progress`) : `size` `md` (piste de 6 px) et `variant` `success` et `running` (pulsation, calcul en cours). Barres de poids d'`AllocationField` et d'exécution active.
+- `ui/progress.tsx` (ajouté par `shadcn add progress`) : `size` `md` (piste de 6 px) et `variant` `success`, `running` (pulsation, calcul en cours) et `chart` (couleur `chart-1`, part d'un total). Barres de poids d'`AllocationField`, d'exécution active et de contribution au risque.
 - `ui/empty.tsx` (ajouté par `shadcn add empty`) : état vide, utilisé via `EmptyCard`.
 
 - `ui/pagination.tsx` (`Pagination`, `PaginationContent`, `PaginationItem`, `PaginationLink`, `PaginationPrevious`, `PaginationNext`, `PaginationEllipsis`) : généré par `bunx --bun shadcn@latest add pagination`, non modifié ; libellés anglais par défaut, passer `text` et `aria-label` en français. Utilisé seulement via la prop `pagination` de `DataTable`.
@@ -205,7 +220,7 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 ### PageHeader
 
 - **Import** : `import { PageHeader } from "@/components/page-layout"`.
-- **Rôle** : en-tête de page : titre, badge, description, élément de tête et actions à droite. Une page pas encore construite n'affiche que lui (titre et description).
+- **Rôle** : en-tête de page : titre, badge, description, élément de tête et actions à droite (passent sous le titre quand la largeur manque, sans débordement). Une page pas encore construite n'affiche que lui (titre et description).
 - **Props** :
 
   | Nom | Type | Requis | Défaut | Description |
@@ -779,6 +794,9 @@ Source : `src/components/form/form-issues.ts`.
 | `formatRatio` | Ratio en **fraction** → variation signée en % : `0.342` → « +34,20 % ». Rendement, drawdown. |
 | `formatRate` | Proportion en **fraction** → % non signé, arrondi à l'unité : `0.3846` → « 38 % ». Taux de réussite/échec, poids d'allocation, axe du drawdown. |
 | `formatPercent` | Taux en **fraction** → % non signé, jusqu'à 2 décimales : `0.001` → « 0,1 % », `0.1532` → « 15,32 % ». Frais, volatilité, taux sans risque. |
+| `formatPercent1` | Taux en **fraction** → % non signé, 1 décimale : `0.132` → « 13,2 % », `-0.014` → « −1,4 % ». Volatilité, VaR, CVaR, drawdown mesuré. |
+| `formatDecimal1` | Nombre sans unité, 1 décimale au plus : `3.571` → « 3,6 » (actifs effectifs). |
+| `formatCorrelation` | Corrélation de −1 à 1, 2 décimales : `0.71` → « 0,71 » ; aussi HHI. |
 | `formatSharpe` | Ratio de Sharpe, sans unité, 2 décimales : `1.25` → « 1,25 ». |
 | `formatQuantity` | Quantité de titres, fractionnaires inclus (DCA) : jusqu'à 6 décimales. |
 | `formatVolume` | Notation compacte : `41234567` → « 41,23 M ». |
@@ -826,7 +844,7 @@ Source : `src/lib/pagination.ts`.
 | Export | Rôle |
 | --- | --- |
 | `prefix` | Préfixe des pages connectées. |
-| `routes` | URL de chaque page ; `symbol` encode le symbole (`^GSPC`). |
+| `routes` | URL de chaque page ; `symbol` encode le symbole (`^GSPC`) ; `backtestRisk(id)` = page Risque d'un backtest (`/app/risk?backtest=<id>`). |
 | `safeRedirect` | Destination après connexion : `redirect` s'il commence par `prefix` (et pas `//`), sinon le dashboard. |
 
 Source : `src/lib/routes.ts`.

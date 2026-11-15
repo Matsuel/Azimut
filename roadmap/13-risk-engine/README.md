@@ -5,7 +5,7 @@
 - **Période** : à fixer au démarrage de la feature
 - **Branche / PR** : `feat/risk-engine` — PR à ouvrir
 - **Points** : 42 (MUST 29, SHOULD 13) — prévus (25 avant l'affinage du 2026-11-13, 37 avant le microservice D22)
-- **Maquettes** : `33 · Risque` (créée, node `454:12126`), décrite dans [`MAQUETTE.md`](MAQUETTE.md)
+- **Maquettes** : `33 · Risque` (node `454:12126`) et `33 · Risque · états (F13)` (node `532:17845`, proposée le 15/11/2026), décrites dans [`MAQUETTE.md`](MAQUETTE.md)
 - **Écrans modifiés** : `13 · Résultat d’un backtest` (node `350:7214`) : bouton « Risque » vers `/app/risk?backtest=<id>` (décision : pas de bloc dans le résultat) — dessiné dans la copie `à modifier (F13)` ; l’original est mis à jour au codage
 - **Dépend de** : 11 (rendements corrects). Gèle le moteur de simulation à la fin de cette feature.
 

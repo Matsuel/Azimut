@@ -13,7 +13,7 @@
 ### BacktestDetail
 
 - **Import** : `import { BacktestDetail } from "@/features/backtest/backtest-detail"`.
-- **Rôle** : écran détail (maquette 13 v2 · A) : en-tête avec statut, allocation, rebalancement, benchmark, relance et, dès qu'il y a un résultat, bouton vers `BacktestDividends` ; `ResultOverview` (valeur finale, courbes de valeur et de drawdown) ; `ResultMetrics` (indicateurs groupés) ; `TradesTable` (ordres) ; `ResultDetails` (positions, hypothèses, historique repliés). Instancie `useBacktest` et `useRerunBacktest`.
+- **Rôle** : écran détail (maquette 13 v2 · A) : en-tête avec statut, allocation, rebalancement, benchmark, relance et, dès qu'il y a un résultat, boutons vers `BacktestDividends` et la page Risque (`routes.backtestRisk(id)`, après « Robustesse ») ; `ResultOverview` (valeur finale, courbes de valeur et de drawdown) ; `ResultMetrics` (indicateurs groupés) ; `TradesTable` (ordres) ; `ResultDetails` (positions, hypothèses, historique repliés). Instancie `useBacktest` et `useRerunBacktest`.
 - **Props** :
   - `id` : Id du backtest.
 - **Source** : `src/features/backtest/backtest-detail.tsx`.
