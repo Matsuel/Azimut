@@ -33,11 +33,12 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
 - [Portfolio](#portfolio) : `POST`, `GET`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
 - [Backtest](#backtest) : `POST`, `POST /preview`, `POST /:id/executions`, `GET /stats`, `POST /batch`, `GET /batch/:batchId`, `POST /batch/:batchId/starts`, `POST /batch/:batchId/executions`, `GET /compare`, `GET /:id`, `GET`
 - [Risque](#risque) : `GET /api/risk/:backtestId`, `PUT /api/risk/:backtestId/constraint`
+- [Projection](#projection) : `GET /api/projection/:backtestId`
 
 ## Conventions communes
 
 - **Base** : `http://localhost:8000`. Le web appelle via `apiFetch(path)` (`apps/web/src/lib/api.ts`) avec `NEXT_PUBLIC_API_URL=http://localhost:8000/api` : `apiFetch("/backtest")` → `GET /api/backtest`. Cookies envoyés (`credentials: "include"`), CORS limité à `env.WEB_URL` (défaut `http://localhost:3000`, `env.ts`).
-- **Ordre d'enregistrement** (`index.ts`) : `helmet`, `cors`, `GET /health`, limiteur `/api/auth` + `authRouter`, `marketRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
+- **Ordre d'enregistrement** (`index.ts`) : `helmet`, `cors`, `GET /health`, limiteur `/api/auth` + `authRouter`, `marketRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
 - **Santé** : `GET /health` (sans auth) → `200 { "status": "ok" }`, `503 { "status": "unavailable" }` si la base ne répond pas.
 - **Limites de débit** (par IP, fenêtre 60 s, en-têtes `RateLimit-*`) : `POST /api/auth/*` 30 requêtes (les `GET`, dont `get-session` appelé à chaque page, ne comptent pas) ; `POST /api/backtest` et `POST /api/backtest/:id/executions` 20 requêtes (les lectures et `POST /api/backtest/preview` ne comptent pas). Au-delà : `429`. Body JSON refusé au-delà de 100 ko (`413`).
 - **Auth** : `authMiddleware` lit la session better-auth depuis les en-têtes (cookie, ou `Authorization: Bearer` via le plugin `bearer`) et pose `req.userId`. Sans session : `401 { "error": "Unauthorized", "code": "UNAUTHORIZED" }`.
@@ -319,7 +320,7 @@ Les montants sont dans la devise saisie, affichée `EUR` par le web (`BACKTEST_C
 
 - **Auth** : session requise.
 - **Entrée** : params `id`.
-- **Réponse** : `200`, `BacktestDetails` : `Backtest` + `executions` (toutes, plus récente d'abord, chacune avec son résumé de résultat ou `null`) + `result` (`BacktestResult` de la dernière exécution `COMPLETED`, ou `null`, hors `risk` : voir [Risque](#risque)) + `hasDividendDetails` (booléen : dividendes perçus ou effet de change à détailler sur l'écran « Dividendes et change » ; faux sans résultat ou pour un résultat antérieur à `returnBreakdown`).
+- **Réponse** : `200`, `BacktestDetails` : `Backtest` + `executions` (toutes, plus récente d'abord, chacune avec son résumé de résultat ou `null`) + `result` (`BacktestResult` de la dernière exécution `COMPLETED`, ou `null`, hors `risk` et `projection` : voir [Risque](#risque) et [Projection](#projection)) + `hasDividendDetails` (booléen : dividendes perçus ou effet de change à détailler sur l'écran « Dividendes et change » ; faux sans résultat ou pour un résultat antérieur à `returnBreakdown`).
   ```json
   { "id": "cm…", "name": "…", "executions": [{ "status": "COMPLETED", "attempt": 1, "result": { "totalReturn": "0.123456", "totalTrades": 12, "...": "…" } }], "result": { "finalValue": "11234.56", "totalInvested": "10010", "totalFees": "10.01", "profit": "1224.56", "totalReturn": "0.123456", "rebalanceCount": 3, "maxDrawdown": "-0.08", "maxDrawdownDate": "2026-03-10T00:00:00.000Z", "maxDrawdownPeakDate": "2026-02-12T00:00:00.000Z", "maxDrawdownRecoveryDate": "2026-05-04T00:00:00.000Z", "recoveryDays": 81, "cagr": "0.071234", "volatility": "0.153201", "sharpeRatio": "0.464973", "riskFreeRate": "0", "equityCurve": [{ "date": "2025-11-03", "value": 1000, "invested": 1001, "lumpSumValue": 10000 }], "trades": [{ "date": "2025-11-03", "symbol": "AAPL", "price": 268.5, "quantity": 3.720670, "amount": 1000, "fee": 1 }], "holdings": [{ "symbol": "AAPL", "quantity": 41.2, "value": 11234.56 }], "lumpSumComparison": { "finalValue": 11890.2, "totalReturn": 0.187831, "maxDrawdown": -0.12, "dcaAdvantage": -655.64 }, "benchmark": { "symbol": "URTH", "finalValue": 11502.3, "totalReturn": 0.149081, "cagr": 0.081, "volatility": 0.141, "sharpeRatio": 0.574468, "maxDrawdown": -0.07, "recoveryDays": 64, "excessCagr": -0.009766, "excessVolatility": 0.012201, "excessMaxDrawdown": -0.01, "excessSharpe": -0.109495 }, "executionRule": "CLOSE_ON_SCHEDULED_DAY", "dataSource": { "provider": "yahoo-finance2", "priceType": "TOTAL_RETURN", "fetchedAt": "2026-10-30T10:12:03.000Z", "fingerprint": "7e2c42c9…" }, "...": "…" } }
   ```
@@ -379,3 +380,20 @@ Calculé par `risk-engine` après chaque backtest (`risk.completed`), stocké av
 - **Effets** : écrit `maxDrawdownLimit` et `previousMaxDrawdownLimit` du backtest ; aucun événement.
 - **Appelant** : aucun pour l'instant (page Risque, T-07).
 - **Source** : `routes/risk/risk.routes.ts`, `controller/risk.controller.ts`, `services/risk.service.ts`, `repositories/risk.repository.ts`.
+
+## Projection
+
+Calculée par `risk-engine` après le risque de chaque backtest (`projection.completed`), stockée avec le résultat par core-backend. Les valeurs sont des nombres JSON en EUR, les probabilités des ratios (`0.2` = 20 %).
+
+### GET /api/projection/:backtestId
+
+- **Auth** : session requise.
+- **Entrée** : params `backtestId` (string, cuid).
+- **Réponse** : `200`, `ProjectionView` (`packages/contracts/src/projection.ts`), calculée sur le **dernier résultat terminé** du backtest. `state` : `COMPUTED` (`projection` renseignée), `INSUFFICIENT_DATA` (historique insuffisant, moins de 2 jours de cotation communs, ou un actif sans cours : aucun chiffre partiel), `UNAVAILABLE` (ancien résultat, exécution en cours ou en échec, `projection.completed` pas encore reçu). `projection` : `null` sauf si `COMPUTED` ; `points` = percentiles p5 à p95 par jour ouvré depuis aujourd'hui, `years` = mêmes percentiles à chaque fin d'année avec `lossProbability` (part des chemins sous le capital de départ).
+  ```json
+  { "state": "COMPUTED", "projection": { "seed": 42, "paths": 10000, "blockDays": 21, "capital": 10000, "historyStart": "2021-01-04", "historyEnd": "2026-10-30", "historyDays": 1480, "points": [{ "day": 0, "p5": 10000, "p10": 10000, "p25": 10000, "p50": 10000, "p75": 10000, "p90": 10000, "p95": 10000 }], "years": [{ "years": 1, "day": 252, "p5": 8100, "p10": 8700, "p25": 9600, "p50": 10800, "p75": 12100, "p90": 13400, "p95": 14300, "lossProbability": 0.27 }] } }
+  ```
+- **Erreurs** : `401` ; `403 { "error": "Access denied" }` ; `404 { "error": "Backtest not found" }`.
+- **Effets** : aucun.
+- **Appelant** : aucun pour l'instant (section Projection, T-06).
+- **Source** : `routes/projection/projection.routes.ts`, `controller/projection.controller.ts`, `services/projection.service.ts`, `repositories/projection.repository.ts`.

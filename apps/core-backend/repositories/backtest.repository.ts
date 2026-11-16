@@ -22,7 +22,7 @@ export interface IBacktestRepository {
 const executionSummary = {
     // Dernière exécution en premier ; attempt départage deux createdAt identiques
     orderBy: [{ createdAt: "desc" }, { attempt: "desc" }],
-    include: { result: { omit: { equityCurve: true, trades: true, holdings: true, dividendEvents: true, lumpSumComparison: true, benchmark: true, rollingSummary: true, risk: true } } },
+    include: { result: { omit: { equityCurve: true, trades: true, holdings: true, dividendEvents: true, lumpSumComparison: true, benchmark: true, rollingSummary: true, risk: true, projection: true, projectionComputedAt: true } } },
 } satisfies Prisma.Backtest$executionsArgs
 
 // Allocation persistée : relue pour republier `backtest.requested` et renvoyée au web
@@ -122,7 +122,7 @@ class BacktestRepository implements IBacktestRepository {
             prisma.backtestResult.findFirst({
                 where: { execution: { backtestId: id, status: { in: statuses } } },
                 orderBy: [{ execution: { createdAt: "desc" } }, { execution: { attempt: "desc" } }],
-                omit: { risk: true },
+                omit: { risk: true, projection: true, projectionComputedAt: true },
             }),
         ])
         return backtest && { ...backtest, result }
