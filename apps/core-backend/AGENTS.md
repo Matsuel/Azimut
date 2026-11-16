@@ -58,7 +58,7 @@ Invariant : une seule exécution active (`ACTIVE_STATUSES`) par backtest ; une r
 
 ## Migrations
 
-`bun run db:migrate` puis `bun run db:generate`. Une colonne ajoutée à une table non vide est nullable ou a une `@default`. Si `prisma migrate dev` refuse en non-interactif (avertissement de contrainte), écris `prisma/migrations/<timestamp>_<nom>/migration.sql` à la main, applique avec `bunx prisma migrate deploy`, puis vérifie l'absence d'écart avec `bunx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script` (attendu : migration vide).
+`bun run db:migrate` puis `bun run db:generate`. Une migration déjà appliquée sur une base (dev ou `trading_test`) est figée : tout changement de schéma, même une colonne oubliée, passe par une nouvelle migration. Une colonne ajoutée à une table non vide est nullable ou a une `@default`. Si `prisma migrate dev` refuse en non-interactif (avertissement de contrainte), écris `prisma/migrations/<timestamp>_<nom>/migration.sql` à la main, applique avec `bunx prisma migrate deploy`, puis vérifie l'absence d'écart avec `bunx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script` (attendu : migration vide).
 
 ## Ajouter une feature `<domaine>` (checklist)
 

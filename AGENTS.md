@@ -27,7 +27,7 @@ Ces règles sont **strictes** : un écart doit être justifié dans le résumé 
 | `packages/utils` | `Logger` partagé, `onShutdown`, `DAY_MS`, `round`, `TRADING_DAYS_PER_YEAR`, change (`fxPairSymbol`, `rateOn`), calendrier de simulation (`periodKey`, `businessDays`, `estimateSchedule`). |
 | `packages/market-client` | `MarketClient` : cours et dividendes lus auprès de market-service (clé interne, délai, seconde tentative, réponse validée par le contrat) pour backtest-engine et risk-engine. |
 | `packages/http` | Socle des services Express : `AppError` et sous-classes, `RouteDescriptor`/`registerRoutes`, `errorMiddleware`. |
-| `roadmap/` | Suivi des features : un dossier par feature (`README.md`, `US.md`, `TASKS.md`), maintenu avec le skill `feature-roadmap`. |
+| `roadmap/` | Suivi des features : un dossier par feature (`README.md`, `US.md`, `TASKS.md`), maintenu avec le skill `feature-roadmap`. Le `README.md` d'une feature porte ses décisions (`D<n>`, écrans modifiés) : il se lit en entier avec ses cadres Figma avant d'en coder la première ligne (skill `implementer-feature`), et toute décision prise en conversation s'y écrit au moment où elle est prise. |
 
 ## Responsabilités : qui calcule quoi
 
