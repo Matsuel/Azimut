@@ -49,9 +49,9 @@ export function getExecutionDuration(t: BacktestTranslator, e: BacktestExecution
         : t("duration.seconds", { seconds })
 }
 
-/** Allocation lisible : « AAPL 60 % · MSFT 40 % » (poids en ratio, au pourcent entier, D2). */
-export const formatAllocation = (f: Formatters, allocations: Backtest["allocations"]) =>
-    allocations.map(({ symbol, weight }) => `${symbol} ${f.formatRate(Number(weight))}`).join(" · ")
+/** Allocation lisible : « AAPL 60 % · MSFT 40 % » (poids en ratio, au pourcent entier, D2) ; `separator` change le « · » (sous-titres : « , »). */
+export const formatAllocation = (f: Formatters, allocations: Backtest["allocations"], separator = " · ") =>
+    allocations.map(({ symbol, weight }) => `${symbol} ${f.formatRate(Number(weight))}`).join(separator)
 
 /** Decimal sérialisé en string par l'API → number ; null ou absent → null (champ absent des résultats antérieurs). */
 export const fromDecimal = (value: string | null | undefined) => (value == null ? null : Number(value))

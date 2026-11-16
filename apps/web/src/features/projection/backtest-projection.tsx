@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useBacktest, useRerunBacktest } from "@/features/backtest/hook"
 import type { BacktestExecution } from "@/features/backtest/types"
-import { awaitResultPollMs, fromDecimal, getExecution, isActive } from "@/features/backtest/utils"
+import { awaitResultPollMs, formatAllocation, getExecution, isActive } from "@/features/backtest/utils"
 import { useApiErrorMessages } from "@/lib/api-error"
 import { useFormatters } from "@/lib/format"
 import { routes } from "@/lib/routes"
@@ -58,9 +58,7 @@ function ProjectionContent({ backtestId, picker }: { backtestId: string; picker:
         backtest.data &&
         computed &&
         t("subtitle", {
-            allocations: backtest.data.allocations
-                .map((a) => `${a.symbol} ${f.formatRate(fromDecimal(a.weight) ?? 0)}`)
-                .join(", "),
+            allocations: formatAllocation(f, backtest.data.allocations, ", "),
             period: f.formatDayRange(backtest.data.startDate, backtest.data.endDate),
             paths: f.formatDecimal1(computed.paths),
             horizon: f.formatYears(horizon),

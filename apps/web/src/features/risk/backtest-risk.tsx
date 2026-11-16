@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useBacktest, useRerunBacktest } from "@/features/backtest/hook"
 import type { BacktestDetails, BacktestExecution } from "@/features/backtest/types"
-import { awaitResultPollMs, fromDecimal, getExecution, isActive } from "@/features/backtest/utils"
+import { awaitResultPollMs, formatAllocation, getExecution, isActive } from "@/features/backtest/utils"
 import { useApiErrorMessages } from "@/lib/api-error"
 import { type Formatters, useFormatters } from "@/lib/format"
 import { routes } from "@/lib/routes"
@@ -28,7 +28,7 @@ import type { RiskView } from "./types"
 // Sous-titre de la maquette : allocation, période, fréquence des rendements
 const describe = (f: Formatters, t: RiskTranslator, b: BacktestDetails) =>
     t("subtitle", {
-        allocations: b.allocations.map((a) => `${a.symbol} ${f.formatRate(fromDecimal(a.weight) ?? 0)}`).join(", "),
+        allocations: formatAllocation(f, b.allocations, ", "),
         period: f.formatDayRange(b.startDate, b.endDate),
     })
 

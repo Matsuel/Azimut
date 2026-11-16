@@ -344,7 +344,7 @@ Source : `src/features/backtest/constants.ts`.
 | `isActive` | Exécution `PENDING` ou `RUNNING`. |
 | `getExecutionDuration(t, e)` | Durée `finishedAt − (startedAt ?? createdAt)`, « 2 min 5 s » ou « 12 s » (minimum 1 s) ; `null` si non terminée. |
 | `fromDecimal` | `Decimal` sérialisé → `number`, `null` ou absent → `null`. |
-| `formatAllocation(f, allocations)` | Allocation lisible : « AAPL 60 % · MSFT 40 % » (`formatRate` du poids). |
+| `formatAllocation(f, allocations, separator = " · ")` | Allocation lisible : « AAPL 60 % · MSFT 40 % » (`formatRate` du poids) ; `separator` pour les sous-titres de Risque et Projection (« , »). |
 | `alignCurves` | Courbes de A et B sur l'union de leurs dates triées : séries `a` et `b` (absentes hors de leur période) et, avec `benchmarkSide`, `benchmark` = `benchmarkValue` de ce côté ; `value` choisit la série (valeur, drawdown). |
 | `formatAmount(f, v)` | Montant en `BACKTEST_CURRENCY`, au format de la langue active. |
 | `formatWholeAmount(f, v)` | Montant en `BACKTEST_CURRENCY` arrondi à l'unité (« 15 820 € »), via `formatWholePrice`. |
