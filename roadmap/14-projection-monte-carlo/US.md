@@ -119,4 +119,4 @@ Tâches : T-08 (détail dans `TASKS.md`).
 | US-02 | Connaître la probabilité de perte | MUST | 2 | risk-engine, web |
 | US-03 | Rejouer une projection sans doublon | MUST | 1 | contracts, risk-engine, core-backend |
 | US-04 | Comprendre l'absence de projection | SHOULD | 3 | core-backend, web |
-| US-05 | Voir l'avancement et la durée du calcul | SHOULD | 6 | contracts, risk-engine, core-backend, web |
+| US-05 | Voir l'avancement et la durée du calcul | SHOULD | 5 | contracts, risk-engine, core-backend, web |
