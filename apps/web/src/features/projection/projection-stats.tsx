@@ -12,26 +12,25 @@ export function ProjectionStats({ year, capital }: { year: ProjectionYear; capit
     const f = useFormatters()
     const t = useTranslations("pages.projection.stats")
     const horizon = f.formatYears(year.years)
-    const amount = (value: number) => formatWholeAmount(f, value)
 
     return (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
                 label={<InfoHint entry="projectionPercentile">{t("median", { horizon })}</InfoHint>}
                 delta={t("p50")}
-                value={amount(year.p50)}
-                caption={t("medianCaption", { capital: amount(capital) })}
+                value={formatWholeAmount(f, year.p50)}
+                caption={t("medianCaption", { capital: formatWholeAmount(f, capital) })}
             />
             <StatCard
                 label={t("pessimistic")}
                 delta={t("p10")}
-                value={amount(year.p10)}
+                value={formatWholeAmount(f, year.p10)}
                 caption={t("pessimisticCaption")}
             />
             <StatCard
                 label={t("optimistic")}
                 delta={t("p90")}
-                value={amount(year.p90)}
+                value={formatWholeAmount(f, year.p90)}
                 caption={t("optimisticCaption")}
             />
             <StatCard

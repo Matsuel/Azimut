@@ -28,7 +28,6 @@ export function ProjectionFanChart({ points, capital, horizonYears, paths, year 
     const daysPerYear = year.day / year.years // lu des données, pas écrit en dur
     const data = points.filter((p) => p.day <= year.day).map((p) => toRow(p, daysPerYear))
     const ticks = Array.from({ length: horizonYears + 1 }, (_, i) => i)
-    const amount = (value: number) => formatWholeAmount(f, value)
     const { names, config, legend } = chartSeries(t)
     return (
         <Card>
@@ -69,10 +68,10 @@ export function ProjectionFanChart({ points, capital, horizonYears, paths, year 
                             dot={false}
                             isAnimationActive={false}
                         />
-                        {investedLine(capital, t("investedLabel", { capital: amount(capital) }))}
-                        {endLabel(`P90 ${amount(year.p90)}`, year.p90, year.years)}
-                        {endLabel(amount(year.p50), year.p50, year.years)}
-                        {endLabel(`P10 ${amount(year.p10)}`, year.p10, year.years)}
+                        {investedLine(capital, t("investedLabel", { capital: formatWholeAmount(f, capital) }))}
+                        {endLabel(`P90 ${formatWholeAmount(f, year.p90)}`, year.p90, year.years)}
+                        {endLabel(formatWholeAmount(f, year.p50), year.p50, year.years)}
+                        {endLabel(`P10 ${formatWholeAmount(f, year.p10)}`, year.p10, year.years)}
                     </ComposedChart>
                 </ChartContainer>
                 <p className="text-small text-muted-foreground">

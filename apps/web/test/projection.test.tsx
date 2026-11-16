@@ -157,7 +157,7 @@ test("historique des calculs : une ligne par exécution avec durée, <Dash /> sa
     expect(screen.getByText("#2")).toBeTruthy()
     expect(screen.getByText("Données insuffisantes")).toBeTruthy()
     // Ligne en cours : ni date ni durée, deux tirets
-    const pendingRow = screen.getByText("#2").closest("div.flex.items-center.justify-between") as HTMLElement
+    const pendingRow = screen.getByText("#2").closest('[role="listitem"]') as HTMLElement
     expect(within(pendingRow).getAllByText("—")).toHaveLength(2)
 })
 
@@ -195,7 +195,7 @@ test("PENDING bloqué : « Relancer le backtest » relance l'exécution, désact
     )
 })
 
-test("PENDING bloqué pendant une exécution active : « Relancer le backtest » désactivé", async () => {
+test("PENDING bloqué pendant une exécution active : sans bouton", async () => {
     getProjection.mockResolvedValue({ state: "PENDING", projection: null, history: [] })
     const running = { ...backtest, executions: [execution("RUNNING", null)] }
     inFrench(<BacktestProjection backtestId="b1" />, running)

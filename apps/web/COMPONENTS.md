@@ -140,6 +140,7 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [ResultDetails](src/features/backtest/COMPONENTS.md#resultdetails) : carte de sections repliables (`ui/collapsible`) en bas du détail 
   - [BacktestAssumptions](src/features/backtest/COMPONENTS.md#backtestassumptions) : liste « Hypothèses » d'un résultat, sans carte, en deux colonnes à partir de `sm` 
   - [ExecutionList](src/features/backtest/COMPONENTS.md#executionlist) : lignes d'exécution, sans carte 
+  - [HistoryRow](src/features/backtest/COMPONENTS.md#historyrow) : ligne d'historique partagée par `ExecutionList` et `ProjectionHistory`
   - [BacktestStats](src/features/backtest/COMPONENTS.md#backteststats) : 4 `StatCard` de la liste 
   - [ResultMetrics](src/features/backtest/COMPONENTS.md#resultmetrics) : 3 `MetricBlock` d'un résultat, sur 2 colonnes à partir de `md` et 3 à partir de `xl` 
   - [`features/backtest/metrics.tsx`](src/features/backtest/COMPONENTS.md#featuresbacktestmetricstsx) : exports `Metric`, `metricDefinitions`, `resultValue(f, result, metric)`, `withBenchmark`

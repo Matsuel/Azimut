@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl"
 import { Dash } from "@/components/dash"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { HistoryRow } from "@/features/backtest/result/history-row"
 import { StatusBadge } from "@/features/backtest/status-badge"
 import { useFormatters } from "@/lib/format"
 import type { ProjectionRun } from "./types"
@@ -21,24 +22,18 @@ function RunRow({ run }: { run: ProjectionRun }) {
     const tBacktest = useTranslations("backtest")
 
     return (
-        <div className="flex items-center justify-between gap-4 border-b py-3 last:border-b-0">
-            <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                    <span className="text-body-medium">#{run.attempt}</span>
-                    <StateBadge state={run.state} />
-                </div>
-                <span className="text-small text-muted-foreground">
-                    {run.computedAt ? f.formatDate(run.computedAt) : <Dash />}
-                </span>
-            </div>
-            <span className="shrink-0 text-small text-muted-foreground">
-                {run.durationMs === null ? (
+        <HistoryRow
+            attempt={run.attempt}
+            badge={<StateBadge state={run.state} />}
+            detail={run.computedAt ? f.formatDate(run.computedAt) : <Dash />}
+            trailing={
+                run.durationMs === null ? (
                     <Dash />
                 ) : (
                     t("history.duration", { duration: formatComputationDuration(f, tBacktest, run.durationMs) })
-                )}
-            </span>
-        </div>
+                )
+            }
+        />
     )
 }
 
@@ -50,7 +45,7 @@ export function ProjectionHistory({ history }: { history: ProjectionRun[] }) {
             <CardHeader>
                 <CardTitle>{t("history.title")}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent role="list">
                 {history.map((run) => (
                     <RunRow key={run.executionId} run={run} />
                 ))}

@@ -171,10 +171,22 @@ _Ligne et pied du champ : `form/allocation-row.tsx` (`AllocationRow`, `Allocatio
 ### ExecutionList
 
 - **Import** : `import { ExecutionList } from "@/features/backtest/result/execution-history"`.
-- **Rôle** : lignes d'exécution, sans carte : tentative, statut, date, résumé ou cause d'échec, durée ; barre de progression pour une exécution active.
+- **Rôle** : lignes d'exécution, sans carte : tentative, statut, date, résumé ou cause d'échec, durée ; barre de progression pour une exécution active (ligne `HistoryRow`).
 - **Props** :
   - `executions` : Plus récente d'abord.
 - **Source** : `src/features/backtest/result/execution-history.tsx`.
+
+### HistoryRow
+
+- **Import** : `import { HistoryRow } from "@/features/backtest/result/history-row"`.
+- **Rôle** : ligne d'un historique, `role="listitem"` (le conteneur porte `role="list"`) : `#tentative` et badge, détail dessous, `children` sous le détail, valeur à droite. Partagée par `ExecutionList` et `ProjectionHistory`.
+- **Props** :
+  - `attempt` : numéro de tentative.
+  - `badge` : badge d'état.
+  - `detail` : texte sous le badge ; `detailClassName` : classes ajoutées (ex. `text-destructive`).
+  - `trailing` : valeur à droite (durée).
+  - `children` : contenu sous le détail (barre de progression), facultatif.
+- **Source** : `src/features/backtest/result/history-row.tsx`.
 
 ### BacktestStats
 

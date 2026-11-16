@@ -13,7 +13,6 @@ export function ProjectionPercentiles({ years, horizonYears }: { years: Projecti
     const f = useFormatters()
     const t = useTranslations("pages.projection.percentiles")
     const rows = years.filter((year) => year.years <= horizonYears)
-    const amount = (value: number) => formatWholeAmount(f, value)
 
     return (
         <Card>
@@ -44,9 +43,9 @@ export function ProjectionPercentiles({ years, horizonYears }: { years: Projecti
                         {rows.map((year) => (
                             <TableRow key={year.years} variant="static">
                                 <TableCell>{f.formatYears(year.years)}</TableCell>
-                                <TableCell className="text-right">{amount(year.p10)}</TableCell>
-                                <TableCell className="text-right">{amount(year.p50)}</TableCell>
-                                <TableCell className="text-right">{amount(year.p90)}</TableCell>
+                                <TableCell className="text-right">{formatWholeAmount(f, year.p10)}</TableCell>
+                                <TableCell className="text-right">{formatWholeAmount(f, year.p50)}</TableCell>
+                                <TableCell className="text-right">{formatWholeAmount(f, year.p90)}</TableCell>
                                 <TableCell className="text-right">{f.formatPercent1(year.lossProbability)}</TableCell>
                             </TableRow>
                         ))}

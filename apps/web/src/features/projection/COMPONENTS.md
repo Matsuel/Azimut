@@ -5,7 +5,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 ### BacktestProjection
 
 - **Import** : `import { BacktestProjection } from "@/features/projection/backtest-projection"`.
-- **Rôle** : écran de la route `routes.backtestProjection(id)` (`/app/projection?backtest=<id>`) : en-tête « Projection · <nom> » avec badge `Calculée` ou badge `En cours` (`StatusBadge` RUNNING) pendant le calcul, allocation, période, scénarios, horizon et `BacktestPicker` ; puis un seul état : erreur (« Réessayer »), chargement, calcul en cours (« Projection en cours de calcul… », sans bouton, rafraîchi toutes les 2 s ; passé 2 min : « Le calcul prend plus de temps que prévu » + « Réessayer » et « Relancer le backtest »), données insuffisantes, sans projection (« Relancer le backtest », désactivé pendant une exécution) ou `ComputedProjection` ; puis `ProjectionHistory` si l'historique n'est pas vide. Garde l'horizon choisi (5 par défaut) dans l'état local : le changer ne déclenche aucune requête. Instancie `useBacktest`, `useProjection` (rafraîchi par `awaitResultPollMs` de `features/backtest/result-wait`) et `useRerunBacktest`.
+- **Rôle** : écran de la route `routes.backtestProjection(id)` (`/app/projection?backtest=<id>`) : en-tête « Projection · <nom> » avec badge `Calculée` ou badge `En cours` (`StatusBadge` RUNNING) pendant le calcul, allocation, période, scénarios, horizon et `BacktestPicker` ; puis un seul état : erreur (« Réessayer »), chargement, calcul en cours (« Projection en cours de calcul… », sans bouton, rafraîchi toutes les 2 s ; passé 2 min : « Le calcul prend plus de temps que prévu » + « Réessayer » et « Relancer le backtest »), données insuffisantes, sans projection, y compris un calcul attendu depuis plus de 10 min, expiré par le serveur (« Relancer le backtest », désactivé pendant une exécution) ou `ComputedProjection` ; puis `ProjectionHistory` si l'historique n'est pas vide. Garde l'horizon choisi (5 par défaut) dans l'état local : le changer ne déclenche aucune requête. Instancie `useBacktest`, `useProjection` (rafraîchi par `awaitResultPollMs` de `features/backtest/result-wait`) et `useRerunBacktest`.
 - **Props** :
   - `backtestId` : id du backtest de l'URL ; `""` affiche l'état « Choisissez un backtest terminé ».
 - **Source** : `src/features/projection/backtest-projection.tsx`.
@@ -13,7 +13,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 ### ProjectionHistory
 
 - **Import** : `import { ProjectionHistory } from "@/features/projection/projection-history"`.
-- **Rôle** : carte « Historique des calculs », sur le modèle de l'historique d'exécution du backtest : une ligne par exécution, la plus récente en haut : `#tentative`, badge d'état (`En cours` = `StatusBadge` RUNNING, `Calculée`, `Données insuffisantes`, `Indisponible`), date de réception (`<Dash />` sans), durée « en 0,7 s » (`<Dash />` sans).
+- **Rôle** : carte « Historique des calculs », sur le modèle de l'historique d'exécution du backtest : une ligne `HistoryRow` par exécution, la plus récente en haut : `#tentative`, badge d'état (`En cours` = `StatusBadge` RUNNING, `Calculée`, `Données insuffisantes`, `Indisponible`), date de réception (`<Dash />` sans), durée « en 0,7 s » (`<Dash />` sans).
 - **Props** : `history` : `ProjectionRun[]` reçu.
 - **Source** : `src/features/projection/projection-history.tsx`.
 
