@@ -21,6 +21,7 @@ import { routes } from "@/lib/routes"
 import { ComputedProjection } from "./computed-projection"
 import { DEFAULT_PROJECTION_HORIZON } from "./constants"
 import { useProjection } from "./hook"
+import { ProjectionHistory } from "./projection-history"
 import type { ProjectionView } from "./types"
 
 /**
@@ -88,6 +89,7 @@ function ProjectionContent({ backtestId, picker }: { backtestId: string; picker:
                 horizon={horizon}
                 onHorizonChange={setHorizon}
             />
+            {view && view.history.length > 0 && <ProjectionHistory history={view.history} />}
         </>
     )
 }

@@ -1119,6 +1119,15 @@
             "title": "Projection · {name}",
             "titleEmpty": "Projection",
             "subtitle": "{allocations} · {period} · {paths} scenarios · {horizon} horizon",
+            "history": {
+                "title": "Calculation history",
+                "duration": "in {duration}",
+                "state": {
+                    "COMPUTED": "Computed",
+                    "INSUFFICIENT_DATA": "Insufficient data",
+                    "UNAVAILABLE": "Unavailable"
+                }
+            },
             "states": {
                 "pending": "Projection being computed…",
                 "slow": "The computation is taking longer than expected.",

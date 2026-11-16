@@ -342,13 +342,13 @@ Source : `src/features/backtest/constants.ts`.
 | `getExecution` | Dernière exécution (`executions[0]`). |
 | `hasStatus` | Statut de la dernière exécution dans la liste. |
 | `isActive` | Exécution `PENDING` ou `RUNNING`. |
+| `formatSeconds(t, seconds)` | Secondes entières lisibles : « 1 min 5 s » ou « 12 s » (clés `backtest.duration.*`). |
 | `getExecutionDuration(t, e)` | Durée `finishedAt − (startedAt ?? createdAt)`, « 2 min 5 s » ou « 12 s » (minimum 1 s) ; `null` si non terminée. |
 | `fromDecimal` | `Decimal` sérialisé → `number`, `null` ou absent → `null`. |
 | `formatAllocation(f, allocations, separator = " · ")` | Allocation lisible : « AAPL 60 % · MSFT 40 % » (`formatRate` du poids) ; `separator` pour les sous-titres de Risque et Projection (« , »). |
 | `alignCurves` | Courbes de A et B sur l'union de leurs dates triées : séries `a` et `b` (absentes hors de leur période) et, avec `benchmarkSide`, `benchmark` = `benchmarkValue` de ce côté ; `value` choisit la série (valeur, drawdown). |
 | `formatAmount(f, v)` | Montant en `BACKTEST_CURRENCY`, au format de la langue active. |
 | `formatWholeAmount(f, v)` | Montant en `BACKTEST_CURRENCY` arrondi à l'unité (« 15 820 € »), via `formatWholePrice`. |
-| `awaitResultPollMs(state, execution)` | Intervalle (ms) tant qu'un résultat publié après le backtest manque (`state` `UNAVAILABLE`) pendant ou juste après une exécution, `false` sinon. Risque et projection. |
 | `formatRecovery(f, t, …)` | Durée `formatDuration` ; si `recoveryDays` est null : « Aucune baisse » sans baisse, « Non récupéré » si `peakDated` (`maxDrawdownPeakDate` non null ; `true` pour un benchmark), sinon `null`, affiché `<Dash />` par l'écran (résultat antérieur, que l'API renvoie aussi à null). |
 | `benchmarkLabel(t, symbol)` | Nom de la série du benchmark : « Benchmark URTH ». |
 | `BacktestTranslator` | Type du traducteur `useTranslations("backtest")`, passé aux helpers qui produisent du texte (`getExecutionDuration`, `formatRecovery`, `benchmarkLabel`). |
@@ -356,6 +356,14 @@ Source : `src/features/backtest/constants.ts`.
 | `getComparisonBenchmark` | Benchmark affiché : celui de A, sinon celui de B ; `benchmark` null si aucun. |
 
 Source : `src/features/backtest/utils.ts`. Helpers purs : aucun JSX (`<Dash />` est ajouté par l'écran).
+
+### `features/backtest/result-wait.ts`
+
+- **Import** : `import { awaitResultPollMs } from "@/features/backtest/result-wait"`.
+
+| Export | Rôle |
+| --- | --- |
+| `awaitResultPollMs(state, execution)` | Intervalle (ms, `RESULT_POLL_MS`) tant qu'un résultat publié après le backtest manque (`state` `UNAVAILABLE`, ou `PENDING` : calcul attendu) pendant ou juste après une exécution ; `false` sinon, y compris `PENDING` au-delà de `RESULT_WAIT_MS` (l'écran propose « Réessayer »). Risque et projection. |
 
 ### `features/backtest/column.tsx`
 

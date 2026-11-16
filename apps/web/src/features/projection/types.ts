@@ -2,6 +2,7 @@
 export type {
     Projection,
     ProjectionPoint,
+    ProjectionRun,
     ProjectionState,
     ProjectionView,
     ProjectionYear,

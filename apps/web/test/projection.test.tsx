@@ -129,6 +129,37 @@ test("horizon absent des années reçues : message au lieu d'un écran vide", ()
     expect(screen.getByText("Cet horizon n’est pas disponible pour cette projection.")).toBeTruthy()
 })
 
+const runs = [
+    { executionId: "e2", attempt: 2, computedAt: null, durationMs: null, state: "PENDING" as const },
+    {
+        executionId: "e1",
+        attempt: 1,
+        computedAt: "2026-11-16T10:00:00.000Z",
+        durationMs: 700,
+        state: "COMPUTED" as const,
+    },
+    {
+        executionId: "e0",
+        attempt: 0,
+        computedAt: "2026-11-15T10:00:00.000Z",
+        durationMs: 65_400,
+        state: "INSUFFICIENT_DATA" as const,
+    },
+]
+
+test("historique des calculs : une ligne par exécution avec durée, <Dash /> sans durée", async () => {
+    getProjection.mockResolvedValue({ state: "COMPUTED", projection, history: runs })
+    inFrench(<BacktestProjection backtestId="b1" />)
+
+    expect(await screen.findByText("Historique des calculs")).toBeTruthy()
+    expect(screen.getByText("en 0,7 s")).toBeTruthy()
+    expect(screen.getByText("en 1 min 5 s")).toBeTruthy()
+    expect(screen.getByText("#2")).toBeTruthy()
+    expect(screen.getByText("Données insuffisantes")).toBeTruthy()
+    // Ligne en cours : ni date ni durée, deux tirets
+    expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(2)
+})
+
 test("PENDING juste après l'exécution : badge « En cours » et carte d'état, sans bouton", async () => {
     getProjection.mockResolvedValue({ state: "PENDING", projection: null, history: [] })
     const fresh = { ...backtest, executions: [execution("COMPLETED", new Date().toISOString())] }

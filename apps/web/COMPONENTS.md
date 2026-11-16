@@ -152,7 +152,8 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/backtest/hook.ts`](src/features/backtest/COMPONENTS.md#featuresbacktesthookts) : exports `useCreateBacktest`, `useCreateBacktestBatch`, `useRestartBacktestBatch`, `useRerunBacktestBatch`,
   - [`features/backtest/schema.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestschemats) : exports `createBacktestFormSchema(t)`, `BacktestValues`, `createQuickBacktestFormSchema(t)`,
   - [`features/backtest/constants.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestconstantsts) : exports `BACKTEST_CURRENCY`, `RESULT_POLL_MS`, `RESULT_WAIT_MS`, `activeStatuses`, `investmentModes`, `rebalanceFrequencies`,
-  - [`features/backtest/utils.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestutilsts) : exports `getExecution`, `hasStatus`, `isActive`, `formatWholeAmount(f, v)`, `awaitResultPollMs(state, execution)`, `getExecutionDuration(t, e)`, `fromDecimal`,
+  - [`features/backtest/utils.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestutilsts) : exports `getExecution`, `hasStatus`, `isActive`, `formatWholeAmount(f, v)`, `formatSeconds(t, seconds)`, `getExecutionDuration(t, e)`, `fromDecimal`,
+  - [`features/backtest/result-wait.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestresult-waitts) : exports `awaitResultPollMs(state, execution)`
   - [`features/backtest/column.tsx`](src/features/backtest/COMPONENTS.md#featuresbacktestcolumntsx) : exports `useBacktestColumns()`, `useBatchColumns(endDate)`, `useRollingColumns()`, `useTradeColumns()`,
   - [`features/backtest/types.ts`](src/features/backtest/COMPONENTS.md#featuresbacktesttypests) : voir l'entrée
 - [`features/market`](src/features/market/COMPONENTS.md)
@@ -172,10 +173,12 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [ProjectionStats](src/features/projection/COMPONENTS.md#projectionstats) : quatre cartes P50, P10, P90, probabilité de perte
   - [ProjectionFanChart](src/features/projection/COMPONENTS.md#projectionfanchart) : éventail des trajectoires (plages, médiane, montant investi)
   - [ProjectionPercentiles](src/features/projection/COMPONENTS.md#projectionpercentiles) : tableau des percentiles par horizon
+  - [ProjectionHistory](src/features/projection/COMPONENTS.md#projectionhistory) : historique des calculs (tentative, état, date, durée)
   - [ProjectionParams](src/features/projection/COMPONENTS.md#projectionparams) : onglets d'horizon et hypothèses fixes
   - [`features/projection/api.ts`](src/features/projection/COMPONENTS.md#featuresprojectionapits) : exports `getProjection`
   - [`features/projection/hook.ts`](src/features/projection/COMPONENTS.md#featuresprojectionhookts) : exports `useProjection`
   - [`features/projection/constants.ts`](src/features/projection/COMPONENTS.md#featuresprojectionconstantsts) : exports `HORIZON_YEARS`, `DEFAULT_PROJECTION_HORIZON`
+  - [`features/projection/utils.ts`](src/features/projection/COMPONENTS.md#featuresprojectionutilsts) : exports `formatComputationDuration(f, t, durationMs)`
   - [`features/projection/types.ts`](src/features/projection/COMPONENTS.md#featuresprojectiontypests) : réexports des types de projection du contrat
 - [`features/risk`](src/features/risk/COMPONENTS.md)
   - [BacktestRisk](src/features/risk/COMPONENTS.md#backtestrisk) : écran Risque (maquette 33, route `routes.backtestRisk(id)`) et ses états
