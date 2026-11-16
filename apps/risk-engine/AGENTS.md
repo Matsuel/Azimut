@@ -2,7 +2,7 @@
 
 Worker Kafka sans serveur HTTP **et sans base de données**. Consomme `backtest.completed` (allocations, dates de début et de fin), lit les cours et la devise de chaque actif auprès de market-service (`GET /api/market/closes` et `/dividends` via `MarketClient` de `@azimut/market-client`, assigné à `service.repo`, clé interne `INTERNAL_API_KEY`, **jamais** de fournisseur en direct), calcule le risque, puis publie `risk.completed` et `projection.completed`. **Calqué sur `apps/backtest-engine`** : lis `../backtest-engine/AGENTS.md` et reprends ses règles de couches. Respecte `../../AGENTS.md`.
 
-Risque = rendements journaliers des actifs en euros (change inclus), pondérés aux poids cibles constants, sur les jours de cotation communs ; sous 250 jours communs, `risk` vaut `null` (roadmap 13, D1 à D21). Projection = bootstrap de blocs seedé (graine `PROJECTION_PARAMS.seed`) sur les mêmes cours en euros, capital de départ = `totalInvested`, `projection` `null` sous 250 jours communs (roadmap 14). core-backend stocke les résultats ; il reste le seul à écrire en base.
+Risque = rendements journaliers des actifs en euros (change inclus), pondérés aux poids cibles constants, sur les jours de cotation communs ; sous 250 jours communs, `risk` vaut `null` (roadmap 13, D1 à D21). Projection = bootstrap de blocs seedé (graine `PROJECTION_PARAMS.seed`) sur les mêmes cours en euros, capital de départ = `totalInvested`, `projection` `null` sous 2 jours communs ou si un actif n'a aucun cours (D12, roadmap 14). core-backend stocke les résultats ; il reste le seul à écrire en base.
 
 ## Structure
 
