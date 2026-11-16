@@ -83,7 +83,8 @@ function ProjectionContent({ backtestId, picker }: { backtestId: string; picker:
             />
             <ProjectionBody
                 backtestId={backtestId}
-                queries={[backtest, projection]}
+                backtestQuery={backtest}
+                projectionQuery={projection}
                 view={view}
                 execution={execution}
                 horizon={horizon}
@@ -94,9 +95,12 @@ function ProjectionContent({ backtestId, picker }: { backtestId: string; picker:
     )
 }
 
+type ProjectionQuery = Pick<UseQueryResult, "isError" | "error" | "refetch" | "isPending">
+
 type ProjectionBodyProps = {
     backtestId: string
-    queries: Pick<UseQueryResult, "isError" | "error" | "refetch" | "isPending">[] // backtest puis projection
+    backtestQuery: ProjectionQuery
+    projectionQuery: ProjectionQuery
     view: ProjectionView | undefined
     execution: BacktestExecution | undefined
     horizon: number
@@ -104,17 +108,35 @@ type ProjectionBodyProps = {
 }
 
 // État unique de la page : erreur, chargement, calcul en cours (ou trop long), données insuffisantes, sans projection ou projection calculée
-function ProjectionBody({ backtestId, queries, view, execution, horizon, onHorizonChange }: ProjectionBodyProps) {
+function ProjectionBody({
+    backtestId,
+    backtestQuery,
+    projectionQuery,
+    view,
+    execution,
+    horizon,
+    onHorizonChange,
+}: ProjectionBodyProps) {
     const t = useTranslations("pages.projection")
     const tc = useTranslations("common")
     const { errorMessage } = useApiErrorMessages()
     const queryClient = useQueryClient()
     const rerun = useRerunBacktest(backtestId)
+    const queries = [backtestQuery, projectionQuery]
     const failed = queries.find((query) => query.isError)
 
     const retry = (query: Pick<UseQueryResult, "refetch">) => (
         <Button variant="outline" onClick={() => query.refetch()}>
             {tc("retry")}
+        </Button>
+    )
+
+    const onRerun = () =>
+        rerun.mutate(undefined, { onSuccess: () => queryClient.invalidateQueries({ queryKey: ["projection"] }) })
+    const canRerun = !rerun.isPending && !(execution && isActive(execution))
+    const rerunButton = (
+        <Button onClick={onRerun} disabled={!canRerun}>
+            {t("states.rerun")}
         </Button>
     )
 
@@ -126,19 +148,17 @@ function ProjectionBody({ backtestId, queries, view, execution, horizon, onHoriz
         // Passé l'attente, `awaitResultPollMs` rend `false` : le calcul tarde, on propose de relire plutôt que d'attendre sans fin
         const waiting = execution && awaitResultPollMs(view.state, execution) !== false
         if (waiting) return <StateCard message={t("states.pending")} />
-        return <StateCard message={t("states.slow")} action={retry(queries[1]!)} />
+        const slowActions = (
+            <>
+                {retry(projectionQuery)}
+                {rerunButton}
+            </>
+        )
+        return <StateCard message={t("states.slow")} action={slowActions} />
     }
     if (view.state === "INSUFFICIENT_DATA") return <StateCard message={t("states.insufficientData")} />
     if (view.state === "UNAVAILABLE" || !view.projection) {
-        const onRerun = () =>
-            rerun.mutate(undefined, { onSuccess: () => queryClient.invalidateQueries({ queryKey: ["projection"] }) })
-        const canRerun = !rerun.isPending && !(execution && isActive(execution))
-        const action = (
-            <Button onClick={onRerun} disabled={!canRerun}>
-                {t("states.rerun")}
-            </Button>
-        )
-        return <StateCard message={t("states.unavailable")} action={action} />
+        return <StateCard message={t("states.unavailable")} action={rerunButton} />
     }
     return <ComputedProjection projection={view.projection} horizon={horizon} onHorizonChange={onHorizonChange} />
 }

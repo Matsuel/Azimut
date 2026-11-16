@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, mock, spyOn, test } from "bun:test"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { NextIntlClientProvider } from "next-intl"
 import type { ReactNode } from "react"
 import fr from "../messages/fr.json"
@@ -157,7 +157,8 @@ test("historique des calculs : une ligne par exécution avec durée, <Dash /> sa
     expect(screen.getByText("#2")).toBeTruthy()
     expect(screen.getByText("Données insuffisantes")).toBeTruthy()
     // Ligne en cours : ni date ni durée, deux tirets
-    expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(2)
+    const pendingRow = screen.getByText("#2").closest("div.flex.items-center.justify-between") as HTMLElement
+    expect(within(pendingRow).getAllByText("—")).toHaveLength(2)
 })
 
 test("PENDING juste après l'exécution : badge « En cours » et carte d'état, sans bouton", async () => {
@@ -178,6 +179,30 @@ test("PENDING au-delà de 2 minutes : « prend plus de temps » et « Réessayer
     expect(await screen.findByText("Le calcul prend plus de temps que prévu.")).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "Réessayer" }))
     await waitFor(() => expect(getProjection).toHaveBeenCalledTimes(2))
+})
+
+test("PENDING bloqué : « Relancer le backtest » relance l'exécution, désactivé pendant une exécution", async () => {
+    getProjection.mockResolvedValue({ state: "PENDING", projection: null, history: [] })
+    inFrench(<BacktestProjection backtestId="b1" />)
+
+    fireEvent.click(await screen.findByRole("button", { name: "Relancer le backtest" }))
+    await waitFor(() =>
+        expect(
+            fetchMock.mock.calls.some(
+                ([url, init]) => String(url).endsWith("/backtest/b1/executions") && init?.method === "POST",
+            ),
+        ).toBe(true),
+    )
+})
+
+test("PENDING bloqué pendant une exécution active : « Relancer le backtest » désactivé", async () => {
+    getProjection.mockResolvedValue({ state: "PENDING", projection: null, history: [] })
+    const running = { ...backtest, executions: [execution("RUNNING", null)] }
+    inFrench(<BacktestProjection backtestId="b1" />, running)
+
+    // Une exécution active : le calcul est attendu, la carte « en cours » n'a pas de bouton
+    expect(await screen.findByText("Projection en cours de calcul…")).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Relancer le backtest" })).toBeNull()
 })
 
 test("awaitResultPollMs : PENDING rafraîchi dans la fenêtre d'attente, plus après", () => {
