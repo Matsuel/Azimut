@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useBacktest, useRerunBacktest } from "@/features/backtest/hook"
 import type { BacktestDetails, BacktestExecution } from "@/features/backtest/types"
-import { fromDecimal, getExecution, isActive } from "@/features/backtest/utils"
+import { awaitResultPollMs, fromDecimal, getExecution, isActive } from "@/features/backtest/utils"
 import { useApiErrorMessages } from "@/lib/api-error"
 import { type Formatters, useFormatters } from "@/lib/format"
 import { routes } from "@/lib/routes"
@@ -24,7 +24,6 @@ import { RiskContributions } from "./risk-contributions"
 import { RiskStats } from "./risk-stats"
 import type { RiskTranslator } from "./schema"
 import type { RiskView } from "./types"
-import { riskPollMs } from "./utils"
 
 // Sous-titre de la maquette : allocation, période, fréquence des rendements
 const describe = (f: Formatters, t: RiskTranslator, b: BacktestDetails) =>
@@ -59,7 +58,7 @@ function RiskContent({ backtestId, picker }: { backtestId: string; picker: React
     const t = useTranslations("risk")
     const backtest = useBacktest(backtestId)
     const execution = backtest.data && getExecution(backtest.data)
-    const risk = useRisk(backtestId, (view) => riskPollMs(view, execution))
+    const risk = useRisk(backtestId, (view) => awaitResultPollMs(view.state, execution))
     const view = risk.data
 
     return (

@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+import { StateCard } from "@/components/state-card"
 import { ProjectionFanChart } from "./projection-fan-chart"
 import { ProjectionParams } from "./projection-params"
 import { ProjectionPercentiles } from "./projection-percentiles"
@@ -8,9 +10,10 @@ type ComputedProjectionProps = { projection: Projection; horizon: number; onHori
 
 /** Projection calculée : cartes, éventail, paramètres et percentiles de l'horizon choisi (sélection de `years`, aucun calcul). */
 export function ComputedProjection({ projection, horizon, onHorizonChange }: ComputedProjectionProps) {
+    const t = useTranslations("pages.projection")
     // Sélection de l'année de l'horizon : le backend a déjà calculé chaque année
-    const year = projection.years[horizon - 1] ?? projection.years.at(-1)
-    if (!year) return null
+    const year = projection.years.find((y) => y.years === horizon)
+    if (!year) return <StateCard message={t("states.horizonMissing")} />
     return (
         <>
             <ProjectionStats year={year} capital={projection.capital} />

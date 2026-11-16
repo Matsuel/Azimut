@@ -4,13 +4,13 @@ import { NextIntlClientProvider } from "next-intl"
 import type { ReactNode } from "react"
 import fr from "../messages/fr.json"
 import type { BacktestExecution } from "../src/features/backtest/types"
+import { awaitResultPollMs } from "../src/features/backtest/utils"
 import { AssetExposures } from "../src/features/risk/asset-exposures"
 import { CorrelationMatrix } from "../src/features/risk/correlation-matrix"
 import { DrawdownConstraint } from "../src/features/risk/drawdown-constraint"
 import { RiskContributions } from "../src/features/risk/risk-contributions"
 import { RiskStats } from "../src/features/risk/risk-stats"
 import type { Risk, RiskReading, RiskView } from "../src/features/risk/types"
-import { riskPollMs } from "../src/features/risk/utils"
 
 afterEach(cleanup)
 
@@ -114,12 +114,12 @@ test("contrainte : sans vérification, pas de tableau ; saisie hors plage refus�
     await waitFor(() => expect(sent).toEqual([15]))
 })
 
-test("riskPollMs : attend le risque pendant une exécution ou juste après, pas pour un ancien résultat", () => {
-    const view = { state: "UNAVAILABLE" } as RiskView
+test("awaitResultPollMs : attend le risque pendant une exécution ou juste après, pas pour un ancien résultat", () => {
+    const view = { state: "UNAVAILABLE" }
     const execution = (status: string, finishedAt: string | null) => ({ status, finishedAt }) as BacktestExecution
 
-    expect(riskPollMs(view, execution("RUNNING", null))).toBe(2000)
-    expect(riskPollMs(view, execution("COMPLETED", new Date().toISOString()))).toBe(2000)
-    expect(riskPollMs(view, execution("COMPLETED", "2024-01-01T00:00:00.000Z"))).toBe(false)
-    expect(riskPollMs({ state: "COMPUTED" } as RiskView, execution("RUNNING", null))).toBe(false)
+    expect(awaitResultPollMs(view.state, execution("RUNNING", null))).toBe(2000)
+    expect(awaitResultPollMs(view.state, execution("COMPLETED", new Date().toISOString()))).toBe(2000)
+    expect(awaitResultPollMs(view.state, execution("COMPLETED", "2024-01-01T00:00:00.000Z"))).toBe(false)
+    expect(awaitResultPollMs("COMPUTED", execution("RUNNING", null))).toBe(false)
 })

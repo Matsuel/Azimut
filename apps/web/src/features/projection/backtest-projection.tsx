@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useBacktest, useRerunBacktest } from "@/features/backtest/hook"
 import type { BacktestExecution } from "@/features/backtest/types"
-import { fromDecimal, getExecution, isActive } from "@/features/backtest/utils"
+import { awaitResultPollMs, fromDecimal, getExecution, isActive } from "@/features/backtest/utils"
 import { useApiErrorMessages } from "@/lib/api-error"
 import { useFormatters } from "@/lib/format"
 import { routes } from "@/lib/routes"
@@ -20,7 +20,6 @@ import { ComputedProjection } from "./computed-projection"
 import { DEFAULT_PROJECTION_HORIZON } from "./constants"
 import { useProjection } from "./hook"
 import type { ProjectionView } from "./types"
-import { projectionPollMs } from "./utils"
 
 /**
  * Page Projection d'un backtest (maquette 34 et ses états) : backtest choisi dans l'URL (`?backtest=<id>`), cartes,
@@ -51,7 +50,7 @@ function ProjectionContent({ backtestId, picker }: { backtestId: string; picker:
     const [horizon, setHorizon] = useState<number>(DEFAULT_PROJECTION_HORIZON)
     const backtest = useBacktest(backtestId)
     const execution = backtest.data && getExecution(backtest.data)
-    const projection = useProjection(backtestId, (view) => projectionPollMs(view, execution))
+    const projection = useProjection(backtestId, (view) => awaitResultPollMs(view.state, execution))
     const view = projection.data
     const computed = view?.projection
 

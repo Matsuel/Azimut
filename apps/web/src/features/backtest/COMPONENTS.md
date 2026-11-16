@@ -314,6 +314,7 @@ Source : `src/features/backtest/schema.ts`.
 | Export | Rôle |
 | --- | --- |
 | `BACKTEST_CURRENCY` | Devise d'affichage des montants (cours non convertis). |
+| `RESULT_POLL_MS`, `RESULT_WAIT_MS` | Rafraîchissement (2 000 ms) d'un résultat publié après le backtest (risque, projection) et délai d'attente (2 min) après la fin d'une exécution. |
 | `activeStatuses` | Statuts d'une exécution qui peut encore évoluer (miroir de `ACTIVE_STATUSES` backend). |
 | `investmentModes` | Modes d'investissement du `SelectField` ; libellés `backtest.investmentMode.<mode>`. |
 | `rebalanceFrequencies` | Fréquences de rebalancement (select et backtest stocké) ; libellés `backtest.rebalanceFrequency.<fréquence>`. |
@@ -346,6 +347,8 @@ Source : `src/features/backtest/constants.ts`.
 | `formatAllocation(f, allocations)` | Allocation lisible : « AAPL 60 % · MSFT 40 % » (`formatRate` du poids). |
 | `alignCurves` | Courbes de A et B sur l'union de leurs dates triées : séries `a` et `b` (absentes hors de leur période) et, avec `benchmarkSide`, `benchmark` = `benchmarkValue` de ce côté ; `value` choisit la série (valeur, drawdown). |
 | `formatAmount(f, v)` | Montant en `BACKTEST_CURRENCY`, au format de la langue active. |
+| `formatWholeAmount(f, v)` | Montant en `BACKTEST_CURRENCY` arrondi à l'unité (« 15 820 € »), via `formatWholePrice`. |
+| `awaitResultPollMs(state, execution)` | Intervalle (ms) tant qu'un résultat publié après le backtest manque (`state` `UNAVAILABLE`) pendant ou juste après une exécution, `false` sinon. Risque et projection. |
 | `formatRecovery(f, t, …)` | Durée `formatDuration` ; si `recoveryDays` est null : « Aucune baisse » sans baisse, « Non récupéré » si `peakDated` (`maxDrawdownPeakDate` non null ; `true` pour un benchmark), sinon `null`, affiché `<Dash />` par l'écran (résultat antérieur, que l'API renvoie aussi à null). |
 | `benchmarkLabel(t, symbol)` | Nom de la série du benchmark : « Benchmark URTH ». |
 | `BacktestTranslator` | Type du traducteur `useTranslations("backtest")`, passé aux helpers qui produisent du texte (`getExecutionDuration`, `formatRecovery`, `benchmarkLabel`). |

@@ -10,6 +10,11 @@ import type {
 // Devise des montants saisis : les cours ne sont pas convertis
 export const BACKTEST_CURRENCY = "EUR"
 
+// Après la fin d'un backtest, risk-engine publie le risque et la projection quelques secondes plus tard : les pages
+// les rafraîchissent toutes les `RESULT_POLL_MS` pendant `RESULT_WAIT_MS`
+export const RESULT_WAIT_MS = 2 * 60_000
+export const RESULT_POLL_MS = 2000
+
 // Total des poids d'une allocation, en pourcent entier (D2)
 export const FULL_PERCENT = 100
 

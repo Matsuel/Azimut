@@ -1,9 +1,8 @@
 import { ReferenceDot, ReferenceLine } from "recharts"
 import { referenceSeries } from "@/components/area-series-chart"
 import { type ChartConfig, ChartTooltipContent } from "@/components/ui/chart"
-import { BACKTEST_CURRENCY } from "@/features/backtest/constants"
+import { formatWholeAmount } from "@/features/backtest/utils"
 import type { Formatters } from "@/lib/format"
-import { PROJECTION_DAYS_PER_YEAR } from "./constants"
 import type { ProjectionPoint } from "./types"
 
 export const COLORS = {
@@ -12,9 +11,9 @@ export const COLORS = {
     band80: "color-mix(in oklab, var(--chart-1) 15%, transparent)",
 }
 
-// Une ligne par point : `x` en années (jour / 252), plages `[bas, haut]` pour les `Area`
-export const toRow = (p: ProjectionPoint) => ({
-    x: p.day / PROJECTION_DAYS_PER_YEAR,
+// Une ligne par point : `x` en années (jour / jours par année), plages `[bas, haut]` pour les `Area`
+export const toRow = (p: ProjectionPoint, daysPerYear: number) => ({
+    x: p.day / daysPerYear,
     median: p.p50,
     band50: [p.p25, p.p75],
     band80: [p.p10, p.p90],
@@ -40,8 +39,8 @@ export const amountTooltip = (f: Formatters, names: Record<string, string>) => (
         formatter={(value, name) => {
             const range = Array.isArray(value)
             const text = range
-                ? `${f.formatWholePrice(Number(value[0]), BACKTEST_CURRENCY)} – ${f.formatWholePrice(Number(value[1]), BACKTEST_CURRENCY)}`
-                : f.formatWholePrice(Number(value), BACKTEST_CURRENCY)
+                ? `${formatWholeAmount(f, Number(value[0]))} – ${formatWholeAmount(f, Number(value[1]))}`
+                : formatWholeAmount(f, Number(value))
             return (
                 <span className="text-body-medium">
                     {names[String(name)]} : {text}

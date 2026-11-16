@@ -1088,14 +1088,14 @@
         "projectionPercentile": {
             "title": "Projection percentiles",
             "purpose": "The range of values the portfolio could reach: P10 an unfavourable scenario, median the central one, P90 a favourable one.",
-            "computation": "The risk engine draws 10,000 paths by resampling blocks of days from the common price history, at constant target weights, then reads the percentiles of their value at each horizon. Only the percentiles are stored.",
+            "computation": "The risk engine draws thousands of paths by resampling blocks of days from the common price history, at constant target weights, then reads the percentiles of their value at each horizon. Only the percentiles are stored.",
             "unit": "Amount in euros, on the backtest's starting capital.",
             "readingTip": "P10: 9 scenarios out of 10 do better. Median: a coin flip. P90: 1 scenario out of 10 does better."
         },
         "projectionLossProbability": {
             "title": "Probability of loss",
             "purpose": "The share of scenarios that end below the invested amount at the chosen horizon.",
-            "computation": "Share of the 10,000 paths whose value is strictly below the starting capital at that horizon.",
+            "computation": "Share of the paths whose value is strictly below the starting capital at that horizon.",
             "unit": "Ratio shown as a percentage.",
             "readingTip": "Computed on historical scenarios, not a promise: the future can fall outside this range."
         }
@@ -1124,7 +1124,8 @@
                 "insufficientData": "Insufficient data: fewer than 2 trading days common to all assets, the projection is not computed.",
                 "unavailable": "This result has no projection yet. Rerun the backtest to compute it.",
                 "rerun": "Rerun the backtest",
-                "error": "The projection could not be loaded."
+                "error": "The projection could not be loaded.",
+                "horizonMissing": "This horizon is not available for this projection."
             },
             "stats": {
                 "median": "Median capital at {horizon}",

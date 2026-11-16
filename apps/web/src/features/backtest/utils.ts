@@ -1,7 +1,7 @@
 import type { useTranslations } from "next-intl"
 import type { ChartPoint } from "@/components/area-series-chart"
 import type { Formatters } from "@/lib/format"
-import { activeStatuses, BACKTEST_CURRENCY, MIN_YEARS_BEFORE_END } from "./constants"
+import { activeStatuses, BACKTEST_CURRENCY, MIN_YEARS_BEFORE_END, RESULT_POLL_MS, RESULT_WAIT_MS } from "./constants"
 import type {
     AllocationInput,
     Backtest,
@@ -58,6 +58,21 @@ export const fromDecimal = (value: string | null | undefined) => (value == null 
 
 /** Montant en `BACKTEST_CURRENCY`. */
 export const formatAmount = (f: Formatters, v: number) => f.formatPrice(v, BACKTEST_CURRENCY)
+
+/** Montant en `BACKTEST_CURRENCY`, arrondi à l'unité (`15 820 €`). */
+export const formatWholeAmount = (f: Formatters, v: number) => f.formatWholePrice(v, BACKTEST_CURRENCY)
+
+/**
+ * Intervalle de rafraîchissement d'un résultat publié après le backtest (risque, projection) : `RESULT_POLL_MS` tant qu'il
+ * manque (`state` « UNAVAILABLE ») alors qu'une exécution tourne ou vient de finir, `false` sinon (ancien résultat : il ne
+ * viendra pas sans relance).
+ */
+export function awaitResultPollMs(state: string, execution: BacktestExecution | undefined): number | false {
+    if (state !== "UNAVAILABLE" || !execution) return false
+    if (isActive(execution)) return RESULT_POLL_MS
+    const finishedAt = execution.finishedAt ? Date.parse(execution.finishedAt) : 0
+    return execution.status === "COMPLETED" && Date.now() - finishedAt < RESULT_WAIT_MS ? RESULT_POLL_MS : false
+}
 
 /**
  * Durée de récupération ; `recoveryDays` null : « Aucune baisse » sans baisse, « Non récupéré » si la baisse a un plus haut

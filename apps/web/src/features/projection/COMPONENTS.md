@@ -1,11 +1,11 @@
 # Catalogue web : `features/projection`
 
-Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carlo`, états `34.1` indisponible et données insuffisantes). Toutes les valeurs viennent de `GET /api/projection/:backtestId` (calculées par risk-engine, stockées par core-backend) : le web sélectionne l'année de l'horizon dans `years`, filtre `points`, convertit les ratios en pourcentages et `day / 252` en années, sans rien calculer d'autre. Gabarits d'entrée : [`COMPONENTS.md`](../../../COMPONENTS.md#gabarits).
+Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carlo`, états `34.1` indisponible et données insuffisantes). Toutes les valeurs viennent de `GET /api/projection/:backtestId` (calculées par risk-engine, stockées par core-backend) : le web sélectionne l'année de l'horizon dans `years`, filtre `points`, convertit les ratios en pourcentages et `day` en années (jours par année lus des données), sans rien calculer d'autre. Gabarits d'entrée : [`COMPONENTS.md`](../../../COMPONENTS.md#gabarits).
 
 ### BacktestProjection
 
 - **Import** : `import { BacktestProjection } from "@/features/projection/backtest-projection"`.
-- **Rôle** : écran de la route `routes.backtestProjection(id)` (`/app/projection?backtest=<id>`) : en-tête « Projection · <nom> » avec badge `Calculée`, allocation, période, scénarios, horizon et `BacktestPicker` ; puis un seul état : erreur (« Réessayer »), chargement, données insuffisantes, sans projection (« Relancer le backtest », désactivé pendant une exécution) ou `ComputedProjection`. Garde l'horizon choisi (5 par défaut) dans l'état local : le changer ne déclenche aucune requête. Instancie `useBacktest`, `useProjection` (rafraîchi par `projectionPollMs`) et `useRerunBacktest`.
+- **Rôle** : écran de la route `routes.backtestProjection(id)` (`/app/projection?backtest=<id>`) : en-tête « Projection · <nom> » avec badge `Calculée`, allocation, période, scénarios, horizon et `BacktestPicker` ; puis un seul état : erreur (« Réessayer »), chargement, données insuffisantes, sans projection (« Relancer le backtest », désactivé pendant une exécution) ou `ComputedProjection`. Garde l'horizon choisi (5 par défaut) dans l'état local : le changer ne déclenche aucune requête. Instancie `useBacktest`, `useProjection` (rafraîchi par `awaitResultPollMs`) et `useRerunBacktest`.
 - **Props** :
   - `backtestId` : id du backtest de l'URL ; `""` affiche l'état « Choisissez un backtest terminé ».
 - **Source** : `src/features/projection/backtest-projection.tsx`.
@@ -13,7 +13,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 ### ComputedProjection
 
 - **Import** : `import { ComputedProjection } from "@/features/projection/computed-projection"`.
-- **Rôle** : `ProjectionStats`, `ProjectionFanChart`, puis `ProjectionParams` et `ProjectionPercentiles` côte à côte, pour l'année `years[horizon − 1]`.
+- **Rôle** : `ProjectionStats`, `ProjectionFanChart`, puis `ProjectionParams` et `ProjectionPercentiles` côte à côte, pour l'année dont `years` vaut l'horizon (message « horizon indisponible » sinon).
 - **Props** : `projection` (`Projection` reçu), `horizon` (années), `onHorizonChange`.
 - **Source** : `src/features/projection/computed-projection.tsx`.
 
@@ -29,7 +29,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 ### ProjectionFanChart
 
 - **Import** : `import { ProjectionFanChart } from "@/features/projection/projection-fan-chart"`.
-- **Rôle** : carte « Éventail des trajectoires » : `ComposedChart` dans `ChartContainer` (aires `[p10, p90]` et `[p25, p75]`, ligne p50, `ReferenceLine` au capital, étiquettes P10 / médiane / P90 de fin d'horizon), `ChartLegend` et phrase de probabilité de perte. Axe X en années (`day / 252`), points limités à l'horizon.
+- **Rôle** : carte « Éventail des trajectoires » : `ComposedChart` dans `ChartContainer` (aires `[p10, p90]` et `[p25, p75]`, ligne p50, `ReferenceLine` au capital, étiquettes P10 / médiane / P90 de fin d'horizon), `ChartLegend` et phrase de probabilité de perte. Axe X en années (`day` divisé par les jours de l'année, lus de `year.day / year.years`), points limités à l'horizon.
 - **Props** :
   - `points` : `ProjectionPoint[]` reçus (EUR).
   - `capital` : capital de départ, EUR (ligne de référence).
@@ -41,7 +41,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 ### ProjectionPercentiles
 
 - **Import** : `import { ProjectionPercentiles } from "@/features/projection/projection-percentiles"`.
-- **Rôle** : carte « Percentiles par horizon » : une ligne par année ≤ `horizonYears` (P10, médiane, P90 en EUR entiers ; probabilité de perte en rouge à partir de 20 %) et mention « pas une promesse ».
+- **Rôle** : carte « Percentiles par horizon » : une ligne par année ≤ `horizonYears` (P10, médiane, P90 en EUR entiers ) et mention « pas une promesse ».
 - **Props** :
   - `years` : `ProjectionYear[]` reçus.
   - `horizonYears` : dernière année affichée.
@@ -79,18 +79,8 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 
 | Export | Rôle (et unité) |
 | --- | --- |
-| `HORIZON_YEARS` | Horizons proposés, années : 1, 3, 5, 10 (miroir de `PROJECTION_HORIZONS`). |
+| `HORIZON_YEARS` | Horizons proposés, années : 1, 3, 5, 10 (copie voulue de `PROJECTION_HORIZONS` du contrat, importable seulement en type). |
 | `DEFAULT_PROJECTION_HORIZON` | Horizon initial, 5 ans. |
-| `PROJECTION_DAYS_PER_YEAR` | 252 jours ouvrés par année, pour l'axe X. |
-| `PROJECTION_POLL_MS`, `PROJECTION_WAIT_MS` | Intervalle de rafraîchissement (2 000 ms) et délai d'attente après la fin d'un backtest (2 min). |
-
-### `features/projection/utils.ts`
-
-- **Import** : `import { projectionPollMs } from "@/features/projection/utils"`.
-
-| Export | Rôle (et unité) |
-| --- | --- |
-| `projectionPollMs(view, execution)` | `PROJECTION_POLL_MS` tant que la projection manque (`UNAVAILABLE`) alors qu'une exécution tourne ou vient de finir ; `false` sinon. |
 
 ### `features/projection/types.ts`
 

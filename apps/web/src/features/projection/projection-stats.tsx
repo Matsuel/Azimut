@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl"
 import { InfoHint } from "@/components/info-hint"
 import { StatCard } from "@/components/stat-card"
-import { BACKTEST_CURRENCY } from "@/features/backtest/constants"
+import { formatWholeAmount } from "@/features/backtest/utils"
 import { useFormatters } from "@/lib/format"
 import type { ProjectionYear } from "./types"
 
@@ -12,7 +12,7 @@ export function ProjectionStats({ year, capital }: { year: ProjectionYear; capit
     const f = useFormatters()
     const t = useTranslations("pages.projection.stats")
     const horizon = f.formatYears(year.years)
-    const amount = (value: number) => f.formatWholePrice(value, BACKTEST_CURRENCY)
+    const amount = (value: number) => formatWholeAmount(f, value)
 
     return (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

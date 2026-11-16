@@ -82,20 +82,11 @@ Page Risque d'un backtest (feature 13, maquette `33 · Risque`, états du cadre 
 
 ### `features/risk/constants.ts`
 
-- **Import** : `import { RISK_LIMIT_PERCENT, RISK_PICKER_LIMIT, RISK_POLL_MS, RISK_WAIT_MS } from "@/features/risk/constants"`.
+- **Import** : `import { RISK_LIMIT_PERCENT, RISK_PICKER_LIMIT } from "@/features/risk/constants"`.
 
 | Export | Rôle (et unité) |
 | --- | --- |
 | `RISK_LIMIT_PERCENT` | Bornes de la limite saisie, en pourcent entier (miroir de `RISK_LIMIT_BOUNDS` du contrat). |
-| `RISK_POLL_MS`, `RISK_WAIT_MS` | Intervalle de rafraîchissement du risque attendu (ms) et délai d'attente après la fin d'une exécution (ms). |
-
-### `features/risk/utils.ts`
-
-- **Import** : `import { riskPollMs } from "@/features/risk/utils"`.
-
-| Export | Rôle (et unité) |
-| --- | --- |
-| `riskPollMs` | Intervalle (ms) tant que le risque manque pendant ou juste après une exécution, `false` sinon. |
 
 ### `features/risk/types.ts`
 

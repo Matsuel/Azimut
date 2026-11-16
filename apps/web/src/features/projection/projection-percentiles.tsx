@@ -4,20 +4,16 @@ import { useTranslations } from "next-intl"
 import { InfoHint } from "@/components/info-hint"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { BACKTEST_CURRENCY } from "@/features/backtest/constants"
+import { formatWholeAmount } from "@/features/backtest/utils"
 import { useFormatters } from "@/lib/format"
-import { cn } from "@/lib/utils"
 import type { ProjectionYear } from "./types"
-
-// Probabilité de perte à partir de laquelle la cellule passe en rouge (maquette 34 : 21 % rouge, 13 % neutre) : affichage seul
-const LOSS_ALERT_RATIO = 0.2
 
 /** Carte « Percentiles par horizon » : une ligne par année de `years` jusqu'à `horizonYears` (EUR, probabilité en ratio). */
 export function ProjectionPercentiles({ years, horizonYears }: { years: ProjectionYear[]; horizonYears: number }) {
     const f = useFormatters()
     const t = useTranslations("pages.projection.percentiles")
     const rows = years.filter((year) => year.years <= horizonYears)
-    const amount = (value: number) => f.formatWholePrice(value, BACKTEST_CURRENCY)
+    const amount = (value: number) => formatWholeAmount(f, value)
 
     return (
         <Card>
@@ -51,14 +47,7 @@ export function ProjectionPercentiles({ years, horizonYears }: { years: Projecti
                                 <TableCell className="text-right">{amount(year.p10)}</TableCell>
                                 <TableCell className="text-right">{amount(year.p50)}</TableCell>
                                 <TableCell className="text-right">{amount(year.p90)}</TableCell>
-                                <TableCell
-                                    className={cn(
-                                        "text-right",
-                                        year.lossProbability >= LOSS_ALERT_RATIO && "text-destructive",
-                                    )}
-                                >
-                                    {f.formatPercent1(year.lossProbability)}
-                                </TableCell>
+                                <TableCell className="text-right">{f.formatPercent1(year.lossProbability)}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

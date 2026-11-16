@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl"
 import { DetailRow } from "@/components/detail-row"
 import { FilterTabs } from "@/components/filter-tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { BACKTEST_CURRENCY } from "@/features/backtest/constants"
+import { formatWholeAmount } from "@/features/backtest/utils"
 import { useFormatters } from "@/lib/format"
 import { HORIZON_YEARS } from "./constants"
 import type { Projection } from "./types"
@@ -37,9 +37,7 @@ export function ProjectionParams({ projection, horizon, onHorizonChange }: Proje
                     />
                 </div>
                 <dl className="flex flex-col gap-4 text-body">
-                    <DetailRow label={t("invested")}>
-                        {f.formatWholePrice(projection.capital, BACKTEST_CURRENCY)}
-                    </DetailRow>
+                    <DetailRow label={t("invested")}>{formatWholeAmount(f, projection.capital)}</DetailRow>
                     <DetailRow label={t("paths")}>{f.formatDecimal1(projection.paths)}</DetailRow>
                     <DetailRow label={t("seed")}>{projection.seed}</DetailRow>
                     <DetailRow label={t("blockSize")}>{t("blockDays", { count: projection.blockDays })}</DetailRow>

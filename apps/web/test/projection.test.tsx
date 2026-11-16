@@ -16,7 +16,7 @@ const fetchMock = spyOn(globalThis, "fetch")
 const { BacktestProjection } = await import("../src/features/projection/backtest-projection")
 const { ProjectionPercentiles } = await import("../src/features/projection/projection-percentiles")
 const { ProjectionStats } = await import("../src/features/projection/projection-stats")
-const { projectionPollMs } = await import("../src/features/projection/utils")
+const { ComputedProjection } = await import("../src/features/projection/computed-projection")
 
 afterEach(cleanup)
 beforeEach(() => {
@@ -122,13 +122,8 @@ test("UNAVAILABLE affiche « Relancer le backtest »", async () => {
     )
 })
 
-test("projectionPollMs : attend la projection pendant une exécution ou juste après, pas pour un ancien résultat", () => {
-    const view = { state: "UNAVAILABLE", projection: null } as ProjectionView
+test("horizon absent des années reçues : message au lieu d'un écran vide", () => {
+    inFrench(<ComputedProjection projection={projection} horizon={10} onHorizonChange={() => {}} />)
 
-    expect(projectionPollMs(view, execution("RUNNING", null))).toBe(2000)
-    expect(projectionPollMs(view, execution("COMPLETED", new Date().toISOString()))).toBe(2000)
-    expect(projectionPollMs(view, execution("COMPLETED", "2024-01-01T00:00:00.000Z"))).toBe(false)
-    expect(projectionPollMs({ state: "COMPUTED", projection } as ProjectionView, execution("RUNNING", null))).toBe(
-        false,
-    )
+    expect(screen.getByText("Cet horizon n’est pas disponible pour cette projection.")).toBeTruthy()
 })

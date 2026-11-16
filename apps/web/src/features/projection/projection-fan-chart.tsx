@@ -5,9 +5,8 @@ import { Area, CartesianGrid, ComposedChart, Line, ReferenceDot, XAxis, YAxis } 
 import { ChartLegend } from "@/components/chart-legend"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BACKTEST_CURRENCY } from "@/features/backtest/constants"
+import { formatWholeAmount } from "@/features/backtest/utils"
 import { type Formatters, useFormatters } from "@/lib/format"
-import { PROJECTION_DAYS_PER_YEAR } from "./constants"
 import { amountTooltip, chartSeries, endLabel, investedLine, toRow } from "./fan-chart-parts"
 import type { ProjectionPoint, ProjectionYear } from "./types"
 
@@ -26,10 +25,10 @@ type ProjectionFanChartProps = {
 export function ProjectionFanChart({ points, capital, horizonYears, paths, year }: ProjectionFanChartProps) {
     const f = useFormatters()
     const t = useTranslations("pages.projection.chart")
-    const horizonDays = horizonYears * PROJECTION_DAYS_PER_YEAR
-    const data = points.filter((p) => p.day <= horizonDays).map(toRow)
+    const daysPerYear = year.day / year.years // lu des données, pas écrit en dur
+    const data = points.filter((p) => p.day <= year.day).map((p) => toRow(p, daysPerYear))
     const ticks = Array.from({ length: horizonYears + 1 }, (_, i) => i)
-    const amount = (value: number) => f.formatWholePrice(value, BACKTEST_CURRENCY)
+    const amount = (value: number) => formatWholeAmount(f, value)
     const { names, config, legend } = chartSeries(t)
     return (
         <Card>

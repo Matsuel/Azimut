@@ -1088,14 +1088,14 @@
         "projectionPercentile": {
             "title": "Percentiles de la projection",
             "purpose": "La fourchette des valeurs que le portefeuille pourrait atteindre : P10 un scénario défavorable, médiane le scénario central, P90 un scénario favorable.",
-            "computation": "Le moteur de risque tire 10 000 trajectoires en rééchantillonnant par blocs de jours l’historique commun des cours, au poids cibles constants, puis lit les percentiles de leur valeur à chaque horizon. Seuls les percentiles sont stockés.",
+            "computation": "Le moteur de risque tire des milliers de trajectoires en rééchantillonnant par blocs de jours l’historique commun des cours, au poids cibles constants, puis lit les percentiles de leur valeur à chaque horizon. Seuls les percentiles sont stockés.",
             "unit": "Montant en euros, sur le capital de départ du backtest.",
             "readingTip": "P10 : 9 scénarios sur 10 font mieux. Médiane : une chance sur deux. P90 : 1 scénario sur 10 fait mieux."
         },
         "projectionLossProbability": {
             "title": "Probabilité de perte",
             "purpose": "La part des scénarios qui finissent sous le montant investi à l’horizon choisi.",
-            "computation": "Part des 10 000 trajectoires dont la valeur est strictement inférieure au capital de départ à cet horizon.",
+            "computation": "Part des trajectoires dont la valeur est strictement inférieure au capital de départ à cet horizon.",
             "unit": "Ratio affiché en pourcentage.",
             "readingTip": "Calculée sur des scénarios historiques, pas une promesse : le futur peut sortir de cette fourchette."
         }
@@ -1124,7 +1124,8 @@
                 "insufficientData": "Données insuffisantes : moins de 2 jours de cotation communs à tous les actifs, la projection n’est pas calculée.",
                 "unavailable": "Ce résultat n’a pas encore de projection. Relancez le backtest pour la calculer.",
                 "rerun": "Relancer le backtest",
-                "error": "La projection n’a pas pu être chargée."
+                "error": "La projection n’a pas pu être chargée.",
+                "horizonMissing": "Cet horizon n’est pas disponible pour cette projection."
             },
             "stats": {
                 "median": "Capital médian à {horizon}",
