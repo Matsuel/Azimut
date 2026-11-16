@@ -29,7 +29,7 @@ test("2 jours (1 rendement) : blocs d'1 jour, percentiles = capital × (1 + r)^2
 test("10 jours (9 rendements) : blocs de 9 jours, valide pour le contrat", () => {
     const result = computeProjection(one, { A: series(10, noisy) }, capital, 42)!
     expect(result.blockDays).toBe(9)
-    expect(result.points.length).toBe(121)
+    expect(result.points.length).toBe(361)
     expect(projectionSchema.safeParse(result).success).toBe(true)
 })
 
@@ -42,15 +42,15 @@ test("même seed : même résultat ; seed différente : p50 final différent", (
     const a = computeProjection(one, prices, capital, 42)!
     expect(computeProjection(one, prices, capital, 42)).toEqual(a)
     const b = computeProjection(one, prices, capital, 43)!
-    expect(b.years[9]!.p50).not.toBe(a.years[9]!.p50)
+    expect(b.years[29]!.p50).not.toBe(a.years[29]!.p50)
 })
 
 test("forme du résultat, valide pour le contrat", () => {
     const result = computeProjection(one, { A: series(300, noisy) }, capital, 42)!
     expect(projectionSchema.safeParse(result).success).toBe(true)
-    expect(result.points.length).toBe(121)
+    expect(result.points.length).toBe(361)
     expect(result.points[0]).toEqual({ day: 0, p5: capital, p10: capital, p25: capital, p50: capital, p75: capital, p90: capital, p95: capital })
-    expect(result.years.length).toBe(10)
+    expect(result.years.length).toBe(30)
     expect(result.years[4]!.day).toBe(1260)
     expect(result.years[4]!.years).toBe(5)
     expect(result).toMatchObject({ seed: 42, paths: PROJECTION_PARAMS.paths, blockDays: 21, capital, historyStart: "2023-01-02", historyDays: 300 })
@@ -97,10 +97,10 @@ test("probabilités de perte : multiples de 1/10 000, plus fins que 1/1 000 (10 
 })
 
 // Règle : 10 000 tirages rendent la médiane stable d'une seed à l'autre (écart < 2 %) sans la figer (seeds différentes, valeurs différentes).
-test("dispersion des percentiles à 10 ans, médiane stable entre deux seeds", () => {
+test("dispersion des percentiles à 30 ans, médiane stable entre deux seeds", () => {
     const prices = { A: series(300, noisyFlat) }
-    const a = computeProjection(one, prices, capital, 42)!.years[9]!
-    const b = computeProjection(one, prices, capital, 43)!.years[9]!
+    const a = computeProjection(one, prices, capital, 42)!.years[29]!
+    const b = computeProjection(one, prices, capital, 43)!.years[29]!
     expect(a.p5).toBeLessThan(a.p50)
     expect(a.p50).toBeLessThan(a.p95)
     expect(b.p50).not.toBe(a.p50)
