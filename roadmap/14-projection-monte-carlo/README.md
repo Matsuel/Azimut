@@ -1,10 +1,10 @@
 # 14 · Projection Monte Carlo
 
-- **Statut** : En cours
+- **Statut** : Livrée
 - **Roadmap** : Mois 7 — Mois 7 — Projection (Monte Carlo seedé, fan chart, percentiles, probabilité de perte)
-- **Période** : 2026-11-16 → en cours
+- **Période** : 2026-11-16 → 2026-11-16
 - **Branche / PR** : `feat/projection-monte-carlo` — PR à ouvrir
-- **Points** : 32 (MUST 31, SHOULD 1) — prévus
+- **Points** : 32 (MUST 31, SHOULD 1) prévus, 32 réalisés
 - **Maquettes** : `34 · Projection Monte Carlo` (mise à jour le 2026-11-16, node `455:12320`) ; états `34.1 · Projection · indisponible` (node `563:14423`) et `34.2 · Projection · données insuffisantes` (node `563:15104`)
 - **Écrans modifiés** : aucun (page `Projection` de la sidebar, le backtest se choisit avec le sélecteur de l'en-tête de la page 34)
 - **Dépend de** : 12 (robustesse). Le moteur est réutilisé en 18 pour le pricing.
@@ -43,7 +43,9 @@ Le plan initial plaçait le moteur dans `backtest-engine` avec deux topics et un
 
 ## Bilan
 
-À écrire à la clôture de la feature.
+Livré : moteur de projection par bootstrap de blocs seedé (`risk-engine/engine/`, 10 000 trajectoires, blocs de 21 jours, 121 points sur 10 ans, percentiles P5 à P95, probabilité de perte à chaque fin d'année), publication de `projection.completed` après le risque, stockage nullable sur `BacktestResult` (première réception gagnante), `GET /api/projection/:backtestId` (`COMPUTED`, `INSUFFICIENT_DATA`, `UNAVAILABLE`), page Projection (fan chart, percentiles, paramètres en lecture seule, états des maquettes 34.1 et 34.2). Le web n'affiche que des valeurs reçues. `bun run verify` passe (tsc, tests, lint, format).
+
+32 points réalisés pour 32 prévus. Écarts : D12 (historique minimal de 2 jours au lieu de 250) ajoutée en cours de route, moteur, plan et AGENTS.md de risk-engine alignés ; le seuil rouge de perte a été retiré du web car c'est une règle métier ; le helper d'attente de résultat (`awaitResultPollMs`) est partagé avec la page Risque (refactor de T-05/T-06). Le cadre Figma 34.2 citait 250 jours : corrigé selon D12. Le critère de comparaison visuelle reste non coché : l'app n'a pas tourné avec backend, Kafka et base. Dette ouverte : TD-39 (`features/backtest/utils.ts` à 155 lignes), TD-40 (`HORIZON_YEARS` recopie `PROJECTION_HORIZONS`), TD-41 (comparaison visuelle, chevauchement possible des étiquettes du fan chart), TD-42 (pas de test d'omission de `projection` dans `GET /api/backtest/:id`). Redémarrer core-backend et risk-engine (nouveau topic `projection.completed`, migration `20261116105242_add_backtest_result_projection`).
 
 ## Fichiers
 
