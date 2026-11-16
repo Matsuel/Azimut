@@ -1,18 +1,25 @@
 "use client"
 
 import { useTranslations } from "next-intl"
+import { useState } from "react"
+import { TablePagination } from "@/components/data-table/table-pagination"
 import { InfoHint } from "@/components/info-hint"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatWholeAmount } from "@/features/backtest/utils"
 import { useFormatters } from "@/lib/format"
+import { paginate } from "@/lib/pagination"
+import { PERCENTILES_PAGE_SIZE } from "./constants"
 import type { ProjectionYear } from "./types"
 
 /** Carte « Percentiles par horizon » : une ligne par année de `years` jusqu'à `horizonYears` (EUR, probabilité en ratio). */
 export function ProjectionPercentiles({ years, horizonYears }: { years: ProjectionYear[]; horizonYears: number }) {
     const f = useFormatters()
     const t = useTranslations("pages.projection.percentiles")
+    const [requestedPage, setPage] = useState(1)
     const rows = years.filter((year) => year.years <= horizonYears)
+    // Un horizon plus court réduit le nombre de pages : la page demandée est ramenée à la dernière
+    const page = Math.min(requestedPage, Math.max(1, Math.ceil(rows.length / PERCENTILES_PAGE_SIZE)))
 
     return (
         <Card>
@@ -40,7 +47,7 @@ export function ProjectionPercentiles({ years, horizonYears }: { years: Projecti
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {rows.map((year) => (
+                        {paginate(rows, page, PERCENTILES_PAGE_SIZE).map((year) => (
                             <TableRow key={year.years} variant="static">
                                 <TableCell>{f.formatYears(year.years)}</TableCell>
                                 <TableCell className="text-right">{formatWholeAmount(f, year.p10)}</TableCell>
@@ -51,6 +58,12 @@ export function ProjectionPercentiles({ years, horizonYears }: { years: Projecti
                         ))}
                     </TableBody>
                 </Table>
+                <TablePagination
+                    page={page}
+                    pageSize={PERCENTILES_PAGE_SIZE}
+                    count={rows.length}
+                    onPageChange={setPage}
+                />
                 <p className="text-small text-muted-foreground">{t("note")}</p>
             </CardContent>
         </Card>

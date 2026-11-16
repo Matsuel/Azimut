@@ -55,7 +55,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 ### ProjectionPercentiles
 
 - **Import** : `import { ProjectionPercentiles } from "@/features/projection/projection-percentiles"`.
-- **Rôle** : carte « Percentiles par horizon » : une ligne par année ≤ `horizonYears` (P10, médiane, P90 en EUR entiers) et mention « pas une promesse ».
+- **Rôle** : carte « Percentiles par horizon » : une ligne par année ≤ `horizonYears` (P10, médiane, P90 en EUR entiers), paginées par `PERCENTILES_PAGE_SIZE` (`TablePagination`, page ramenée à la dernière si l'horizon raccourcit), et mention « pas une promesse ».
 - **Props** :
   - `years` : `ProjectionYear[]` reçus.
   - `horizonYears` : dernière année affichée.
@@ -95,6 +95,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 | --- | --- |
 | `HORIZON_YEARS` | Horizons proposés, années : 1, 3, 5, 10, 20, 30, filtrés par `projection.years` à l'affichage (choix d'affichage du web, borné par `PROJECTION_PARAMS.horizonYears` du contrat). |
 | `DEFAULT_PROJECTION_HORIZON` | Horizon initial, 5 ans. |
+| `PERCENTILES_PAGE_SIZE` | Lignes par page du tableau « Percentiles par horizon » : 5. |
 
 ### `features/projection/types.ts`
 

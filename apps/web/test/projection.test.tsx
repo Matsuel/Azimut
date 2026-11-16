@@ -187,7 +187,23 @@ test("projection sur 30 ans : six onglets d'horizon", async () => {
     await waitFor(() => expect(screen.getByText("Paramètres de la projection")).toBeTruthy())
     expect(tabLabels()).toEqual(["1 an", "3 ans", "5 ans", "10 ans", "20 ans", "30 ans"])
     fireEvent.click(screen.getByRole("tab", { name: "30 ans" }))
-    await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(1 + 30))
+    await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(1 + 5))
+})
+
+test("tableau des percentiles : 5 lignes par page, la page suivante affiche les années suivantes", async () => {
+    getProjection.mockResolvedValue({
+        state: "COMPUTED",
+        projection: { ...projection, years: yearsUpTo(30) },
+        history: [],
+    })
+    inFrench(<BacktestProjection backtestId="b1" />)
+
+    await waitFor(() => expect(screen.getByText("Paramètres de la projection")).toBeTruthy())
+    fireEvent.click(screen.getByRole("tab", { name: "30 ans" }))
+    await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(1 + 5))
+    fireEvent.click(screen.getByLabelText("Page suivante"))
+    await waitFor(() => expect(screen.getByText("6 ans")).toBeTruthy())
+    expect(screen.getAllByRole("row")).toHaveLength(1 + 5)
 })
 
 test("ancienne projection sur 10 ans : quatre onglets, pas d'horizon au-delà", async () => {

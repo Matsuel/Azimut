@@ -3,3 +3,6 @@
 export const HORIZON_YEARS = [1, 3, 5, 10, 20, 30] as const
 
 export const DEFAULT_PROJECTION_HORIZON = 5
+
+// Lignes par page du tableau « Percentiles par horizon » (30 lignes à 30 ans)
+export const PERCENTILES_PAGE_SIZE = 5
