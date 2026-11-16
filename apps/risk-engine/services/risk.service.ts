@@ -1,5 +1,7 @@
 import { Logger, REFERENCE_CURRENCY, fxPairSymbol } from "@azimut/utils";
 import type { BacktestCompletedPayload } from "@azimut/contracts";
+import { PROJECTION_PARAMS } from "@azimut/contracts";
+import computeProjection from "../engine/projection.engine";
 import computeRisk from "../engine/risk.engine";
 import { toEuros } from "../engine/risk.utils";
 import type { IRiskPublisher } from "../publishers/risk.publisher";
@@ -14,11 +16,12 @@ class RiskService {
     constructor(private readonly publisher: IRiskPublisher) { }
 
     /**
-     * Calcule le risque d'un `backtest.completed` et publie `risk.completed` (`risk` null sous 250 jours communs).
-     * Une erreur (market-service injoignable, taux de change manquant) n'est pas capturée : le consommateur la logue et kafkajs
-     * rejoue le message ; rejoué, l'événement republie le même résultat (core-backend garde la transition).
+     * Calcule le risque d'un `backtest.completed` et publie `risk.completed`, puis `projection.completed` (`risk` et `projection`
+     * null sous 250 jours communs). Les cours en euros sont lus une fois pour les deux calculs ; `totalInvested` est le capital de départ.
+     * Une erreur (market-service injoignable, taux de change manquant, échec de la projection) n'est pas capturée : le consommateur
+     * la logue et kafkajs rejoue le message ; rejoué, les deux événements sont republiés (core-backend garde le premier de chacun).
      */
-    async compute({ executionId, request: { allocations, startDate, endDate } }: Pick<BacktestCompletedPayload, "executionId" | "request">): Promise<void> {
+    async compute({ executionId, totalInvested, request: { allocations, startDate, endDate } }: Pick<BacktestCompletedPayload, "executionId" | "request" | "totalInvested">): Promise<void> {
         const symbols = allocations.map((allocation) => allocation.symbol);
         const start = new Date(startDate);
         const end = new Date(endDate);
@@ -30,9 +33,14 @@ class RiskService {
         const pairs = [...new Set(Object.values(currencies).filter((currency) => currency !== REFERENCE_CURRENCY))].map(fxPairSymbol);
         const closes = await this.repo.getDailyCloses([...symbols, ...pairs], start, end);
 
-        const risk = computeRisk(allocations, toEuros(closes, currencies, closes));
+        const eurCloses = toEuros(closes, currencies, closes);
+        const risk = computeRisk(allocations, eurCloses);
         await this.publisher.completed({ executionId, finishedAt: new Date().toISOString(), risk });
         logger.info("Risk computed", { executionId, computed: risk !== null });
+
+        const projection = computeProjection(allocations, eurCloses, totalInvested, PROJECTION_PARAMS.seed);
+        await this.publisher.projectionCompleted({ executionId, finishedAt: new Date().toISOString(), projection });
+        logger.info("Projection computed", { executionId, computed: projection !== null });
     }
 }
 

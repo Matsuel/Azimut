@@ -1,5 +1,5 @@
 import { KafkaClient, KafkaConsumer, KafkaProducer } from "@azimut/kafka";
-import { BACKTEST_TOPICS, RISK_TOPICS } from "@azimut/contracts";
+import { BACKTEST_TOPICS, PROJECTION_TOPICS, RISK_TOPICS } from "@azimut/contracts";
 import { Logger, onShutdown } from "@azimut/utils";
 import RiskConsumer from "./consumers/risk.consumer";
 import RiskPublisher from "./publishers/risk.publisher";
@@ -16,7 +16,7 @@ const consumer = new KafkaConsumer(client.createConsumer("risk-engine-events"));
 const riskConsumer = new RiskConsumer(new RiskService(new RiskPublisher(producer)));
 
 async function main(): Promise<void> {
-    await client.ensureTopics([BACKTEST_TOPICS.completed, RISK_TOPICS.completed]);
+    await client.ensureTopics([BACKTEST_TOPICS.completed, RISK_TOPICS.completed, PROJECTION_TOPICS.completed]);
 
     await producer.connect();
     await consumer.connect();

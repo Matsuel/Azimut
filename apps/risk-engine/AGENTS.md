@@ -1,8 +1,8 @@
 # risk-engine
 
-Worker Kafka sans serveur HTTP **et sans base de données**. Consomme `backtest.completed` (allocations, dates de début et de fin), lit les cours et la devise de chaque actif auprès de market-service (`GET /api/market/closes` et `/dividends` via `MarketClient` de `@azimut/market-client`, assigné à `service.repo`, clé interne `INTERNAL_API_KEY`, **jamais** de fournisseur en direct), calcule le risque, puis publie `risk.completed`. **Calqué sur `apps/backtest-engine`** : lis `../backtest-engine/AGENTS.md` et reprends ses règles de couches. Respecte `../../AGENTS.md`.
+Worker Kafka sans serveur HTTP **et sans base de données**. Consomme `backtest.completed` (allocations, dates de début et de fin), lit les cours et la devise de chaque actif auprès de market-service (`GET /api/market/closes` et `/dividends` via `MarketClient` de `@azimut/market-client`, assigné à `service.repo`, clé interne `INTERNAL_API_KEY`, **jamais** de fournisseur en direct), calcule le risque, puis publie `risk.completed` et `projection.completed`. **Calqué sur `apps/backtest-engine`** : lis `../backtest-engine/AGENTS.md` et reprends ses règles de couches. Respecte `../../AGENTS.md`.
 
-Risque = rendements journaliers des actifs en euros (change inclus), pondérés aux poids cibles constants, sur les jours de cotation communs ; sous 250 jours communs, `risk` vaut `null` (roadmap 13, D1 à D21). core-backend stocke le résultat ; il reste le seul à écrire en base.
+Risque = rendements journaliers des actifs en euros (change inclus), pondérés aux poids cibles constants, sur les jours de cotation communs ; sous 250 jours communs, `risk` vaut `null` (roadmap 13, D1 à D21). Projection = bootstrap de blocs seedé (graine `PROJECTION_PARAMS.seed`) sur les mêmes cours en euros, capital de départ = `totalInvested`, `projection` `null` sous 250 jours communs (roadmap 14). core-backend stocke les résultats ; il reste le seul à écrire en base.
 
 ## Structure
 
@@ -10,9 +10,9 @@ Risque = rendements journaliers des actifs en euros (change inclus), pondérés 
 env.ts             variables validées par zod (MARKET_SERVICE_URL, INTERNAL_API_KEY)
 index.ts           bootstrap : câble publisher → service → consumer, abonne. Aucune logique.
 consumers/         risk.consumer.ts : valide backtest.completed (zod), appelle le service
-services/          risk.service.ts : charge les cours, convertit en euros, appelle l'engine, publie risk.completed
-engine/            calcul pur et déterministe : risk.engine.ts (computeRisk), risk.utils.ts (briques : corrélation, VaR, contributions, change)
-publishers/        IRiskPublisher + classe : publication de risk.completed, clé = executionId
+services/          risk.service.ts : charge les cours, convertit en euros, appelle les engines, publie risk.completed puis projection.completed
+engine/            calcul pur et déterministe : risk.engine.ts (computeRisk), risk.utils.ts (briques : corrélation, VaR, contributions, change), projection.engine.ts (computeProjection) et ses briques
+publishers/        IRiskPublisher + classe : publication de risk.completed et projection.completed, clé = executionId
 constants/         constantes (risk.constants.ts)
 test/              <sujet>.test.ts
 ```
@@ -20,7 +20,7 @@ test/              <sujet>.test.ts
 ## Règles
 
 - **engine/** : pur (aucune I/O, horloge ni aléa). Chaque mesure a son `bun test` sur un jeu à résultat connu (voir `roadmap/13-risk-engine/US.md`). Arrondi (6 décimales) à la publication seulement, jamais sur un cumul.
-- **services/** : seul endroit où l'horloge est lue. Une erreur (market-service, taux de change) n'est pas capturée : `KafkaConsumer` la logue et kafkajs rejoue le message. Kafka est at-least-once : un rejeu republie le même `risk.completed`, que core-backend ignore par transition gardée.
+- **services/** : seul endroit où l'horloge est lue. Une erreur (market-service, taux de change) n'est pas capturée : `KafkaConsumer` la logue et kafkajs rejoue le message. Kafka est at-least-once : un rejeu republie les mêmes `risk.completed` et `projection.completed` (le risque d'abord ; si la projection lève, le rejeu republie les deux), que core-backend ignore par transition gardée.
 - **consumers/** : message invalide → `logger.warn` et retour.
 - Un contrat modifié l'est des deux côtés dans le même diff (`packages/contracts/src/risk.ts`, consommateur core-backend), puis signale de redémarrer les services concernés.
 
