@@ -36,6 +36,7 @@
 | D10 | Courbe | Un point tous les 21 jours ouvrés, jour 0 compris : 121 points | Résultat stocké de petite taille. |
 | D11 | Moteur | Dans `risk-engine`, pas dans `backtest-engine` | Les rendements EUR sur dates communes y existent déjà. |
 | D12 | Historique minimal | 2 jours communs (1 rendement), pas 250. Les blocs font `min(21, rendements disponibles)` jours ; `blockDays` du résultat = longueur effective. Un historique court donne une projection peu précise, affichée avec son nombre de jours. `null` seulement sous 2 jours ou si un actif n'a aucun cours. | `MIN_COMMON_DAYS` (250) ne vaut plus pour la projection. Décision du 2026-11-16. |
+| D13 | Statut et historique | `PENDING` (« En cours ») pendant le calcul ; `durationMs` publié par risk-engine ; `history` : une ligne par exécution (tentative, date, état, durée), carte « Historique des calculs » | Même retour d'information que la page backtest. Décision du 2026-11-16. |
 
 ---
 
@@ -95,6 +96,19 @@ Critères d’acceptation :
 
 Tâches : T-04, T-06 (détail dans `TASKS.md`).
 
+#### US-05 · Voir l'avancement et la durée du calcul — SHOULD
+
+**En tant que** utilisateur, **je veux** voir que la projection est en cours de calcul, puis la durée de chaque calcul **afin de** savoir si j'attends encore et de comparer mes exécutions (D13).
+
+Critères d’acceptation :
+- [x] Résultat terminé dont `projection.completed` n'est pas reçu (`PENDING`) : badge « En cours », carte « Projection en cours de calcul… » sans bouton, rafraîchissement toutes les 2 s.
+- [x] `PENDING` depuis plus de 2 minutes après la fin de l'exécution : rafraîchissement arrêté, « Le calcul prend plus de temps que prévu » et « Réessayer ».
+- [x] `projection.completed` porte `durationMs` ; sans lui le message est invalide et ignoré.
+- [x] Carte « Historique des calculs » : une ligne par exécution (`#tentative`, état, date de réception, durée), la plus récente en haut ; `<Dash />` sans date ou sans durée.
+- [x] Ancien résultat (avant D13) : `UNAVAILABLE`, inchangé.
+
+Tâches : T-08 (détail dans `TASKS.md`).
+
 ---
 
 ## Récapitulatif
@@ -105,3 +119,4 @@ Tâches : T-04, T-06 (détail dans `TASKS.md`).
 | US-02 | Connaître la probabilité de perte | MUST | 2 | risk-engine, web |
 | US-03 | Rejouer une projection sans doublon | MUST | 1 | contracts, risk-engine, core-backend |
 | US-04 | Comprendre l'absence de projection | SHOULD | 3 | core-backend, web |
+| US-05 | Voir l'avancement et la durée du calcul | SHOULD | 6 | contracts, risk-engine, core-backend, web |

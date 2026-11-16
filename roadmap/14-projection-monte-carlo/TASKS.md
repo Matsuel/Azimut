@@ -13,8 +13,9 @@
 | T-05 | Composants partagés de backtest | US-01 | web | MUST | 2 | — | 2 | `3c311a0` |
 | T-06 | Écran Projection | US-01, US-02, US-04 | web | MUST | 8 | T-04, T-05 | 8 | `c44d08e`, `0c9bf77` |
 | T-07 | Clôture : vérifications, dette, bilan | US-01 | docs | SHOULD | 1 | T-03, T-06 | 1 | `b3f72f8` |
+| T-08 | Statut « en cours » et historique des calculs (D13) | US-05 | contracts, risk-engine, core-backend, web | SHOULD | 5 | T-06 | 5 | `795cc47`, `f5581cf`, `a4cc540`, `663e452` |
 
-**Total** : 32 points — MUST 31, SHOULD 1. Les tâches T-01 à T-07 suivent les Tâches 1 à 7 de `PLAN.md` (la Tâche 0, maquette et roadmap, est faite).
+**Total** : 37 points — MUST 31, SHOULD 6. Les tâches T-01 à T-07 suivent les Tâches 1 à 7 de `PLAN.md` (la Tâche 0, maquette et roadmap, est faite).
 
 | Lot | Tâches | Points |
 | --- | --- | --- |
@@ -23,6 +24,7 @@
 | 3. Service | T-04 | 8 |
 | 4. Écrans | T-05 → T-06 | 10 |
 | 5. Clôture | T-07 | 1 |
+| 6. Extension D13 | T-08 | 5 |
 
 **Chemin critique** (19 points) : T-01 → T-04 → T-06 → T-07. T-02 : la reproductibilité tient sur l'ordre de tirage fixe (jour puis trajectoire, un tirage par trajectoire au début de chaque bloc de `min(21, n)` jours) ; un test à seed fixe la protège. T-04 : colonnes nullables et première réception gagnante, pour le rejeu.
 
@@ -39,6 +41,7 @@ flowchart LR
     T05[T-05 Composants partagés]
     T06[T-06 Écran Projection]
     T07[T-07 Clôture]
+    T08[T-08 Statut et historique]
     T01 --> T02
     T01 --> T03
     T02 --> T03
@@ -47,6 +50,7 @@ flowchart LR
     T05 --> T06
     T03 --> T07
     T06 --> T07
+    T06 --> T08
 ```
 
 ---
@@ -133,3 +137,18 @@ Critères d’acceptation :
 - [x] `verify` et les contrôles manuels de `AGENTS.md` passés ; dette repérée ajoutée à `TECH-DEBT.md`.
 - [x] Critères cochés, commits et bilan écrits, statut `Livrée` dans l'index.
 - [x] Redémarrage de `risk-engine` et `core-backend` signalé (nouveau topic et contrat).
+
+## Lot 6 — Extension D13
+
+### T-08 · Statut « en cours » et historique des calculs
+
+- **US** : US-05 · **Priorité** : SHOULD · **Points** : 5 · **Dépend de** : T-06 · **Commits** : `795cc47`, `f5581cf`, `a4cc540`, `663e452`
+- **Fichiers** : `packages/contracts/src/projection.ts`, `apps/risk-engine/services/risk.service.ts`, `apps/core-backend/{prisma,repositories,services,interfaces,API.md}`, `apps/web/src/features/{projection,backtest}/`, `messages/{fr,en}.json`, catalogues, `TECH-DEBT.md` (TD-39 fermée)
+
+Critères d’acceptation :
+- [x] risk-engine mesure `computeProjection` et publie `durationMs` (entier, ms) ; contrat et test.
+- [x] Prisma `projectionExpected` (`@default(false)`, vrai à la création d'un résultat) et `projectionDurationMs` ; migration `add_backtest_result_projection_status`.
+- [x] Service : état `PENDING`, fonction unique d'état pour la vue et les lignes de `history`, triée par tentative décroissante ; tests service, route, repository, consumer.
+- [x] Web : badge `En cours`, carte d'état, rafraîchissement par `awaitResultPollMs` (déplacé dans `result-wait.ts`, TD-39), « Réessayer » passé 2 min, `ProjectionHistory`.
+- [x] Catalogues à jour.
+- [ ] Rendu comparé à la maquette (historique des calculs en cours de mise à jour dans Figma) : non fait (TD-41).

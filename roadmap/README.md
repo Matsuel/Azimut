@@ -47,7 +47,7 @@ Les dossiers des features 02 à 08 citent les anciens numéros ; cette table les
 | 11 | [Dividendes, splits et effet devise](11-dividendes-splits-devise/) | 5 | 2026-11-12 | — | Livrée | 36 |
 | 12 | [Robustesse : dates de départ et métriques glissantes](12-robustesse-dates-de-depart/) | 5 | 2026-11-13 | #10 | Livrée | 36 |
 | 13 | [Risk Engine](13-risk-engine/) | 6 | 2026-11-14 → 2026-11-15 | — | Livrée | 50 |
-| 14 | [Projection Monte Carlo](14-projection-monte-carlo/) | 7 | 2026-11-16 → 2026-11-16 | — | Livrée | 32 |
+| 14 | [Projection Monte Carlo](14-projection-monte-carlo/) | 7 | 2026-11-16 → 2026-11-16 | — | Livrée | 37 |
 
 ᵃ estimés a posteriori d’après les diffs.
 ᵇ hors « Roadmap annuelle » : demande du 2026-10-30, après le lot 3 de la feature 08.
