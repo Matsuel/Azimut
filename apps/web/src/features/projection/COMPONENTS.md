@@ -41,7 +41,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 ### ProjectionPercentiles
 
 - **Import** : `import { ProjectionPercentiles } from "@/features/projection/projection-percentiles"`.
-- **Rôle** : carte « Percentiles par horizon » : une ligne par année ≤ `horizonYears` (P10, médiane, P90 en EUR entiers ) et mention « pas une promesse ».
+- **Rôle** : carte « Percentiles par horizon » : une ligne par année ≤ `horizonYears` (P10, médiane, P90 en EUR entiers) et mention « pas une promesse ».
 - **Props** :
   - `years` : `ProjectionYear[]` reçus.
   - `horizonYears` : dernière année affichée.
