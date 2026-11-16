@@ -6,131 +6,130 @@
 
 | Tâche | Titre | US | Couche | Priorité | Points | Dépend de | Commits |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T-01 | Engine : PRNG seedé et bootstrap par blocs | US-01, US-03 | backtest-engine | MUST | 5 | — | — |
-| T-02 | Engine : percentiles et probabilité de perte | US-01, US-02 | backtest-engine | MUST | 3 | T-01 | — |
-| T-03 | Contrat : topics et schémas de projection | US-03 | contracts | MUST | 2 | — | — |
-| T-04 | Demande et stockage côté core-backend | US-01 | core-backend | MUST | 5 | T-03 | — |
-| T-05 | Worker : consumer et publication | US-01 | backtest-engine | MUST | 3 | T-01, T-02, T-03 | — |
-| T-06 | Rejeu idempotent | US-03 | core-backend | MUST | 2 | T-04, T-05 | — |
-| T-07 | Fan chart et probabilité de perte | US-01, US-02 | web | MUST | 5 | T-04 | — |
-| T-08 | Catalogues API et composants | US-01 | docs | SHOULD | 1 | T-04 | — |
+| T-01 | Contrat : topic, paramètres et schémas de projection | US-01, US-03 | contracts | MUST | 2 | — | — |
+| T-02 | Moteur de projection (risk-engine) | US-01, US-02 | risk-engine | MUST | 8 | T-01 | — |
+| T-03 | Publication de `projection.completed` par risk-engine | US-01, US-03 | risk-engine | MUST | 3 | T-01, T-02 | — |
+| T-04 | Stockage et route côté core-backend | US-01, US-03, US-04 | core-backend | MUST | 8 | T-01 | — |
+| T-05 | Composants partagés de backtest | US-01 | web | MUST | 2 | — | — |
+| T-06 | Écran Projection | US-01, US-02, US-04 | web | MUST | 8 | T-04, T-05 | — |
+| T-07 | Clôture : vérifications, dette, bilan | US-01 | docs | SHOULD | 1 | T-03, T-06 | — |
 
-**Total** : 26 points — MUST 25, SHOULD 1.
+**Total** : 32 points — MUST 31, SHOULD 1. Les tâches T-01 à T-07 suivent les Tâches 1 à 7 de `PLAN.md` (la Tâche 0, maquette et roadmap, est faite).
 
 | Lot | Tâches | Points |
 | --- | --- | --- |
-| 1. Moteur | T-01 → T-02 | 8 |
-| 2. Contrat | T-03 | 2 |
-| 3. Service | T-04 | 5 |
-| 4. Worker | T-05 → T-06 | 5 |
-| 5. Écrans | T-07 → T-08 | 6 |
+| 1. Contrat | T-01 | 2 |
+| 2. Moteur et publication | T-02 → T-03 | 11 |
+| 3. Service | T-04 | 8 |
+| 4. Écrans | T-05 → T-06 | 10 |
+| 5. Clôture | T-07 | 1 |
 
-**Chemin critique** (13 points) : T-01 → T-02 → T-05 → T-06. T-01 : la reproductibilité doit tenir sur toute la boucle (même seed, même ordre de tirage). Un test de non-régression sur une seed fixe le protège.
+**Chemin critique** (19 points) : T-01 → T-04 → T-06 → T-07. T-02 : la reproductibilité tient sur l'ordre de tirage fixe (trajectoire puis bloc) ; un test à seed fixe la protège. T-04 : colonnes nullables et première réception gagnante, pour le rejeu.
 
-**Parallélisable** : T-01, T-03 dès le début ; T-01, T-03 dès le début ; T-07 après T-04.
+**Parallélisable** : T-01 et T-05 dès le début ; T-02 et T-04 après T-01 ; T-06 après T-04 et T-05.
 
 ## Graphe des dépendances
 
 ```mermaid
 flowchart LR
-    T01[T-01 Engine  PRNG seedé et bootstrap par blocs]
-    T02[T-02 Engine  percentiles et probabilité de perte]
-    T03[T-03 Contrat  topics et schémas de projection]
-    T04[T-04 Demande et stockage côté core-backend]
-    T05[T-05 Worker  consumer et publication]
-    T06[T-06 Rejeu idempotent]
-    T07[T-07 Fan chart et probabilité de perte]
-    T08[T-08 Catalogues API et composants]
+    T01[T-01 Contrat  topic, paramètres, schémas]
+    T02[T-02 Moteur de projection]
+    T03[T-03 Publication par risk-engine]
+    T04[T-04 Stockage et route core-backend]
+    T05[T-05 Composants partagés]
+    T06[T-06 Écran Projection]
+    T07[T-07 Clôture]
     T01 --> T02
-    T03 --> T04
-    T01 --> T05
-    T02 --> T05
-    T03 --> T05
+    T01 --> T03
+    T02 --> T03
+    T01 --> T04
     T04 --> T06
     T05 --> T06
-    T04 --> T07
-    T04 --> T08
+    T03 --> T07
+    T06 --> T07
 ```
 
 ---
 
-## Lot 1 — Moteur
+## Lot 1 — Contrat
 
-### T-01 · Engine : PRNG seedé et bootstrap par blocs
+### T-01 · Contrat : topic, paramètres et schémas de projection
 
-- **US** : US-01, US-03 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : — · **Commits** : —
-- **Fichiers** : `apps/backtest-engine/engine/projection.ts`, `projection.test.ts`
-
-Critères d’acceptation :
-- [ ] Même seed et mêmes entrées : sortie identique (test de reproductibilité).
-- [ ] Blocs de 21 jours ouvrés (D2) ; 10 000 trajectoires (D6).
-- [ ] Les mêmes jours sont tirés pour tous les actifs, rendements pondérés aux poids du backtest (D5) : test de conservation de la corrélation.
-
-### T-02 · Engine : percentiles et probabilité de perte
-
-- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01 · **Commits** : —
-- **Fichiers** : `apps/backtest-engine/engine/projection.ts`
-
-Critères d’acceptation :
-- [ ] Percentiles 5, 10, 25, 50, 75, 90, 95 par date (D7) ; probabilité que la valeur finale soit < capital initial, en EUR (D8).
-- [ ] Test sur une série constante (résultat connu).
-
-## Lot 2 — Contrat
-
-### T-03 · Contrat : topics et schémas de projection
-
-- **US** : US-03 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : —
+- **US** : US-01, US-03 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : —
 - **Fichiers** : `packages/contracts/src/projection.ts`, `packages/contracts/src/index.ts`
 
 Critères d’acceptation :
-- [ ] `projection.requested` et `projection.completed` ; enveloppe `KafkaEvent`.
-- [ ] Chaque champ numérique documente son unité.
+- [ ] Topic `projection.completed`, `PROJECTION_PARAMS` (D6′), `PROJECTION_HORIZONS`, schémas de point, d'année et de projection, enveloppe `KafkaEvent` (D4′).
+- [ ] Chaque champ numérique documente son unité (EUR, ratio, jours ouvrés, date `YYYY-MM-DD`).
+- [ ] `ProjectionView` : états `COMPUTED`, `INSUFFICIENT_DATA`, `UNAVAILABLE`.
+
+## Lot 2 — Moteur et publication
+
+### T-02 · Moteur de projection (risk-engine)
+
+- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 8 · **Dépend de** : T-01 · **Commits** : —
+- **Fichiers** : `apps/risk-engine/engine/projection.utils.ts`, `engine/projection.engine.ts`, `engine/risk.utils.ts`, `test/projection.*.test.ts`
+
+Critères d’acceptation :
+- [ ] Même seed et mêmes entrées : sortie identique ; deux seeds donnent deux résultats différents.
+- [ ] Blocs de 21 jours ouvrés, 10 000 trajectoires, un seul calcul sur 2 520 jours (D2, D6′, D9) ; 121 points tous les 21 jours (D10).
+- [ ] Mêmes jours tirés pour tous les actifs, poids du backtest : corrélation conservée (D5) ; `portfolioReturns` partagé avec `computeRisk`.
+- [ ] Percentiles P5 à P95 (D7) et probabilité de perte à chaque fin d'année (D8′), arrondis à la publication seulement.
+- [ ] Moins de 250 jours communs ou actif sans cours : `null`. Rendements constants ou nuls : pas de division par zéro.
+
+### T-03 · Publication de `projection.completed` par risk-engine
+
+- **US** : US-01, US-03 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01, T-02 · **Commits** : —
+- **Fichiers** : `apps/risk-engine/services/risk.service.ts`, `publishers/risk.publisher.ts`, `consumers/risk.consumer.ts`, `index.ts`, `test/risk.service.test.ts`
+
+Critères d’acceptation :
+- [ ] Après le risque, `projection.completed` est publié avec `executionId` et la projection (capital = `totalInvested`, seed 42).
+- [ ] Les cours EUR sont lus une seule fois pour le risque et la projection (D11).
 
 ## Lot 3 — Service
 
-### T-04 · Demande et stockage côté core-backend
+### T-04 · Stockage et route côté core-backend
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-03 · **Commits** : —
-- **Fichiers** : `apps/core-backend/services/projection.service.ts`, `prisma/schema.prisma`, `routes/projection/`
-
-Critères d’acceptation :
-- [ ] POST crée une projection `PENDING`, publie `projection.requested`.
-- [ ] Seules les courbes de percentiles sont stockées, pas les trajectoires ; la seed et l'horizon (années, choisi par l'utilisateur, D6) le sont avec le résultat.
-
-## Lot 4 — Worker
-
-### T-05 · Worker : consumer et publication
-
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01, T-02, T-03 · **Commits** : —
-- **Fichiers** : `apps/backtest-engine/consumers/projection.consumer.ts`, `publishers/`
+- **US** : US-01, US-03, US-04 · **Priorité** : MUST · **Points** : 8 · **Dépend de** : T-01 · **Commits** : —
+- **Fichiers** : `apps/core-backend/prisma/schema.prisma` et migration, `repositories/`, `services/`, `controller/`, `consumers/`, `routes/projection/`, `API.md`, `test/projection.*.test.ts`
 
 Critères d’acceptation :
-- [ ] Consomme `projection.requested`, publie `projection.completed` ou un échec.
+- [ ] Colonnes `projection` et `projectionComputedAt` nullables ; un `projection.completed` rejoué n'écrase rien (première réception gagne).
+- [ ] `GET /api/projection/:backtestId` renvoie `COMPUTED`, `INSUFFICIENT_DATA` ou `UNAVAILABLE` ; `NotFoundError` pour un autre utilisateur ; jamais de 500 pour un ancien résultat.
 - [ ] Un message invalide est loggué et ignoré.
+- [ ] Section « Projection » de `API.md`.
 
-### T-06 · Rejeu idempotent
+## Lot 4 — Écrans
 
-- **US** : US-03 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-04, T-05 · **Commits** : —
-- **Fichiers** : `apps/core-backend/consumers/projection.consumer.ts`
+### T-05 · Composants partagés de backtest
 
-Critères d’acceptation :
-- [ ] Un `projection.completed` rejoué ne crée pas de deuxième résultat.
-
-## Lot 5 — Écrans
-
-### T-07 · Fan chart et probabilité de perte
-
-- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-04 · **Commits** : —
-- **Fichiers** : `apps/web/src/features/projection/` (nouveau)
+- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : —
+- **Fichiers** : `apps/web/src/components/backtest-picker.tsx`, `state-card.tsx`, `features/risk/`, `COMPONENTS.md`
 
 Critères d’acceptation :
-- [ ] Médiane et deux bandes imbriquées, P25-P75 et P10-P90, dans le temps (D7) ; sélecteur d'horizon en années (D6).
-- [ ] La probabilité de perte est affichée telle que reçue, avec la mention « scénarios construits sur l'historique ».
+- [ ] `BacktestPicker` et `StateCard` déplacés vers `components/` ; page Risque inchangée.
+- [ ] Catalogues mis à jour.
 
-### T-08 · Catalogues API et composants
+### T-06 · Écran Projection
 
-- **US** : US-01 · **Priorité** : SHOULD · **Points** : 1 · **Dépend de** : T-04 · **Commits** : —
-- **Fichiers** : `apps/core-backend/API.md`, `apps/web/COMPONENTS.md`
+- **US** : US-01, US-02, US-04 · **Priorité** : MUST · **Points** : 8 · **Dépend de** : T-04, T-05 · **Commits** : —
+- **Fichiers** : `apps/web/src/features/projection/` (nouveau), `app/app/projection/page.tsx`, `lib/routes.ts`, `messages/{fr,en}.json`, `COMPONENTS.md`
 
 Critères d’acceptation :
-- [ ] Routes et composants documentés.
+- [ ] En-tête dans la forme de la page Risque : titre, badge, allocation et période, sélecteur de backtest (maquette 34).
+- [ ] Médiane et deux bandes P25-P75 et P10-P90 ; sélecteur d'horizon 1, 3, 5, 10 ans sans requête (D6′, D9).
+- [ ] Paramètres affichés en lecture seule ; probabilité de perte et tableau par horizon affichés tels que reçus, avec la mention « calculée sur des scénarios historiques, pas une promesse ».
+- [ ] États `UNAVAILABLE` (« Relancer le backtest ») et `INSUFFICIENT_DATA` (maquettes 34.1 et 34.2).
+- [ ] Rendu comparé à la maquette avec le skill `verifier-rendu`.
+
+## Lot 5 — Clôture
+
+### T-07 · Clôture : vérifications, dette, bilan
+
+- **US** : US-01 · **Priorité** : SHOULD · **Points** : 1 · **Dépend de** : T-03, T-06 · **Commits** : —
+- **Fichiers** : `TECH-DEBT.md`, `roadmap/README.md`, `roadmap/14-projection-monte-carlo/`
+
+Critères d’acceptation :
+- [ ] `verify` et les contrôles manuels de `AGENTS.md` passés ; dette repérée ajoutée à `TECH-DEBT.md`.
+- [ ] Critères cochés, commits et bilan écrits, statut `Livrée` dans l'index.
+- [ ] Redémarrage de `risk-engine` et `core-backend` signalé (nouveau topic et contrat).

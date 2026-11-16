@@ -1,12 +1,12 @@
 # 14 · Projection Monte Carlo
 
-- **Statut** : Planifiée
+- **Statut** : En cours
 - **Roadmap** : Mois 7 — Mois 7 — Projection (Monte Carlo seedé, fan chart, percentiles, probabilité de perte)
-- **Période** : à fixer au démarrage de la feature
+- **Période** : 2026-11-16 → en cours
 - **Branche / PR** : `feat/projection-monte-carlo` — PR à ouvrir
-- **Points** : 26 (MUST 25, SHOULD 1) — prévus
-- **Maquettes** : `34 · Projection Monte Carlo` (créée, node `455:12320`)
-- **Écrans modifiés** : aucun (page `Projection` de la sidebar, le backtest se choisit sur la page 34)
+- **Points** : 32 (MUST 31, SHOULD 1) — prévus
+- **Maquettes** : `34 · Projection Monte Carlo` (mise à jour le 2026-11-16, node `455:12320`) ; états `34.1 · Projection · indisponible` (node `563:14423`) et `34.2 · Projection · données insuffisantes` (node `563:15104`)
+- **Écrans modifiés** : aucun (page `Projection` de la sidebar, le backtest se choisit avec le sélecteur de l'en-tête de la page 34)
 - **Dépend de** : 12 (robustesse). Le moteur est réutilisé en 18 pour le pricing.
 
 ## Objectif
@@ -15,7 +15,7 @@ L'utilisateur voit la distribution des futurs possibles de son allocation, bâti
 
 ## Comment
 
-Worker `backtest-engine` : rendements journaliers historiques, bootstrap par blocs, PRNG seedé. Demande et résultat via deux topics Kafka (D4), même patron que le backtest. Le web affiche les percentiles.
+Même patron que le Risque (feature 13). `risk-engine` consomme déjà `backtest.completed` et calcule les rendements journaliers EUR sur dates communes (D11) ; il en tire aussi la projection (bootstrap par blocs, PRNG seedé, un seul calcul sur 10 ans, D9) et publie `projection.completed` (D4′). `core-backend` la stocke sur `BacktestResult` (colonnes nullables, première réception gagne) et l'expose par `GET /api/projection/:backtestId`. Il n'y a ni demande ni POST : la projection est calculée après chaque backtest, ses paramètres sont fixes et affichés en lecture seule (D6′). Le web choisit le backtest avec le sélecteur, puis l'horizon (1, 3, 5 ou 10 ans) parmi les points annuels stockés, sans aucun calcul.
 
 ## Décisions
 
@@ -24,15 +24,21 @@ Worker `backtest-engine` : rendements journaliers historiques, bootstrap par blo
 | D1 | **Générateur** : PRNG seedé implémenté dans l'engine (sans dépendance) | Une seed explicite rend le résultat testable ; une dépendance pour un générateur n'apporte rien ici. | `US.md` (à valider) |
 | D2 | **Blocs** : 21 jours ouvrés, fixe | Conserve un peu d'enchaînement des jours sans paramètre à exposer. | `US.md` (à valider) |
 | D3 | **Stockage** : Percentiles seulement | 10 000 trajectoires × 1 260 jours ne se stockent pas ; on garde ce qui s'affiche. | `US.md` (à valider) |
-| D4 | **Transport** : Deux nouveaux topics Kafka | Le calcul est lourd, asynchrone : même patron que le backtest, rejeu géré par statut. | `US.md` (à valider) |
+| D4 | ~~Deux nouveaux topics Kafka, demande par POST~~ | Remplacée par D4′. | Remplacée le 2026-11-16 |
+| D4′ | **Transport** : un seul nouveau topic, `projection.completed`. Calculée automatiquement après chaque backtest, dans `risk-engine`, sur le même `backtest.completed`. Ni `projection.requested` ni POST. | Évite un second aller-retour pour un calcul qui ne dépend que du backtest ; rejeu géré par statut côté core-backend. | Décision du 2026-11-16 |
 | D5 | **Source** : blocs tirés sur les actifs ensemble, pondérés aux poids du backtest | Les mêmes jours sont tirés pour tous les actifs : les corrélations sont conservées (même base que la 13). | Décision du 2026-11-14 |
-| D6 | **Paramètres** : horizon choisi en années, 10 000 trajectoires et seed non exposées | Peu de réglages ; la seed est stockée avec le résultat pour rejouer. | Décision du 2026-11-14 |
+| D6 | ~~Horizon choisi en années, envoyé au calcul~~ | Remplacée par D6′. | Remplacée le 2026-11-16 |
+| D6′ | **Paramètres** : la projection repose sur un backtest, choisi avec le sélecteur comme pour le Risque. Paramètres fixes, affichés en lecture seule : 10 000 scénarios, seed 42, blocs de 21 jours ouvrés, historique = période du backtest, capital = `totalInvested`. Seul l'horizon (1, 3, 5, 10 ans) se choisit, sans déclencher de calcul. | Un seul résultat par backtest, identique pour tous les clients ; la seed est stockée avec le résultat. | Décision du 2026-11-16 |
 | D7 | **Percentiles stockés** : P5, P10, P25, P50, P75, P90, P95 par date | Deux bandes imbriquées (P10-P90, P25-P75) plus la médiane et des extrêmes. | Décision du 2026-11-14 |
-| D8 | **Probabilité de perte** : part des trajectoires dont la valeur finale est sous le capital initial (EUR) | Sans versements, le capital investi est le capital initial. | Décision du 2026-11-14 |
+| D8 | ~~Probabilité de perte à l'horizon final seulement~~ | Remplacée par D8′. | Remplacée le 2026-11-16 |
+| D8′ | **Probabilité de perte** : calculée à chaque fin d'année (1 à 10 ans) : part des scénarios dont la valeur est strictement sous le capital (EUR). | Le sélecteur d'horizon et le tableau par horizon l'affichent sans recalcul. Sans versements, le capital investi est le capital initial. | Décision du 2026-11-16 |
+| D9 | **Un seul calcul sur 10 ans** : 2 520 jours ouvrés (10 × 252). Le sélecteur d'horizon tronque l'affichage ; les trajectoires à 5 ans sont les 5 premières années de celles à 10 ans, même seed. | Un horizon changé ne coûte rien et reste cohérent entre les vues. | Décision du 2026-11-16 |
+| D10 | **Courbe** : un point tous les 21 jours ouvrés (fin de bloc), jour 0 compris : 121 points sur 10 ans. | Précise D3 : la taille du résultat stocké reste petite. | Décision du 2026-11-16 |
+| D11 | **Moteur dans `risk-engine`**, pas dans `backtest-engine` : `toEuros`, `commonDates` et `dailyReturns` y existent déjà. | Pas de second code de rendements EUR à maintenir. | Décision du 2026-11-16 |
 
 ## Écarts au plan
 
-Aucun : feature planifiée, rien de livré.
+Le plan initial plaçait le moteur dans `backtest-engine` avec deux topics et un POST (D4, D6, D8) ; il est remplacé le 2026-11-16 par D4′, D6′, D8′, D9, D10 et D11. Rien n'était codé : les tâches sont re-découpées (T-01 à T-07), de 26 à 32 points.
 
 ## Bilan
 
