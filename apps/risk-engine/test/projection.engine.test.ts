@@ -78,3 +78,31 @@ test("deux actifs identiques 50/50 : même résultat qu'un seul actif", () => {
     const pair = computeProjection([{ symbol: "A", weight: 0.5 }, { symbol: "B", weight: 0.5 }], { A: s, B: s }, capital, 42)
     expect(pair).toEqual(computeProjection(one, { A: s }, capital, 42))
 })
+
+// Historique bruité sans tendance : les probabilités de perte restent autour de 50 %, jamais 0 ni 1
+const noisyFlat = (i: number) => 100 * (1 + 0.02 * Math.sin(i * 1.7))
+
+// Unité : lossProbability est un ratio 0..1 = pertes / trajectoires. Un dénominateur de 10 000 donne des multiples de 0,0001 ;
+// avec 1 000 tirages seuls des multiples de 0,001 seraient possibles : une valeur plus fine prouve la simulation de 10 000 chemins.
+test("probabilités de perte : multiples de 1/10 000, plus fins que 1/1 000 (10 000 trajectoires simulées)", () => {
+    const result = computeProjection(one, { A: series(300, noisyFlat) }, capital, 42)!
+    const probabilities = result.years.map((year) => year.lossProbability)
+    const open = probabilities.filter((p) => p > 0 && p < 1)
+    expect(open.length).toBeGreaterThanOrEqual(3)
+    for (const p of probabilities) {
+        const draws = p * PROJECTION_PARAMS.paths
+        expect(Math.abs(draws - Math.round(draws))).toBeLessThan(1e-6)
+    }
+    expect(open.some((p) => Math.abs(p * 1_000 - Math.round(p * 1_000)) > 1e-6)).toBe(true)
+})
+
+// Règle : 10 000 tirages rendent la médiane stable d'une seed à l'autre (écart < 2 %) sans la figer (seeds différentes, valeurs différentes).
+test("dispersion des percentiles à 10 ans, médiane stable entre deux seeds", () => {
+    const prices = { A: series(300, noisyFlat) }
+    const a = computeProjection(one, prices, capital, 42)!.years[9]!
+    const b = computeProjection(one, prices, capital, 43)!.years[9]!
+    expect(a.p5).toBeLessThan(a.p50)
+    expect(a.p50).toBeLessThan(a.p95)
+    expect(b.p50).not.toBe(a.p50)
+    expect(Math.abs(b.p50 - a.p50) / a.p50).toBeLessThan(0.02)
+})
