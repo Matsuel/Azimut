@@ -1,5 +1,7 @@
 import { afterEach, expect, test } from "bun:test"
-import MarketRepository from "../repositories/market.repository"
+import { MarketClient } from "../src"
+
+const client = () => new MarketClient({ baseUrl: "http://market.test", apiKey: "test-internal-key-0000" })
 
 const realFetch = globalThis.fetch
 afterEach(() => {
@@ -22,7 +24,7 @@ const end = new Date("2024-01-10T00:00:00.000Z")
 test("lit les cours auprès de market-service avec la clé interne", async () => {
     const calls = stubFetch(() => Response.json({ AAA: [{ date: "2024-01-02", close: 10.5 }], BBB: [] }))
 
-    const prices = await new MarketRepository().getDailyCloses(["AAA", "BBB"], start, end)
+    const prices = await client().getDailyCloses(["AAA", "BBB"], start, end)
 
     expect(prices).toEqual({ AAA: [{ date: "2024-01-02", close: 10.5 }], BBB: [] })
     const url = new URL(calls[0]!.url)
@@ -30,13 +32,13 @@ test("lit les cours auprès de market-service avec la clé interne", async () =>
     expect(url.searchParams.get("symbols")).toBe("AAA,BBB")
     expect(url.searchParams.get("start")).toBe("2024-01-02T00:00:00.000Z")
     expect(url.searchParams.get("end")).toBe("2024-01-10T00:00:00.000Z")
-    expect(calls[0]!.headers.get("x-internal-key")).toBe(process.env.INTERNAL_API_KEY!)
+    expect(calls[0]!.headers.get("x-internal-key")).toBe("test-internal-key-0000")
 })
 
-test("une réponse hors 2xx lève une erreur avec son code (le service publie alors backtest.failed)", async () => {
+test("une réponse hors 2xx lève une erreur avec son code (le service appelant la traite)", async () => {
     const calls = stubFetch(() => Response.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 }))
 
-    await expect(new MarketRepository().getDailyCloses(["AAA"], start, end)).rejects.toThrow("market-service responded 500 INTERNAL_ERROR")
+    await expect(client().getDailyCloses(["AAA"], start, end)).rejects.toThrow("market-service responded 500 INTERNAL_ERROR")
     // Un 500 (symbole inconnu) ne se rejoue pas
     expect(calls).toHaveLength(1)
 })
@@ -45,7 +47,7 @@ test("un 503 puis un succès : une seconde tentative réussit", async () => {
     let attempt = 0
     const calls = stubFetch(() => (++attempt === 1 ? new Response("down", { status: 503 }) : Response.json({ AAA: [] })))
 
-    expect(await new MarketRepository().getDailyCloses(["AAA"], start, end)).toEqual({ AAA: [] })
+    expect(await client().getDailyCloses(["AAA"], start, end)).toEqual({ AAA: [] })
     expect(calls).toHaveLength(2)
 })
 
@@ -56,20 +58,20 @@ test("market-service injoignable deux fois de suite : l'erreur remonte après de
         throw new TypeError("fetch failed")
     }) as unknown as typeof fetch
 
-    await expect(new MarketRepository().getDailyCloses(["AAA"], start, end)).rejects.toThrow("fetch failed")
+    await expect(client().getDailyCloses(["AAA"], start, end)).rejects.toThrow("fetch failed")
     expect(attempts).toBe(2)
 })
 
 test("une réponse qui ne respecte pas le contrat est refusée", async () => {
     stubFetch(() => Response.json({ AAA: [{ date: "pas-une-date", close: "x" }] }))
 
-    expect(new MarketRepository().getDailyCloses(["AAA"], start, end)).rejects.toThrow()
+    expect(client().getDailyCloses(["AAA"], start, end)).rejects.toThrow()
 })
 
 test("lit les dividendes et la devise auprès de market-service", async () => {
     const calls = stubFetch(() => Response.json({ AAA: { currency: "USD", dividends: [{ date: "2024-02-09", amount: 0.24 }] }, BBB: { currency: "EUR", dividends: [] } }))
 
-    const dividends = await new MarketRepository().getDividends(["AAA", "BBB"], start, end)
+    const dividends = await client().getDividends(["AAA", "BBB"], start, end)
 
     expect(dividends.AAA).toEqual({ currency: "USD", dividends: [{ date: "2024-02-09", amount: 0.24 }] })
     expect(dividends.BBB!.dividends).toEqual([])

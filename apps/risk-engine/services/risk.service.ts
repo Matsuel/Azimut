@@ -3,12 +3,13 @@ import type { BacktestCompletedPayload } from "@azimut/contracts";
 import computeRisk from "../engine/risk.engine";
 import { toEuros } from "../engine/risk.utils";
 import type { IRiskPublisher } from "../publishers/risk.publisher";
-import MarketRepository, { type IMarketRepository } from "../repositories/market.repository";
+import { MarketClient, type IMarketClient } from "@azimut/market-client";
+import { env } from "../env";
 
 const logger = Logger.here();
 
 class RiskService {
-    repo: IMarketRepository = new MarketRepository();
+    repo: IMarketClient = new MarketClient({ baseUrl: env.MARKET_SERVICE_URL, apiKey: env.INTERNAL_API_KEY });
 
     constructor(private readonly publisher: IRiskPublisher) { }
 
@@ -22,7 +23,9 @@ class RiskService {
         const start = new Date(startDate);
         const end = new Date(endDate);
 
-        const currencies = await this.repo.getCurrencies(symbols, start, end);
+        // La devise de cotation de chaque symbole arrive avec ses dividendes
+        const dividends = await this.repo.getDividends(symbols, start, end);
+        const currencies = Object.fromEntries(Object.entries(dividends).map(([symbol, { currency }]) => [symbol, currency]));
         // Les taux EUR/devise se lisent comme des cours : une paire par devise étrangère
         const pairs = [...new Set(Object.values(currencies).filter((currency) => currency !== REFERENCE_CURRENCY))].map(fxPairSymbol);
         const closes = await this.repo.getDailyCloses([...symbols, ...pairs], start, end);

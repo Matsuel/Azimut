@@ -1,15 +1,19 @@
 import { expect, test } from "bun:test"
 import type { RiskCompletedPayload } from "@azimut/contracts"
 import type { IRiskPublisher } from "../publishers/risk.publisher"
-import type { IMarketRepository } from "../repositories/market.repository"
+import type { IMarketClient } from "@azimut/market-client"
 import RiskService from "../services/risk.service"
 
 const request = { executionId: "e1", request: { allocations: [{ symbol: "AAA", weight: 1 }], startDate: "2023-01-02T00:00:00.000Z", endDate: "2024-01-10T00:00:00.000Z" } }
 
-function setup(closes: IMarketRepository["getDailyCloses"]) {
+function setup(closes: IMarketClient["getDailyCloses"]) {
     const published: RiskCompletedPayload[] = []
     const service = new RiskService({ completed: async (payload) => void published.push(payload) } as IRiskPublisher)
-    service.repo = { getCurrencies: async () => ({ AAA: "EUR" }), getDailyCloses: closes }
+    service.repo = {
+        source: { provider: "yahoo-finance2", priceType: "TOTAL_RETURN" },
+        getDividends: async () => ({ AAA: { currency: "EUR", dividends: [] } }),
+        getDailyCloses: closes,
+    }
     return { service, published }
 }
 

@@ -267,7 +267,9 @@ const declared = addedIn(/^\s*export\s+(default\s+)?(const|function|type|interfa
 });
 // Exports imposés par Next.js : un par page ou layout, par convention du framework
 const FRAMEWORK_EXPORTS = new Set(["metadata", "config", "proxy", "generateMetadata", "dynamic", "revalidate"]);
-for (const { file, name } of declared.filter(({ name }) => !FRAMEWORK_EXPORTS.has(name))) {
+// Exports imposés par AGENTS.md à chaque app : `process.env` ne se lit que dans l'`env.ts` de l'app, qui exporte `env`
+const CONVENTION_EXPORTS = new Set(["env"]);
+for (const { file, name } of declared.filter(({ name }) => !FRAMEWORK_EXPORTS.has(name) && !CONVENTION_EXPORTS.has(name))) {
     // Déclarations exportées seulement (pas les imports ni les variables locales) ; git grep -E est en POSIX ERE : pas de \s ni de \b
     const pattern = `^[[:space:]]*export[[:space:]]+(default[[:space:]]+)?(declare[[:space:]]+)?(const|function|type|interface|class|enum)[[:space:]]+${name}([^[:alnum:]_]|$)`;
     const others = (await git("grep", "-lE", "--untracked", pattern, "--", "apps/*.ts", "apps/*.tsx", "packages/*.ts", "packages/*.tsx"))

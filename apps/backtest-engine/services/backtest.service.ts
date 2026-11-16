@@ -5,12 +5,13 @@ import runBacktest from "../engine/backtest.engine";
 import { foreignCurrencies } from "../engine/backtest.fx";
 import { fingerprintMarket } from "../engine/backtest.utils";
 import type { IBacktestPublisher } from "../publishers/backtest.publisher";
-import MarketRepository, { type IMarketRepository } from "../repositories/market.repository";
+import { MarketClient, type IMarketClient } from "@azimut/market-client";
+import { env } from "../env";
 
 const logger = Logger.here();
 
 class BacktestService {
-    repo: IMarketRepository = new MarketRepository();
+    repo: IMarketClient = new MarketClient({ baseUrl: env.MARKET_SERVICE_URL, apiKey: env.INTERNAL_API_KEY });
 
     constructor(private readonly publisher: IBacktestPublisher) { }
 

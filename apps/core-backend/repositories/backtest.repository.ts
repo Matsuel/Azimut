@@ -1,13 +1,13 @@
 import type { PaginationQuery, RollingWindow } from "@azimut/contracts"
 import { prisma } from "../prisma"
 import { Prisma, type BacktestExecution, type BacktestStatus } from "../generated/prisma/client"
-import type { BacktestDetails, BacktestExecutionCount, BacktestListFilters, BacktestStatusCounts, BacktestWithExecutions, BatchRecords, ComparedBacktestRecord, CompleteExecutionDTO, CreateBacktestDTO } from "../interfaces/backtest.interface"
+import type { BacktestDetailsRecord, BacktestExecutionCount, BacktestListFilters, BacktestStatusCounts, BacktestWithExecutions, BatchRecords, ComparedBacktestRecord, CompleteExecutionDTO, CreateBacktestDTO } from "../interfaces/backtest.interface"
 
 export interface IBacktestRepository {
     create(data: CreateBacktestDTO): Promise<BacktestWithExecutions>
     createMany(data: CreateBacktestDTO[]): Promise<BacktestWithExecutions[]>
     getById(id: string): Promise<BacktestWithExecutions | null>
-    getDetailsById(id: string, statuses: BacktestStatus[]): Promise<BacktestDetails | null>
+    getDetailsById(id: string, statuses: BacktestStatus[]): Promise<BacktestDetailsRecord | null>
     getAllByUserId(userId: string, pagination: PaginationQuery, filters: BacktestListFilters): Promise<{ data: BacktestWithExecutions[], count: number }>
     countByLatestStatus(userId: string): Promise<BacktestStatusCounts>
     countExecutionsByIds(ids: string[], userId: string, statuses: BacktestStatus[]): Promise<BacktestExecutionCount[]>
@@ -113,7 +113,7 @@ class BacktestRepository implements IBacktestRepository {
         })
     }
 
-    async getDetailsById(id: string, statuses: BacktestStatus[]): Promise<BacktestDetails | null> {
+    async getDetailsById(id: string, statuses: BacktestStatus[]): Promise<BacktestDetailsRecord | null> {
         const [backtest, result] = await prisma.$transaction([
             prisma.backtest.findUnique({
                 where: { id },

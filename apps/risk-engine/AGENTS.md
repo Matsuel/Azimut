@@ -1,6 +1,6 @@
 # risk-engine
 
-Worker Kafka sans serveur HTTP **et sans base de données**. Consomme `backtest.completed` (allocations, dates de début et de fin), lit les cours et la devise de chaque actif auprès de market-service (`GET /api/market/closes` et `/dividends` via `@azimut/market-client`, clé interne `INTERNAL_API_KEY`, **jamais** de fournisseur en direct), calcule le risque, puis publie `risk.completed`. **Calqué sur `apps/backtest-engine`** : lis `../backtest-engine/AGENTS.md` et reprends ses règles de couches. Respecte `../../AGENTS.md`.
+Worker Kafka sans serveur HTTP **et sans base de données**. Consomme `backtest.completed` (allocations, dates de début et de fin), lit les cours et la devise de chaque actif auprès de market-service (`GET /api/market/closes` et `/dividends` via `MarketClient` de `@azimut/market-client`, assigné à `service.repo`, clé interne `INTERNAL_API_KEY`, **jamais** de fournisseur en direct), calcule le risque, puis publie `risk.completed`. **Calqué sur `apps/backtest-engine`** : lis `../backtest-engine/AGENTS.md` et reprends ses règles de couches. Respecte `../../AGENTS.md`.
 
 Risque = rendements journaliers des actifs en euros (change inclus), pondérés aux poids cibles constants, sur les jours de cotation communs ; sous 250 jours communs, `risk` vaut `null` (roadmap 13, D1 à D21). core-backend stocke le résultat ; il reste le seul à écrire en base.
 
@@ -12,7 +12,6 @@ index.ts           bootstrap : câble publisher → service → consumer, abonne
 consumers/         risk.consumer.ts : valide backtest.completed (zod), appelle le service
 services/          risk.service.ts : charge les cours, convertit en euros, appelle l'engine, publie risk.completed
 engine/            calcul pur et déterministe : risk.engine.ts (computeRisk), risk.utils.ts (briques : corrélation, VaR, contributions, change)
-repositories/      IMarketRepository + classe : cours et devises via market-service (lecture seule)
 publishers/        IRiskPublisher + classe : publication de risk.completed, clé = executionId
 constants/         constantes (risk.constants.ts)
 test/              <sujet>.test.ts

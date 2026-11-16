@@ -18,7 +18,7 @@ engine/            calcul pur et déterministe
                    <domaine>.portfolio.ts : état du portefeuille simulé (lignes, ordres, frais)
 test/              <sujet>.test.ts : tests de l'engine (<domaine>.engine.test.ts, <domaine>.utils.test.ts) et du service
                    <domaine>.fixture.ts : jeux de cours déterministes partagés par les tests
-repositories/      I<X>Repository + classe : sources externes en lecture (cours de marché, via market-service)
+repositories/      I<X>Repository + classe : autre source externe en lecture ; les cours viennent de `MarketClient` (`@azimut/market-client`)
 publishers/        I<X>Publisher + classe : publication des événements de sortie
 interfaces/        types du domaine (<domaine>.interface.ts), dérivés des contrats
 errors/            erreurs métier (<nom>.error.ts)
@@ -35,7 +35,7 @@ constants/         constantes (<domaine>.constants.ts)
 - **Aperçu avant exécution** : l'estimation des versements et rebalancements (`estimateSchedule`, `packages/utils`) suit les règles de l'engine et utilise le même `periodKey` que la simulation ; core-backend l'appelle sans recalculer. Une règle de calendrier qui change se modifie dans `periodKey`/`estimateSchedule` et son test.
 - **services/** orchestre : publie `started`, charge les cours, appelle l'engine, publie `completed`. Toute erreur (données, calcul, publication) → `failed` avec la cause. Seul endroit où l'horloge (`new Date()`) est lue. Ne connaît pas `kafkajs`.
 - **consumers/** valide le message avec le schéma de `@azimut/contracts`, appelle **une** méthode de service. Message invalide → `logger.warn` et retour.
-- **repositories/** lit les sources externes (market-service : une seconde tentative sur injoignable, délai dépassé ou 502/503/504, jamais sur un 500) et valide leur format avec le contrat (`dailyClosesSchema`). Le jour de cotation est déjà normalisé par market-service (fuseau de la place, jamais UTC). Aucun calcul métier.
+- **Cours** : `MarketClient` de `@azimut/market-client`, assigné à `service.repo` (un faux dans les tests), lit market-service (une seconde tentative sur injoignable, délai dépassé ou 502/503/504, jamais sur un 500) et valide leur format avec le contrat (`dailyClosesSchema`). Le jour de cotation est déjà normalisé par market-service (fuseau de la place, jamais UTC). Aucun calcul métier.
 - **publishers/** publie avec `createKafkaEvent`, clé Kafka = `executionId` (tous les événements d'une exécution sur la même partition).
 - Types internes dérivés des contrats (`Pick<BacktestCompletedPayload, ...>`), jamais redéfinis.
 

@@ -25,7 +25,7 @@ Ces règles sont **strictes** : un écart doit être justifié dans le résumé 
 | `packages/contracts` | Schémas zod et topics partagés entre services. |
 | `packages/kafka` | `KafkaClient`, `KafkaProducer`, `KafkaConsumer`, `createKafkaEvent`. |
 | `packages/utils` | `Logger` partagé, `onShutdown`, `DAY_MS`, `round`, `TRADING_DAYS_PER_YEAR`, change (`fxPairSymbol`, `rateOn`), calendrier de simulation (`periodKey`, `businessDays`, `estimateSchedule`). |
-| `packages/market-client` | `readMarket` : lecture de market-service (clé interne, délai, seconde tentative) pour backtest-engine et risk-engine. |
+| `packages/market-client` | `MarketClient` : cours et dividendes lus auprès de market-service (clé interne, délai, seconde tentative, réponse validée par le contrat) pour backtest-engine et risk-engine. |
 | `packages/http` | Socle des services Express : `AppError` et sous-classes, `RouteDescriptor`/`registerRoutes`, `errorMiddleware`. |
 | `roadmap/` | Suivi des features : un dossier par feature (`README.md`, `US.md`, `TASKS.md`), maintenu avec le skill `feature-roadmap`. |
 
