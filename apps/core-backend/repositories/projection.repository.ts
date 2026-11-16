@@ -19,13 +19,13 @@ class ProjectionRepository implements IProjectionRepository {
             prisma.backtestResult.findFirst({
                 where: { execution: { backtestId, status: { in: statuses } } },
                 orderBy: [{ execution: { createdAt: "desc" } }, { execution: { attempt: "desc" } }],
-                select: { projection: true, projectionComputedAt: true, projectionExpected: true, projectionDurationMs: true },
+                select: { projection: true, createdAt: true, projectionComputedAt: true, projectionExpected: true, projectionDurationMs: true },
             }),
             // Historique : exécutions avec résultat ou en cours, sans relire le Json de la projection
             prisma.backtestExecution.findMany({
                 where: { backtestId, OR: [{ result: { isNot: null } }, { status: { in: ACTIVE_STATUSES } }] },
                 orderBy: [{ attempt: "desc" }],
-                select: { id: true, attempt: true, result: { select: { projectionComputedAt: true, projectionExpected: true, projectionDurationMs: true } } },
+                select: { id: true, attempt: true, result: { select: { createdAt: true, projectionComputedAt: true, projectionExpected: true, projectionDurationMs: true } } },
             }),
             prisma.backtestResult.findMany({
                 where: { execution: { backtestId }, projection: { not: Prisma.DbNull } },

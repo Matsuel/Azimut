@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import type { Projection } from "@azimut/contracts"
 import type { IProjectionRepository } from "../repositories/projection.repository"
 import type { ProjectionRecord, ProjectionRunRecord } from "../interfaces/projection.interface"
+import { PROJECTION_TIMEOUT_MS } from "../constants/projection.constants"
 import ProjectionService from "../services/projection.service"
 
 const projection: Projection = {
@@ -24,7 +25,7 @@ function record(result: Partial<NonNullable<ProjectionRecord["result"]>> | null 
         result:
             result === null
                 ? null
-                : { projection: projection as never, projectionComputedAt: new Date(), projectionExpected: true, projectionDurationMs: 700, ...result },
+                : { projection: projection as never, createdAt: new Date(), projectionComputedAt: new Date(), projectionExpected: true, projectionDurationMs: 700, ...result },
     }
 }
 
@@ -76,9 +77,9 @@ const computedAt = new Date("2026-11-16T10:00:00.000Z")
 test("historique : une ligne par exécution, ordre du repository, état et durée de chacune", async () => {
     const runs = [
         run(4, null),
-        run(3, { projectionComputedAt: computedAt, projectionExpected: true, projectionDurationMs: 700, hasProjection: true }),
-        run(2, { projectionComputedAt: computedAt, projectionExpected: true, projectionDurationMs: 12, hasProjection: false }),
-        run(1, { projectionComputedAt: null, projectionExpected: false, projectionDurationMs: null, hasProjection: false }),
+        run(3, { createdAt: computedAt, projectionComputedAt: computedAt, projectionExpected: true, projectionDurationMs: 700, hasProjection: true }),
+        run(2, { createdAt: computedAt, projectionComputedAt: computedAt, projectionExpected: true, projectionDurationMs: 12, hasProjection: false }),
+        run(1, { createdAt: computedAt, projectionComputedAt: null, projectionExpected: false, projectionDurationMs: null, hasProjection: false }),
     ]
 
     const { history } = await setup(record({}, runs)).service.get("b1", "u1")
@@ -92,11 +93,33 @@ test("historique : une ligne par exécution, ordre du repository, état et duré
 })
 
 test("historique : un résultat attendu mais pas encore reçu est PENDING, comme la vue", async () => {
-    const pending = { projectionComputedAt: null, projectionExpected: true, projectionDurationMs: null, hasProjection: false }
+    const pending = { createdAt: new Date(), projectionComputedAt: null, projectionExpected: true, projectionDurationMs: null, hasProjection: false }
 
     const { history } = await setup(record({}, [run(1, pending)])).service.get("b1", "u1")
 
     expect(history[0]?.state).toBe("PENDING")
+})
+
+// Résultat créé il y a `ageMs` sans projection reçue, horloge du service figée sur `now`
+const now = new Date("2026-11-16T12:00:00.000Z")
+const waiting = (ageMs: number) => ({ createdAt: new Date(now.getTime() - ageMs), projectionComputedAt: null, projectionExpected: true, projectionDurationMs: null, hasProjection: false })
+
+test("attente de la projection : PENDING avant le délai, UNAVAILABLE après (vue)", async () => {
+    for (const [ageMs, state] of [[PROJECTION_TIMEOUT_MS, "PENDING"], [PROJECTION_TIMEOUT_MS + 1, "UNAVAILABLE"]] as const) {
+        const { service } = setup(record({ projection: null, ...waiting(ageMs) }))
+        service.now = () => now
+
+        expect((await service.get("b1", "u1")).state).toBe(state)
+    }
+})
+
+test("attente de la projection : PENDING avant le délai, UNAVAILABLE après (historique)", async () => {
+    const { service } = setup(record({}, [run(2, waiting(PROJECTION_TIMEOUT_MS - 1)), run(1, waiting(PROJECTION_TIMEOUT_MS + 1))]))
+    service.now = () => now
+
+    const { history } = await service.get("b1", "u1")
+
+    expect(history.map(({ state }) => state)).toEqual(["PENDING", "UNAVAILABLE"])
 })
 
 test("autre propriétaire : 403 ; backtest inconnu : 404", async () => {
