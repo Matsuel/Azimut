@@ -55,8 +55,8 @@ export const projectionSchema = z.object({
 export const projectionCompletedPayloadSchema = z.object({
     executionId: z.string().min(1),
     finishedAt: z.iso.datetime(),
-    // Millisecondes (entier ≥ 0) : durée de `computeProjection`, mesurée par risk-engine
-    durationMs: z.number().int().min(0),
+    // ms (entier ≥ 0) : durée de `computeProjection`, mesurée par risk-engine ; absent pour un message antérieur à D13
+    durationMs: z.number().int().min(0).nullable().optional(),
     // null sous 2 jours de cotation communs ou si un actif n'a aucun cours : « données insuffisantes », aucun résultat partiel
     projection: projectionSchema.nullable(),
 });

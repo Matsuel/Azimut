@@ -103,7 +103,7 @@ Tâches : T-04, T-06 (détail dans `TASKS.md`).
 Critères d’acceptation :
 - [x] Résultat terminé dont `projection.completed` n'est pas reçu (`PENDING`) : badge « En cours », carte « Projection en cours de calcul… » sans bouton, rafraîchissement toutes les 2 s.
 - [x] `PENDING` depuis plus de 2 minutes après la fin de l'exécution : rafraîchissement arrêté, « Le calcul prend plus de temps que prévu » et « Réessayer ».
-- [x] `projection.completed` porte `durationMs` ; sans lui le message est invalide et ignoré.
+- [x] `projection.completed` porte `durationMs` ; absent (message antérieur à D13), il est accepté et la durée reste `null`.
 - [x] Carte « Historique des calculs » : une ligne par exécution (`#tentative`, état, date de réception, durée), la plus récente en haut ; `<Dash />` sans date ou sans durée.
 - [x] Ancien résultat (avant D13) : `UNAVAILABLE`, inchangé.
 

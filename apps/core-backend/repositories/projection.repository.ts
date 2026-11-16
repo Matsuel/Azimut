@@ -6,7 +6,7 @@ import type { ProjectionRecord } from "../interfaces/projection.interface"
 
 export interface IProjectionRepository {
     getByBacktestId(backtestId: string, statuses: BacktestStatus[]): Promise<ProjectionRecord | null>
-    setProjection(executionId: string, projection: Projection | null, computedAt: Date, durationMs: number): Promise<boolean>
+    setProjection(executionId: string, projection: Projection | null, computedAt: Date, durationMs: number | null): Promise<boolean>
 }
 
 class ProjectionRepository implements IProjectionRepository {
@@ -41,7 +41,7 @@ class ProjectionRepository implements IProjectionRepository {
         return backtest && { ...backtest, result, runs }
     }
 
-    async setProjection(executionId: string, projection: Projection | null, computedAt: Date, durationMs: number): Promise<boolean> {
+    async setProjection(executionId: string, projection: Projection | null, computedAt: Date, durationMs: number | null): Promise<boolean> {
         // Première réception gagne : un rejeu de `projection.completed` n'écrase rien
         const { count } = await prisma.backtestResult.updateMany({
             where: { executionId, projectionComputedAt: null },

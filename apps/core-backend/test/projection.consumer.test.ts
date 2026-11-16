@@ -23,12 +23,13 @@ test("projection.completed est routé vers store, projection null comprise", asy
     expect(calls).toEqual([payload])
 })
 
-test("projection.completed sans durationMs est invalide : ignoré", async () => {
+test("projection.completed sans durationMs (message antérieur à D13) est accepté", async () => {
     calls.length = 0
+    const payload = { executionId: "e1", finishedAt: "2024-01-01T00:00:00.000Z", projection: null }
 
-    await new ProjectionConsumer().handle(envelope({ executionId: "e1", finishedAt: "2024-01-01T00:00:00.000Z", projection: null }), context)
+    await new ProjectionConsumer().handle(envelope(payload), context)
 
-    expect(calls).toEqual([])
+    expect(calls).toEqual([payload])
 })
 
 test("un message invalide est ignoré sans exception", async () => {

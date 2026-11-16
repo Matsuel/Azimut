@@ -12,7 +12,7 @@ class ProjectionService {
 
     /** `projection.completed` : enregistre la projection du résultat de l'exécution (`null` : historique insuffisant, moins de 2 jours communs). Rejeu ou résultat absent : ignoré. */
     async store({ executionId, projection, durationMs }: ProjectionCompletedPayload) {
-        const stored = await this.repo.setProjection(executionId, projection, new Date(), durationMs)
+        const stored = await this.repo.setProjection(executionId, projection, new Date(), durationMs ?? null)
         logger.info(stored ? "Projection stored" : "Projection completed event ignored", { executionId })
     }
 

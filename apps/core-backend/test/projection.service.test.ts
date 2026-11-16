@@ -29,11 +29,11 @@ function record(result: Partial<NonNullable<ProjectionRecord["result"]>> | null 
 }
 
 function setup(current: ProjectionRecord | null) {
-    const stored: { executionId: string; projection: Projection | null; durationMs: number }[] = []
+    const stored: { executionId: string; projection: Projection | null; durationMs: number | null }[] = []
     const service = new ProjectionService()
     service.repo = {
         getByBacktestId: async () => current,
-        setProjection: async (executionId: string, value: Projection | null, _computedAt: Date, durationMs: number) => {
+        setProjection: async (executionId: string, value: Projection | null, _computedAt: Date, durationMs: number | null) => {
             stored.push({ executionId, projection: value, durationMs })
             return true
         },
@@ -111,4 +111,12 @@ test("store enregistre la projection de l'exécution, y compris null", async () 
     await service.store({ executionId: "e2", finishedAt: "2024-01-01T00:00:00.000Z", durationMs: 12, projection: null })
 
     expect(stored).toEqual([{ executionId: "e1", projection, durationMs: 700 }, { executionId: "e2", projection: null, durationMs: 12 }])
+})
+
+test("store sans durationMs enregistre une durée null", async () => {
+    const { service, stored } = setup(record())
+
+    await service.store({ executionId: "e3", finishedAt: "2024-01-01T00:00:00.000Z", projection })
+
+    expect(stored).toEqual([{ executionId: "e3", projection, durationMs: null }])
 })
