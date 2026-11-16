@@ -267,6 +267,10 @@ model BacktestResult {
   projection              Json?
   // Instant de réception de `projection.completed` ; non null avec `projection` null = « données insuffisantes », null = pas de projection
   projectionComputedAt    DateTime?
+  // Vrai pour un résultat créé avec le suivi de la projection : `projection.completed` est attendu (état PENDING tant qu'il manque) ; faux pour un ancien résultat (UNAVAILABLE)
+  projectionExpected      Boolean        @default(false)
+  // Millisecondes : durée du calcul de la projection, reçue avec `projection.completed` ; null pour un ancien résultat ou tant que non reçue
+  projectionDurationMs    Int?
   // [{ date: "YYYY-MM-DD", value, invested, lumpSumValue? }], écrite une seule fois à la complétion
   equityCurve             Json           @default("[]")
   // [{ date: "YYYY-MM-DD", symbol, side, price, quantity, amount, fee }] : ordres exécutés, achats et ventes (side absent = achat)

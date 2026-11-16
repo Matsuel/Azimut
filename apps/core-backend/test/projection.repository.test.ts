@@ -57,25 +57,48 @@ describeWithDb("ProjectionRepository (base de test)", () => {
     test("setProjection : la première réception gagne, un rejeu n'écrase rien", async () => {
         await completeExecution()
 
-        expect(await repo.setProjection(executionId, projection, new Date())).toBe(true)
-        expect(await repo.setProjection(executionId, null, new Date())).toBe(false)
+        expect(await repo.setProjection(executionId, projection, new Date(), 700)).toBe(true)
+        expect(await repo.setProjection(executionId, null, new Date(), 5)).toBe(false)
 
         const record = await repo.getByBacktestId(backtestId, COMPARABLE_STATUSES)
         expect(record?.result?.projection).toEqual(projection)
         expect(record?.result?.projectionComputedAt).not.toBeNull()
+        expect(record?.result?.projectionDurationMs).toBe(700)
     })
 
     test("setProjection avec null : historique insuffisant, projectionComputedAt renseigné", async () => {
         await completeExecution()
 
-        await repo.setProjection(executionId, null, new Date())
+        await repo.setProjection(executionId, null, new Date(), 12)
 
         const record = await repo.getByBacktestId(backtestId, COMPARABLE_STATUSES)
         expect(record?.result?.projection).toBeNull()
         expect(record?.result?.projectionComputedAt).not.toBeNull()
     })
 
+    test("runs : une ligne par exécution avec résultat ou en cours, la plus récente d'abord, hasProjection selon la projection", async () => {
+        await completeExecution()
+        await repo.setProjection(executionId, projection, new Date(), 700)
+        const second = await backtests.createExecution(backtestId, 2)
+
+        const record = await repo.getByBacktestId(backtestId, COMPARABLE_STATUSES)
+
+        expect(record?.runs.map(({ attempt }) => attempt)).toEqual([2, 1])
+        expect(record?.runs[0]).toMatchObject({ id: second.id, result: null })
+        expect(record?.runs[1]?.result).toMatchObject({ projectionDurationMs: 700, hasProjection: true })
+    })
+
+    test("runs : une projection null reçue (données insuffisantes) n'a pas de projection", async () => {
+        await completeExecution()
+        await repo.setProjection(executionId, null, new Date(), 12)
+
+        const record = await repo.getByBacktestId(backtestId, COMPARABLE_STATUSES)
+
+        expect(record?.runs[0]?.result).toMatchObject({ hasProjection: false, projectionDurationMs: 12 })
+        expect(record?.runs[0]?.result?.projectionComputedAt).not.toBeNull()
+    })
+
     test("setProjection sans résultat : rien n'est écrit", async () => {
-        expect(await repo.setProjection(executionId, projection, new Date())).toBe(false)
+        expect(await repo.setProjection(executionId, projection, new Date(), 700)).toBe(false)
     })
 })

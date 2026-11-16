@@ -30,12 +30,17 @@ test("sans session : 401", async () => {
 })
 
 test("GET /api/projection/:backtestId : le service reçoit l'id et l'utilisateur, la vue est renvoyée", async () => {
-    get.mockResolvedValue({ state: "UNAVAILABLE", projection: null })
+    const view = {
+        state: "UNAVAILABLE" as const,
+        projection: null,
+        history: [{ executionId: "e1", attempt: 1, computedAt: null, durationMs: null, state: "UNAVAILABLE" as const }],
+    }
+    get.mockResolvedValue(view)
 
     const response = await app.request("/api/projection/b1")
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ state: "UNAVAILABLE", projection: null })
+    expect(await response.json()).toEqual(view)
     expect(get.mock.calls[0]).toEqual(["b1", "u1"])
 })
 

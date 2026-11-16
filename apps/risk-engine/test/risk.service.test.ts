@@ -49,6 +49,14 @@ test("historique suffisant : publie le risque puis la projection au capital inve
     expect(order).toEqual(["risk", "projection"])
 })
 
+test("publie la durée du calcul de la projection en millisecondes entières", async () => {
+    const { service, projections } = setup(async () => ({ AAA: [{ date: "2023-01-02", close: 1 }] }))
+    await service.compute(request)
+    const durationMs = projections[0]?.durationMs
+    expect(Number.isInteger(durationMs)).toBe(true)
+    expect(durationMs).toBeGreaterThanOrEqual(0)
+})
+
 test("market-service en erreur : l'exception remonte, rien n'est publié", async () => {
     const { service, published } = setup(async () => {
         throw new Error("Market data unavailable")

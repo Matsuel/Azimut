@@ -16,11 +16,19 @@ const context = { topic: "projection.completed" } as Parameters<MessageHandler<u
 
 test("projection.completed est routé vers store, projection null comprise", async () => {
     calls.length = 0
-    const payload = { executionId: "e1", finishedAt: "2024-01-01T00:00:00.000Z", projection: null }
+    const payload = { executionId: "e1", finishedAt: "2024-01-01T00:00:00.000Z", durationMs: 700, projection: null }
 
     await new ProjectionConsumer().handle(envelope(payload), context)
 
     expect(calls).toEqual([payload])
+})
+
+test("projection.completed sans durationMs est invalide : ignoré", async () => {
+    calls.length = 0
+
+    await new ProjectionConsumer().handle(envelope({ executionId: "e1", finishedAt: "2024-01-01T00:00:00.000Z", projection: null }), context)
+
+    expect(calls).toEqual([])
 })
 
 test("un message invalide est ignoré sans exception", async () => {

@@ -22,7 +22,7 @@ export interface IBacktestRepository {
 const executionSummary = {
     // Dernière exécution en premier ; attempt départage deux createdAt identiques
     orderBy: [{ createdAt: "desc" }, { attempt: "desc" }],
-    include: { result: { omit: { equityCurve: true, trades: true, holdings: true, dividendEvents: true, lumpSumComparison: true, benchmark: true, rollingSummary: true, risk: true, projection: true, projectionComputedAt: true } } },
+    include: { result: { omit: { equityCurve: true, trades: true, holdings: true, dividendEvents: true, lumpSumComparison: true, benchmark: true, rollingSummary: true, risk: true, projection: true, projectionComputedAt: true, projectionExpected: true, projectionDurationMs: true } } },
 } satisfies Prisma.Backtest$executionsArgs
 
 // Allocation persistée : relue pour republier `backtest.requested` et renvoyée au web
@@ -122,7 +122,7 @@ class BacktestRepository implements IBacktestRepository {
             prisma.backtestResult.findFirst({
                 where: { execution: { backtestId: id, status: { in: statuses } } },
                 orderBy: [{ execution: { createdAt: "desc" } }, { execution: { attempt: "desc" } }],
-                omit: { risk: true, projection: true, projectionComputedAt: true },
+                omit: { risk: true, projection: true, projectionComputedAt: true, projectionExpected: true, projectionDurationMs: true },
             }),
         ])
         return backtest && { ...backtest, result }
@@ -244,6 +244,7 @@ class BacktestRepository implements IBacktestRepository {
                 data: {
                     executionId: id,
                     ...result,
+                    projectionExpected: true,
                     lumpSumComparison: result.lumpSumComparison ?? Prisma.DbNull,
                     benchmark: result.benchmark ?? Prisma.DbNull,
                 },

@@ -55,6 +55,8 @@ export const projectionSchema = z.object({
 export const projectionCompletedPayloadSchema = z.object({
     executionId: z.string().min(1),
     finishedAt: z.iso.datetime(),
+    // Millisecondes (entier ≥ 0) : durée de `computeProjection`, mesurée par risk-engine
+    durationMs: z.number().int().min(0),
     // null sous 2 jours de cotation communs ou si un actif n'a aucun cours : « données insuffisantes », aucun résultat partiel
     projection: projectionSchema.nullable(),
 });
@@ -66,9 +68,10 @@ export type ProjectionYear = z.infer<typeof projectionYearSchema>;
 export type Projection = z.infer<typeof projectionSchema>;
 export type ProjectionCompletedPayload = z.infer<typeof projectionCompletedPayloadSchema>;
 
-// État de la projection d'un backtest : calculée, calculée sans résultat faute de données (`projection.completed`
-// reçu avec `projection: null`), ou absente (ancien résultat, exécution en cours ou en échec, aucun événement reçu)
-export const PROJECTION_STATES = ["COMPUTED", "INSUFFICIENT_DATA", "UNAVAILABLE"] as const;
+// État de la projection d'un backtest : en cours de calcul (résultat créé, `projection.completed` pas encore reçu), calculée,
+// calculée sans résultat faute de données (`projection.completed` reçu avec `projection: null`), ou absente (ancien résultat
+// antérieur au calcul de projection, exécution en cours ou en échec)
+export const PROJECTION_STATES = ["PENDING", "COMPUTED", "INSUFFICIENT_DATA", "UNAVAILABLE"] as const;
 
 export type ProjectionState = (typeof PROJECTION_STATES)[number];
 
@@ -77,4 +80,19 @@ export interface ProjectionView {
     state: ProjectionState;
     // Non null seulement si state = COMPUTED
     projection: Projection | null;
+    // Une entrée par exécution du backtest qui a un résultat ou est en cours, tentative décroissante
+    history: ProjectionRun[];
+}
+
+// Calcul de la projection d'une exécution du backtest (ligne de l'historique des calculs)
+export interface ProjectionRun {
+    executionId: string;
+    // Numéro de la tentative (entier ≥ 1)
+    attempt: number;
+    // Instant de réception de `projection.completed` (ISO 8601) ; null tant qu'il n'est pas reçu
+    computedAt: string | null;
+    // Millisecondes (entier ≥ 0) : durée du calcul mesurée par risk-engine ; null tant que non reçue et pour un résultat antérieur à son enregistrement
+    durationMs: number | null;
+    // PENDING : exécution en cours ou `projection.completed` attendu ; UNAVAILABLE : résultat antérieur au calcul de projection
+    state: ProjectionState;
 }

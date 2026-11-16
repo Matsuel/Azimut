@@ -38,8 +38,11 @@ class RiskService {
         await this.publisher.completed({ executionId, finishedAt: new Date().toISOString(), risk });
         logger.info("Risk computed", { executionId, computed: risk !== null });
 
+        // Le service peut lire l'horloge, pas l'engine
+        const startedAt = performance.now();
         const projection = computeProjection(allocations, eurCloses, totalInvested, PROJECTION_PARAMS.seed);
-        await this.publisher.projectionCompleted({ executionId, finishedAt: new Date().toISOString(), projection });
+        const durationMs = Math.round(performance.now() - startedAt);
+        await this.publisher.projectionCompleted({ executionId, finishedAt: new Date().toISOString(), durationMs, projection });
         logger.info("Projection computed", { executionId, computed: projection !== null });
     }
 }

@@ -193,7 +193,7 @@ export type BacktestBatchDTO = Omit<BacktestBatch, "rows" | "endDate"> & {
 };
 
 // Le risque (colonne lourde) se lit par GET /api/risk/:backtestId, pas avec le détail du backtest
-export type BacktestDetailsRecord = BacktestWithExecutions & { result: Omit<BacktestResult, "risk" | "projection" | "projectionComputedAt"> | null };
+export type BacktestDetailsRecord = BacktestWithExecutions & { result: Omit<BacktestResult, "risk" | "projection" | "projectionComputedAt" | "projectionExpected" | "projectionDurationMs"> | null };
 
 export type CompleteExecutionDTO = Omit<
     BacktestCompletedPayload,

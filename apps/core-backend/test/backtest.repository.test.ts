@@ -141,6 +141,9 @@ describeWithDb("BacktestRepository (base de test)", () => {
         expect(stored.dividendEvents).toEqual(dividendEvents)
         expect(stored.returnBreakdown).toEqual(returnBreakdown)
         expect(stored.rollingSummary).toEqual(result.rollingSummary)
+        // Un résultat créé maintenant attend `projection.completed` (état PENDING de la projection)
+        expect(stored.projectionExpected).toBe(true)
+        expect(stored.projectionDurationMs).toBeNull()
     })
 
     test("countByLatestStatus compte par statut de la dernière exécution", async () => {
