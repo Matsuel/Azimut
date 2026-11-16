@@ -146,6 +146,25 @@ describeWithDb("BacktestRepository (base de test)", () => {
         expect(stored.projectionDurationMs).toBeNull()
     })
 
+    test("getDetailsById : ni le résultat ni le résumé des exécutions n'exposent la projection ni le risque", async () => {
+        const backtest = await repo.create(backtestFor(userId))
+        const executionId = backtest.executions[0]!.id
+        await prisma.backtestExecution.update({ where: { id: executionId }, data: { status: "COMPLETED" } })
+        await prisma.backtestResult.create({
+            data: { executionId, risk: { volatility: 0.1 }, projection: { seed: 1 }, projectionComputedAt: new Date(), projectionExpected: true, projectionDurationMs: 700 },
+        })
+
+        const details = await repo.getDetailsById(backtest.id, ["COMPLETED"])
+
+        const hidden = ["projection", "projectionComputedAt", "projectionExpected", "projectionDurationMs", "risk"]
+        expect(details?.result).not.toBeNull()
+        expect(details?.executions[0]?.result).not.toBeNull()
+        for (const key of hidden) {
+            expect(details?.result).not.toHaveProperty(key)
+            expect(details?.executions[0]?.result).not.toHaveProperty(key)
+        }
+    })
+
     test("countByLatestStatus compte par statut de la dernière exécution", async () => {
         const backtest = await repo.create(backtestFor(userId))
         await repo.create(backtestFor(userId, "autre"))
