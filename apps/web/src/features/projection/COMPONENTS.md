@@ -10,6 +10,13 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
   - `backtestId` : id du backtest de l'URL ; `""` affiche l'état « Choisissez un backtest terminé ».
 - **Source** : `src/features/projection/backtest-projection.tsx`.
 
+### ProjectionBody
+
+- **Import** : `import { ProjectionBody } from "@/features/projection/projection-body"`.
+- **Rôle** : corps de `BacktestProjection` : une `StateCard` selon l'état (erreur, chargement, calcul en cours ou trop long avec « Relire » et « Relancer le backtest », données insuffisantes, indisponible) ou `ComputedProjection`.
+- **Props** : `backtestId`, `backtestQuery` et `projectionQuery` (requêtes TanStack), `view` (`ProjectionView`), `execution`, `horizon` (années), `onHorizonChange`.
+- **Source** : `src/features/projection/projection-body.tsx`.
+
 ### ProjectionHistory
 
 - **Import** : `import { ProjectionHistory } from "@/features/projection/projection-history"`.
