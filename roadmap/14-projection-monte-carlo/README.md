@@ -23,7 +23,7 @@ Même patron que le Risque (feature 13). `risk-engine` consomme déjà `backtest
 | --- | --- | --- | --- |
 | D1 | **Générateur** : PRNG seedé implémenté dans l'engine (sans dépendance) | Une seed explicite rend le résultat testable ; une dépendance pour un générateur n'apporte rien ici. | `US.md` (à valider) |
 | D2 | **Blocs** : 21 jours ouvrés, fixe | Conserve un peu d'enchaînement des jours sans paramètre à exposer. | `US.md` (à valider) |
-| D3 | **Stockage** : Percentiles seulement | 10 000 trajectoires × 1 260 jours ne se stockent pas ; on garde ce qui s'affiche. | `US.md` (à valider) |
+| D3 | **Stockage** : Percentiles seulement | 10 000 trajectoires × 2 520 jours ne se stockent pas ; on garde ce qui s'affiche. Précisée par D10. | `US.md` (à valider) |
 | D4 | ~~Deux nouveaux topics Kafka, demande par POST~~ | Remplacée par D4′. | Remplacée le 2026-11-16 |
 | D4′ | **Transport** : un seul nouveau topic, `projection.completed`. Calculée automatiquement après chaque backtest, dans `risk-engine`, sur le même `backtest.completed`. Ni `projection.requested` ni POST. | Évite un second aller-retour pour un calcul qui ne dépend que du backtest ; rejeu géré par statut côté core-backend. | Décision du 2026-11-16 |
 | D5 | **Source** : blocs tirés sur les actifs ensemble, pondérés aux poids du backtest | Les mêmes jours sont tirés pour tous les actifs : les corrélations sont conservées (même base que la 13). | Décision du 2026-11-14 |
