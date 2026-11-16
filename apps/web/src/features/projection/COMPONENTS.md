@@ -86,7 +86,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 
 | Export | Rôle (et unité) |
 | --- | --- |
-| `HORIZON_YEARS` | Horizons proposés, années : 1, 3, 5, 10 (copie voulue de `PROJECTION_HORIZONS` du contrat, importable seulement en type). |
+| `HORIZON_YEARS` | Horizons proposés, années : 1, 3, 5, 10 (choix d'affichage du web, borné par `PROJECTION_PARAMS.horizonYears` du contrat). |
 | `DEFAULT_PROJECTION_HORIZON` | Horizon initial, 5 ans. |
 
 ### `features/projection/types.ts`

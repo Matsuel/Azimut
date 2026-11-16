@@ -8,9 +8,6 @@ export const PROJECTION_TOPICS = {
 // Paramètres fixes du tirage (D6′) ; `paths` chemins, blocs de `blockDays` jours ouvrés, `horizonYears` ans, graine `seed`
 export const PROJECTION_PARAMS = { paths: 10_000, blockDays: 21, horizonYears: 10, seed: 42 } as const;
 
-// Horizons proposés à l'affichage, en années
-export const PROJECTION_HORIZONS = [1, 3, 5, 10] as const;
-
 // Percentiles de la valeur du portefeuille à un jour donné de la projection
 export const projectionPointSchema = z.object({
     // Jours ouvrés depuis aujourd'hui (entier ≥ 0)

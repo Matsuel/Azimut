@@ -63,7 +63,7 @@ flowchart LR
 - **Fichiers** : `packages/contracts/src/projection.ts`, `packages/contracts/src/index.ts`
 
 Critères d’acceptation :
-- [x] Topic `projection.completed`, `PROJECTION_PARAMS` (D6′), `PROJECTION_HORIZONS`, schémas de point, d'année et de projection, enveloppe `KafkaEvent` (D4′).
+- [x] Topic `projection.completed`, `PROJECTION_PARAMS` (D6′), schémas de point, d'année et de projection, enveloppe `KafkaEvent` (D4′).
 - [x] Chaque champ numérique documente son unité (EUR, ratio, jours ouvrés, date `YYYY-MM-DD`).
 - [x] `ProjectionView` : états `COMPUTED`, `INSUFFICIENT_DATA`, `UNAVAILABLE`.
 

@@ -74,9 +74,8 @@
 **Interfaces** (produites) :
 ```ts
 export const PROJECTION_TOPICS = { completed: "projection.completed" } as const;
-// Paramètres fixes (D6′) ; horizons proposés à l'affichage, en années
+// Paramètres fixes (D6′)
 export const PROJECTION_PARAMS = { paths: 10_000, blockDays: 21, horizonYears: 10, seed: 42 } as const;
-export const PROJECTION_HORIZONS = [1, 3, 5, 10] as const;
 projectionPointSchema   // { day: int ≥ 0 (jours ouvrés depuis aujourd'hui), p5, p10, p25, p50, p75, p90, p95: number (EUR) }
 projectionYearSchema    // projectionPointSchema.extend({ years: int 1..10, lossProbability: number 0..1 (ratio) })
 projectionSchema        // { seed: int, paths: int, blockDays: int, capital: number (EUR), historyStart, historyEnd: "YYYY-MM-DD", historyDays: int, points: projectionPointSchema[], years: projectionYearSchema[] }
