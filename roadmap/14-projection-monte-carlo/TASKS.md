@@ -24,7 +24,7 @@
 | 4. Écrans | T-05 → T-06 | 10 |
 | 5. Clôture | T-07 | 1 |
 
-**Chemin critique** (19 points) : T-01 → T-04 → T-06 → T-07. T-02 : la reproductibilité tient sur l'ordre de tirage fixe (trajectoire puis bloc) ; un test à seed fixe la protège. T-04 : colonnes nullables et première réception gagnante, pour le rejeu.
+**Chemin critique** (19 points) : T-01 → T-04 → T-06 → T-07. T-02 : la reproductibilité tient sur l'ordre de tirage fixe (jour puis trajectoire, un tirage par trajectoire au début de chaque bloc de `min(21, n)` jours) ; un test à seed fixe la protège. T-04 : colonnes nullables et première réception gagnante, pour le rejeu.
 
 **Parallélisable** : T-01 et T-05 dès le début ; T-02 et T-04 après T-01 ; T-06 après T-04 et T-05.
 
@@ -95,7 +95,7 @@ Critères d’acceptation :
 
 Critères d’acceptation :
 - [x] Colonnes `projection` et `projectionComputedAt` nullables ; un `projection.completed` rejoué n'écrase rien (première réception gagne).
-- [x] `GET /api/projection/:backtestId` renvoie `COMPUTED`, `INSUFFICIENT_DATA` ou `UNAVAILABLE` ; `NotFoundError` pour un autre utilisateur ; jamais de 500 pour un ancien résultat.
+- [x] `GET /api/projection/:backtestId` renvoie `COMPUTED`, `INSUFFICIENT_DATA` ou `UNAVAILABLE` ; 403 `ForbiddenError` pour un autre propriétaire, 404 pour un backtest inconnu (aligné sur Risque) ; jamais de 500 pour un ancien résultat.
 - [x] Un message invalide est loggué et ignoré.
 - [x] Section « Projection » de `API.md`.
 

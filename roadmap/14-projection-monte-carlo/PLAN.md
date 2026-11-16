@@ -120,7 +120,7 @@ export interface ProjectionView { state: ProjectionState; projection: Projection
       pour p de 0 à paths−1 : s = floor(rng() * (n − blockDays + 1)); pour d de 0 à blockDays−1 : values[p] *= 1 + r[s+d]
       day = (b+1)*blockDays ; sorted = values.slice().sort() → point ; si day % 252 == 0 : year { years: day/252, lossProbability: part de values < capital }
   ```
-  Les blocs sont tirés sur l'ordre fixe trajectoire puis bloc : c'est ce qui garantit la reproductibilité. Arrondir les EUR à 2 décimales et `lossProbability` à 6 décimales, au moment de construire le résultat seulement.
+  Les blocs sont tirés sur l'ordre fixe jour puis trajectoire, un tirage par trajectoire au début de chaque bloc de `min(21, n)` jours : c'est ce qui garantit la reproductibilité. Arrondir les EUR à 2 décimales et `lossProbability` à 6 décimales, au moment de construire le résultat seulement.
 - [ ] **Étape 4 : lancer `bun test`** dans `apps/risk-engine`. Attendu : PASS, y compris `risk.engine.test.ts` (non-régression après l'extraction de `portfolioReturns`).
 - [ ] **Étape 5 : commit** `feat(risk-engine): moteur de projection par bootstrap de blocs seedé`.
 

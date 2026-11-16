@@ -35,6 +35,7 @@
 | D9 | Horizon | Un seul calcul sur 2 520 jours ouvrés ; le sélecteur tronque l'affichage | Même seed, vues cohérentes. |
 | D10 | Courbe | Un point tous les 21 jours ouvrés, jour 0 compris : 121 points | Résultat stocké de petite taille. |
 | D11 | Moteur | Dans `risk-engine`, pas dans `backtest-engine` | Les rendements EUR sur dates communes y existent déjà. |
+| D12 | Historique minimal | 2 jours communs (1 rendement), pas 250. Les blocs font `min(21, rendements disponibles)` jours ; `blockDays` du résultat = longueur effective. Un historique court donne une projection peu précise, affichée avec son nombre de jours. `null` seulement sous 2 jours ou si un actif n'a aucun cours. | `MIN_COMMON_DAYS` (250) ne vaut plus pour la projection. Décision du 2026-11-16. |
 
 ---
 
@@ -47,8 +48,8 @@
 **En tant que** développeur, **je veux** qu'un message Kafka rejoué ne crée pas deux résultats **afin de** respecter la règle at-least-once du projet.
 
 Critères d’acceptation :
-- [ ] Un `projection.completed` rejoué n'écrase pas la première projection stockée (test).
-- [ ] Un message invalide est loggué et ignoré, il ne fait pas lever le consumer (test).
+- [x] Un `projection.completed` rejoué n'écrase pas la première projection stockée (test).
+- [x] Un message invalide est loggué et ignoré, il ne fait pas lever le consumer (test).
 
 Tâches : T-01, T-03, T-04 (détail dans `TASKS.md`).
 
@@ -61,10 +62,10 @@ Tâches : T-01, T-03, T-04 (détail dans `TASKS.md`).
 **En tant que** utilisateur, **je veux** voir un éventail de trajectoires futures construit sur l'historique de mon backtest **afin de** comprendre l'incertitude au lieu d'un seul chiffre.
 
 Critères d’acceptation :
-- [ ] Un fan chart montre la médiane et les bandes P25-P75 et P10-P90 sur l'horizon choisi (1, 3, 5 ou 10 ans).
-- [ ] La projection est calculée après chaque backtest, avec les paramètres fixes affichés en lecture seule (D6′).
-- [ ] La même seed et les mêmes rendements donnent le même résultat (test de reproductibilité).
-- [ ] Changer l'horizon ne déclenche aucune requête.
+- [x] Un fan chart montre la médiane et les bandes P25-P75 et P10-P90 sur l'horizon choisi (1, 3, 5 ou 10 ans).
+- [x] La projection est calculée après chaque backtest, avec les paramètres fixes affichés en lecture seule (D6′).
+- [x] La même seed et les mêmes rendements donnent le même résultat (test de reproductibilité).
+- [x] Changer l'horizon ne déclenche aucune requête.
 
 Tâches : T-01, T-02, T-03, T-04, T-05, T-06, T-07 (détail dans `TASKS.md`).
 
@@ -75,8 +76,8 @@ Tâches : T-01, T-02, T-03, T-04, T-05, T-06, T-07 (détail dans `TASKS.md`).
 **En tant que** utilisateur, **je veux** voir la probabilité que mon capital finisse sous son montant investi, à chaque horizon, **afin de** mesurer le risque de perte.
 
 Critères d’acceptation :
-- [ ] La probabilité est calculée à chaque fin d'année (D8′) et affichée avec la mention « calculée sur des scénarios historiques, pas une promesse ».
-- [ ] Le tableau par horizon donne P10, médiane, P90 et probabilité de perte, une ligne par année jusqu'à l'horizon.
+- [x] La probabilité est calculée à chaque fin d'année (D8′) et affichée avec la mention « calculée sur des scénarios historiques, pas une promesse ».
+- [x] Le tableau par horizon donne P10, médiane, P90 et probabilité de perte, une ligne par année jusqu'à l'horizon.
 
 Tâches : T-02, T-06 (détail dans `TASKS.md`).
 
@@ -89,8 +90,8 @@ Tâches : T-02, T-06 (détail dans `TASKS.md`).
 **En tant que** utilisateur, **je veux** un message clair quand un backtest n'a pas de projection **afin de** savoir quoi faire (maquettes 34.1 et 34.2).
 
 Critères d’acceptation :
-- [ ] Backtest antérieur à la projection ou exécution en cours (`UNAVAILABLE`) : message « Relancer le backtest », jamais une erreur 500.
-- [ ] Moins de 2 jours communs ou actif sans cours (`INSUFFICIENT_DATA`, D12) : message « données insuffisantes », aucun chiffre partiel.
+- [x] Backtest antérieur à la projection ou exécution en cours (`UNAVAILABLE`) : message « Relancer le backtest », jamais une erreur 500.
+- [x] Moins de 2 jours communs ou actif sans cours (`INSUFFICIENT_DATA`, D12) : message « données insuffisantes », aucun chiffre partiel.
 
 Tâches : T-04, T-06 (détail dans `TASKS.md`).
 

@@ -363,7 +363,7 @@ Calculé par `risk-engine` après chaque backtest (`risk.completed`), stocké av
   ```
 - **Erreurs** : `401` ; `403 { "error": "Access denied" }` ; `404 { "error": "Backtest not found" }`.
 - **Effets** : aucun.
-- **Appelant** : aucun pour l'instant (page Risque, T-06).
+- **Appelant** : `getRisk` (`features/risk/api.ts`), page Risque.
 - **Source** : `routes/risk/risk.routes.ts`, `controller/risk.controller.ts`, `services/risk.service.ts`, `repositories/risk.repository.ts`.
 
 ### PUT /api/risk/:backtestId/constraint
@@ -378,7 +378,7 @@ Calculé par `risk-engine` après chaque backtest (`risk.completed`), stocké av
 - **Réponse** : `200`, `RiskView` (cf. ci-dessus) avec la contrainte réévaluée à partir du `maxDrawdown` stocké, sans relancer l'engine. La limite précédente devient `previous` (D12) ; une limite identique à l'actuelle ne change rien. Respectée si `|maxDrawdown| ≤ limite`.
 - **Erreurs** : `400 { "code": "INVALID_RISK_LIMIT", "issues": [ZodIssue] }` → limite hors plage, non entière en pourcent ou non numérique (limite inchangée) ; `400 { "code": "BACKTEST_NO_RESULT" }` → aucun résultat terminé ; `401` ; `403` ; `404`.
 - **Effets** : écrit `maxDrawdownLimit` et `previousMaxDrawdownLimit` du backtest ; aucun événement.
-- **Appelant** : aucun pour l'instant (page Risque, T-07).
+- **Appelant** : `setRiskLimit` (`features/risk/api.ts`), page Risque (contrainte de drawdown).
 - **Source** : `routes/risk/risk.routes.ts`, `controller/risk.controller.ts`, `services/risk.service.ts`, `repositories/risk.repository.ts`.
 
 ## Projection
@@ -395,5 +395,5 @@ Calculée par `risk-engine` après le risque de chaque backtest (`projection.com
   ```
 - **Erreurs** : `401` ; `403 { "error": "Access denied" }` ; `404 { "error": "Backtest not found" }`.
 - **Effets** : aucun.
-- **Appelant** : aucun pour l'instant (section Projection, T-06).
+- **Appelant** : `getProjection` (`features/projection/api.ts`), page Projection.
 - **Source** : `routes/projection/projection.routes.ts`, `controller/projection.controller.ts`, `services/projection.service.ts`, `repositories/projection.repository.ts`.

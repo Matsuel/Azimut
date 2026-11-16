@@ -22,7 +22,7 @@ test/              <sujet>.test.ts
 - **engine/** : pur (aucune I/O, horloge ni aléa). Chaque mesure a son `bun test` sur un jeu à résultat connu (voir `roadmap/13-risk-engine/US.md`). Arrondi (6 décimales) à la publication seulement, jamais sur un cumul.
 - **services/** : seul endroit où l'horloge est lue. Une erreur (market-service, taux de change) n'est pas capturée : `KafkaConsumer` la logue et kafkajs rejoue le message. Kafka est at-least-once : un rejeu republie les mêmes `risk.completed` et `projection.completed` (le risque d'abord ; si la projection lève, le rejeu republie les deux), que core-backend ignore par transition gardée.
 - **consumers/** : message invalide → `logger.warn` et retour.
-- Un contrat modifié l'est des deux côtés dans le même diff (`packages/contracts/src/risk.ts`, consommateur core-backend), puis signale de redémarrer les services concernés.
+- Un contrat modifié l'est des deux côtés dans le même diff (`packages/contracts/src/risk.ts` et `projection.ts`, consommateur core-backend), puis signale de redémarrer les services concernés.
 
 ## Commandes
 

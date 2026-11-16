@@ -16,8 +16,8 @@ class RiskService {
     constructor(private readonly publisher: IRiskPublisher) { }
 
     /**
-     * Calcule le risque d'un `backtest.completed` et publie `risk.completed`, puis `projection.completed` (`risk` et `projection`
-     * null sous 250 jours communs). Les cours en euros sont lus une fois pour les deux calculs ; `totalInvested` est le capital de départ.
+     * Calcule le risque d'un `backtest.completed` et publie `risk.completed`, puis `projection.completed` (`risk` null sous 250 jours
+     * communs, `projection` null sous 2 jours communs ou si un actif n'a aucun cours, D12). Les cours en euros sont lus une fois pour les deux calculs ; `totalInvested` est le capital de départ.
      * Une erreur (market-service injoignable, taux de change manquant, échec de la projection) n'est pas capturée : le consommateur
      * la logue et kafkajs rejoue le message ; rejoué, les deux événements sont republiés (core-backend garde le premier de chacun).
      */
