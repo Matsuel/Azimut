@@ -26,6 +26,7 @@ export function BacktestStats({ stats }: { stats: BacktestListStats | undefined 
                 }
                 delta={completedRate}
                 trend="up"
+                tone="positive"
             />
             <StatCard
                 label={t("failed")}
@@ -37,6 +38,7 @@ export function BacktestStats({ stats }: { stats: BacktestListStats | undefined 
                 }
                 delta={failedRate}
                 trend="down"
+                tone="negative"
             />
         </div>
     )

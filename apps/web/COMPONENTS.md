@@ -52,6 +52,8 @@ Une ligne par entrée : le détail (import, props, exemple) est dans l'entrée l
   - [NavUser](#navuser) : menu utilisateur en pied de sidebar 
   - [ThemeToggle](#themetoggle) : bouton icône soleil/lune ouvrant un menu Clair / Sombre / Système
   - [AppSheet](#appsheet) : panneau latéral droit ouvert par un déclencheur, avec titre et description
+  - [AppDialog](#appdialog) : boîte de dialogue centrée ouverte par un déclencheur, avec titre et description
+  - [AppAlertDialog](#appalertdialog) : confirmation d'une action (Annuler / Confirmer), `variant="destructive"` pour une action irréversible
   - [InfoHint](#infohint) : libellé d'une donnée calculée, souligné en pointillés
 - [Données et tableaux](#données-et-tableaux)
   - [DataTable](#datatable) : tableau branché sur une requête TanStack Query (`query`) ou sur des lignes déjà chargées (`rows`) 
@@ -93,7 +95,7 @@ Une ligne par entrée : le détail (import, props, exemple) est dans l'entrée l
   - [`lib/routes.ts`](#libroutests) : exports `prefix`, `routes`, `safeRedirect`
   - [`lib/navigation.ts`](#libnavigationts) : exports `findActiveTab`
   - [`lib/env.ts`](#libenvts) : exports `env`
-  - [`lib/trend.ts`](#libtrendts) : exports `Trend`, `trendOf`, `trendStyles`
+  - [`lib/trend.ts`](#libtrendts) : exports `Trend`, `Direction`, `Tone`, `trendOf`, `directionOf`, `toneOf`, `trendStyles`
   - [`lib/utils.ts`](#libutilsts) : exports `cn`
   - [`lib/auth.ts`](#libauthts) : exports `authClient`, `signIn`, `signUp`, `signOut`, `useSession`
   - [`lib/session.ts`](#libsessionts) : exports `getSession`, `requireSession`, `isAdmin`, `hasAdminRole`
@@ -187,13 +189,16 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
 
 Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interface (`AGENTS.md`, « shadcn d'abord ») : un composant manquant s'ajoute par `bunx --bun shadcn@latest add <nom>`, un style manquant par un variant de son `cva`. Chaque variant ajouté au-delà de shadcn est listé ici.
 
-- `ui/badge.tsx` : variant `success` (bordure et texte `--success`) : statut terminé, achat, hausse. Taille `lg` (`size="lg"`) : pastille plus haute qui porte un bouton (symbole retirable de `SymbolsField`).
-- `ui/button.tsx` : variant `hint` avec la taille `inline` : libellé souligné en pointillés qui garde la typographie du parent, déclencheur d'`InfoHint`. Taille `inline` : sans hauteur ni marge. Variant `tile` (avec `inline`) : tuile cliquable sans fond ni survol, contenu libre (aperçus de `ThemeCard`).
+- `ui/badge.tsx` : variant `success` (bordure et texte `--success`) : statut terminé, achat, hausse. Variant `warning` (bordure et texte `--warning`) : avertissement (contrat écarté, valeur approximative). Taille `lg` (`size="lg"`) : pastille plus haute qui porte un bouton (symbole retirable de `SymbolsField`).
+- `ui/button.tsx` : hauteurs de la maquette : `default` 36 px (`h-9`), `sm` 32 px (`h-8`), `icon` 36 px, `icon-sm` 32 px ; `Input`, `Select` et `InputGroup` font 36 px. Variant `hint` avec la taille `inline` : libellé souligné en pointillés qui garde la typographie du parent, déclencheur d'`InfoHint`. Taille `inline` : sans hauteur ni marge. Variant `tile` (avec `inline`) : tuile cliquable sans fond ni survol, contenu libre (aperçus de `ThemeCard`).
 - `ui/card.tsx` : taille `compact` (`<Card size="compact">`) : titre `text-body-semibold`, description `text-small` ; cartes de données (indicateurs, graphiques, récapitulatif).
 - `ui/table.tsx` : `TableRow` `variant` `static` (sans survol, ligne d'état) et `plain` (sans bordure ni survol) ; `TableHead` `variant` `caption` (en-tête discret) et `row` (libellé de ligne) ; `TableCell` `variant` `strong` et `muted`. Utilisés par `DataTable` et `MetricBlock`.
 - `ui/progress.tsx` (ajouté par `shadcn add progress`) : `size` `md` (piste de 6 px) et `variant` `success`, `running` (pulsation, calcul en cours) et `chart` (couleur `chart-1`, part d'un total). Barres de poids d'`AllocationField`, d'exécution active et de contribution au risque.
 - `ui/empty.tsx` (ajouté par `shadcn add empty`) : état vide, utilisé via `EmptyCard`.
 
+- `ui/alert.tsx` (`Alert`, `AlertTitle`, `AlertDescription`, `AlertAction`) : écrit à la main dans le style `base-nova` (le CLI shadcn n'était pas joignable) ; variants `default`, `destructive`, `success`, `warning`, `info` (tokens `--destructive`, `--success`, `--warning`, `--info`).
+- `ui/alert-dialog.tsx` : `AlertDialog` et ses parties (`AlertDialogTrigger`, `Content`, `Header`, `Footer`, `Title`, `Description`, `Action`, `Cancel`), même origine ; `AlertDialogAction` prend le `variant` d'un `Button` et ferme la boîte. Utilisé via `AppAlertDialog`.
+- `ui/toggle.tsx`, `ui/toggle-group.tsx` : `Toggle` (variants `default`, `outline`, tailles `default` 36 px et `sm` 32 px) et `ToggleGroup` / `ToggleGroupItem`, même origine.
 - `ui/pagination.tsx` (`Pagination`, `PaginationContent`, `PaginationItem`, `PaginationLink`, `PaginationPrevious`, `PaginationNext`, `PaginationEllipsis`) : généré par `bunx --bun shadcn@latest add pagination`, non modifié ; libellés anglais par défaut, passer `text` et `aria-label` en français. Utilisé seulement via la prop `pagination` de `DataTable`.
 
 ## Mise en page et navigation
@@ -311,9 +316,44 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
   - `onOpenChange` (optionnel) : Mode contrôlé.
 - **Exemple** (tiré de `src/features/market/symbol-sheet.tsx`) :
   ```tsx
-  <AppSheet title={symbol} trigger={<Button size="lg">Tester</Button>}>…</AppSheet>
+  <AppSheet title={symbol} trigger={<Button>Tester</Button>}>…</AppSheet>
   ```
 - **Source** : `src/components/app-sheet.tsx`.
+
+### AppDialog
+
+- **Import** : `import { AppDialog } from "@/components/app-dialog"`.
+- **Rôle** : boîte de dialogue centrée ouverte par un déclencheur, avec titre et description (même contrat que `AppSheet`).
+- **Props** :
+  - `trigger` : Élément rendu comme déclencheur (`DialogTrigger render`).
+  - `title` : Titre de la boîte.
+  - `description` (optionnel) : Sous le titre.
+  - `children` (optionnel) : Contenu.
+  - `className` (optionnel) : Sur `DialogContent`.
+  - `open` (optionnel) : Mode contrôlé.
+  - `onOpenChange` (optionnel) : Mode contrôlé.
+- **Exemple** :
+  ```tsx
+  <AppDialog title="Renommer" trigger={<Button>Renommer</Button>}>…</AppDialog>
+  ```
+- **Source** : `src/components/app-dialog.tsx`.
+
+### AppAlertDialog
+
+- **Import** : `import { AppAlertDialog } from "@/components/app-alert-dialog"`.
+- **Rôle** : confirmation d'une action : titre, description, boutons Annuler et Confirmer (libellés `components.alertDialog` des dictionnaires par défaut) ; la boîte se ferme dans les deux cas.
+- **Props** :
+  - `trigger` : Élément rendu comme déclencheur.
+  - `title` : Titre.
+  - `description` (optionnel) : Sous le titre.
+  - `variant` (optionnel) : `default` (défaut) ou `destructive` (bouton de confirmation rouge).
+  - `confirmLabel`, `cancelLabel` (optionnels) : Libellés des boutons.
+  - `onConfirm` : Appelé au clic sur Confirmer.
+- **Exemple** :
+  ```tsx
+  <AppAlertDialog variant="destructive" title="Supprimer ?" trigger={<Button variant="destructive">Supprimer</Button>} onConfirm={remove} />
+  ```
+- **Source** : `src/components/app-alert-dialog.tsx`.
 
 ### InfoHint
 
@@ -442,13 +482,14 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 ### StatCard
 
 - **Import** : `import { StatCard } from "@/components/stat-card"`.
-- **Rôle** : carte de métrique : libellé, valeur, badge de tendance optionnel et légende. Groupes de cartes dans `features/<domaine>/stats.tsx`.
+- **Rôle** : carte de métrique : libellé, valeur, badge de variation optionnel (flèche `trend`, couleur `tone`) et légende. Groupes de cartes dans `features/<domaine>/stats.tsx`.
 - **Props** :
   - `label` : Libellé (texte, ou `InfoHint` qui ouvre le glossaire).
   - `value` : Valeur déjà formatée.
   - `caption` (optionnel) : Légende ; masquée si falsy.
   - `delta` (optionnel) : Contenu du badge ; badge masqué si `null`/`undefined`.
-  - `trend` (optionnel) : Style et icône du badge (`up` vert, `down` rouge).
+  - `trend` (optionnel) : Flèche du badge : `up`, `down` ou `none` (défaut), type `Direction` de `lib/trend.ts`.
+  - `tone` (optionnel) : Couleur du badge, indépendante de la flèche : `positive` (vert), `negative` (rouge) ou `neutral` (défaut), type `Tone`. Une volatilité qui baisse : `trend="down" tone="positive"`.
   - `className` (optionnel) : Sur la carte.
 - **Exemple** (tiré de `src/features/backtest/stats.tsx`) :
   ```tsx
@@ -871,13 +912,17 @@ Source : `src/lib/env.ts`.
 
 ### `lib/trend.ts`
 
-- **Import** : `import { trendOf, trendStyles, type Trend } from "@/lib/trend"`.
+- **Import** : `import { directionOf, toneOf, trendOf, trendStyles, type Direction, type Tone, type Trend } from "@/lib/trend"`.
 - Seule règle de couleur d'une variation : courbes, textes et badges la lisent ici.
 
 | Export | Rôle (et unité) |
 | --- | --- |
 | `Trend` | `"up" \| "down" \| "neutral"`. |
 | `trendOf` | `trendOf(change, higherIsBetter = true)` : `up` si la variation est favorable, `down` sinon, `neutral` à zéro (écart de volatilité : `higherIsBetter = false`). |
+| `Direction` | `"up" \| "down" \| "none"` : flèche d'un badge. |
+| `Tone` | `"positive" \| "negative" \| "neutral"` : couleur d'un badge. |
+| `directionOf` | `directionOf(change)` : `up` si positive, `down` si négative, `none` à zéro. |
+| `toneOf` | `toneOf(change, higherIsBetter = true)` : ton selon `trendOf` ; une baisse avec `higherIsBetter = false` est `positive`. |
 | `trendStyles` | Par tendance : `color` (variable CSS d'une courbe), `text` (classe de texte), `badge` (variant de `Badge`). |
 
 Source : `src/lib/trend.ts`.
@@ -936,7 +981,7 @@ Source : `src/constants/pagination.ts`.
 | --- | --- |
 | `SidebarTab` | Un onglet ; `key` = clé du libellé (`navigation.tabs.<key>` dans `messages/*.json`), `url` vient de `routes`. |
 | `SidebarSection` | Une section du menu ; `key` = clé du libellé (`navigation.sections.<key>`). |
-| `sidebarSections` | Menu, dans l'ordre de la roadmap : Vue d'ensemble (Dashboard, Notifications), Marché, Strategy Lab (Backtests, Nouveau backtest, Comparaison, Paper trading), Analyse (Risque, Projection, Optimisation, Rapports), Administration (`adminOnly` : Monitoring, Utilisateurs, Données de référence). Une page ajoutée = sa route dans `routes`, son libellé dans `messages/fr.json` et `messages/en.json`, puis son onglet ici. |
+| `sidebarSections` | Menu (maquette) : Laboratoire (Dashboard, Marché, Backtests), Analyse (Comparaison, Risque, Projection, Optimisation), Trading virtuel (Paper trading), Suivi (Rapports, Notifications), Administration (`adminOnly` : Monitoring, Utilisateurs, Données de référence). Une page ajoutée = sa route dans `routes`, son libellé dans `messages/fr.json` et `messages/en.json`, puis son onglet ici. |
 
 Source : `src/constants/sidebar.tsx`.
 

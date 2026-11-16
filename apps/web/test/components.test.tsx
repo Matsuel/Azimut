@@ -4,6 +4,7 @@ import { Dash, orDash } from "../src/components/dash"
 import { EmptyCard } from "../src/components/empty-card"
 import { FilterTabs } from "../src/components/filter-tabs"
 import { StatCard } from "../src/components/stat-card"
+import { directionOf, toneOf } from "../src/lib/trend"
 
 afterEach(cleanup)
 
@@ -16,7 +17,16 @@ test("orDash formate une valeur présente et affiche le tiret pour une valeur ab
 })
 
 test("StatCard affiche libellé, valeur, légende et variation", () => {
-    render(<StatCard label="Rendement" value="12,5 %" caption="sur la période" delta="+2,1 %" trend="up" />)
+    render(
+        <StatCard
+            label="Rendement"
+            value="12,5 %"
+            caption="sur la période"
+            delta="+2,1 %"
+            trend="up"
+            tone="positive"
+        />,
+    )
 
     for (const text of ["Rendement", "12,5 %", "sur la période", "+2,1 %"]) expect(screen.getByText(text)).toBeTruthy()
 })
@@ -26,6 +36,24 @@ test("StatCard sans variation n'affiche pas de badge", () => {
 
     expect(screen.queryByText("+2,1 %")).toBeNull()
     expect(screen.getByText("3 €")).toBeTruthy()
+})
+
+test("StatCard sépare la flèche de la couleur : une volatilité qui baisse a une flèche bas et un ton positif", () => {
+    render(<StatCard label="Volatilité" value="14 %" delta="-2 pts" trend={directionOf(-2)} tone={toneOf(-2, false)} />)
+
+    const badge = screen.getByText("-2 pts").closest("[data-slot=badge]")
+    expect(badge?.querySelector("svg.lucide-trending-down")).toBeTruthy()
+    expect(badge?.className).toContain("text-success")
+})
+
+test("directionOf et toneOf : le sens de la variation et sa couleur sont indépendants", () => {
+    expect(directionOf(3)).toBe("up")
+    expect(directionOf(-3)).toBe("down")
+    expect(directionOf(0)).toBe("none")
+    expect(toneOf(3)).toBe("positive")
+    expect(toneOf(-3)).toBe("negative")
+    expect(toneOf(-3, false)).toBe("positive")
+    expect(toneOf(0)).toBe("neutral")
 })
 
 test("FilterTabs marque l'option active et signale le choix d'une autre", () => {

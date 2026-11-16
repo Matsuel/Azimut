@@ -32,6 +32,7 @@ export function BatchStats({ batch }: { batch: BacktestBatch }) {
                 value={summary?.worstStart ? f.formatPercent(summary.worstStart.cagr) : <Dash />}
                 delta={summary?.worstStart && new Date(summary.worstStart.startDate).getFullYear()}
                 trend="down"
+                tone="negative"
                 caption={
                     summary?.worstStart &&
                     t("worstStartPeriod", { from: f.formatDay(summary.worstStart.startDate), to: f.formatDay(endDate) })
@@ -42,6 +43,7 @@ export function BatchStats({ batch }: { batch: BacktestBatch }) {
                 value={window ? f.formatPercent(window.worst) : <Dash />}
                 delta={window && t("perYear")}
                 trend="down"
+                tone="negative"
                 caption={window && t("entry", { date: f.formatDay(window.worstDate) })}
             />
             <StatCard

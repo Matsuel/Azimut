@@ -39,10 +39,10 @@
     },
     "navigation": {
         "sections": {
-            "overview": "Vue d’ensemble",
-            "market": "Marché",
-            "strategyLab": "Strategy Lab",
+            "laboratory": "Laboratoire",
             "analysis": "Analyse",
+            "virtualTrading": "Trading virtuel",
+            "followUp": "Suivi",
             "administration": "Administration"
         },
         "tabs": {
@@ -50,7 +50,6 @@
             "notifications": "Notifications",
             "market": "Marché",
             "backtests": "Backtests",
-            "newBacktest": "Nouveau backtest",
             "compare": "Comparaison",
             "paperTrading": "Paper trading",
             "risk": "Risque",
@@ -159,6 +158,10 @@
             "previousAria": "Page précédente",
             "next": "Suivant",
             "nextAria": "Page suivante"
+        },
+        "alertDialog": {
+            "cancel": "Annuler",
+            "confirm": "Confirmer"
         },
         "dataTable": {
             "empty": "Aucune donnée."

@@ -13,10 +13,10 @@ export default function NotFoundPage() {
                 <h2 className="text-h2">{t("title")}</h2>
                 <p className="text-body text-muted-foreground">{t("description")}</p>
                 <div className="flex flex-row gap-3">
-                    <Button size="lg" nativeButton={false} render={<Link href={routes.dashboard} />}>
+                    <Button nativeButton={false} render={<Link href={routes.dashboard} />}>
                         {t("backToDashboard")}
                     </Button>
-                    <Button size="lg" variant="outline" nativeButton={false} render={<Link href={routes.market} />}>
+                    <Button variant="outline" nativeButton={false} render={<Link href={routes.market} />}>
                         {t("viewMarket")}
                     </Button>
                 </div>
