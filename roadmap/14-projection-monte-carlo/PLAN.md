@@ -20,6 +20,7 @@
 | D9 | **Un seul calcul sur 10 ans** : la projection couvre 2 520 jours ouvrés (10 × 252). Le sélecteur d'horizon tronque l'affichage : les trajectoires sur 5 ans sont les 5 premières années de celles sur 10 ans, avec la même seed. | — |
 | D10 | **Courbe** : un point tous les 21 jours ouvrés (fin de bloc), jour 0 compris. Cela donne 121 points sur 10 ans, au lieu d'un point par jour. | D3 (précisée) |
 | D11 | **Moteur** : il tourne dans `risk-engine`, pas dans `backtest-engine`. Les rendements EUR sur dates communes (`toEuros`, `commonDates`, `dailyReturns`) y existent déjà. | README « Comment » |
+| D12 | **Historique minimal** : 2 jours communs (1 rendement), pas 250. Les blocs font `min(21, rendements disponibles)` jours ; `blockDays` du résultat = longueur effective. Un historique court donne une projection peu précise, affichée avec son nombre de jours. `null` seulement sous 2 jours ou si un actif n'a aucun cours. Décision utilisateur du 2026-11-16. | `MIN_COMMON_DAYS` (250) pour la projection |
 
 ## Contraintes globales
 
@@ -34,7 +35,7 @@
 
 ## Points d'attention en revue
 
-1. **Historique plus court qu'un bloc ou que 250 jours** : `projection` vaut `null`, l'écran affiche « données insuffisantes » et aucun chiffre partiel. Testé en Tâche 2.
+1. **Historique plus court qu'un bloc (2 à 21 jours)** : projection calculée avec des blocs raccourcis (D12) ; sous 2 jours, `projection` vaut `null`, l'écran affiche « données insuffisantes » et aucun chiffre partiel. Testé en Tâche 2.
 2. **Rejeu de `backtest.completed`** : risk-engine republie le risque et la projection. core-backend garde la première projection (`projectionComputedAt` non null). Testé en Tâche 4.
 3. **Ancien résultat sans projection, ou exécution en cours** : l'état est `UNAVAILABLE` avec « Relancer le backtest », jamais une erreur 500. Testé en Tâches 4 et 6.
 4. **Un seul actif ou rendements tous nuls** : aucune division par zéro. Les percentiles valent le capital et la probabilité de perte vaut 0, car `valeur < capital` est strict. Testé en Tâche 2.
