@@ -27,7 +27,6 @@ export default function HomePage() {
                 <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Azimut</h1>
                 <p className="text-h3 font-normal text-muted-foreground">{t("intro")}</p>
                 <Button
-                    size="lg"
                     className="h-11 px-5 text-body-medium"
                     nativeButton={false}
                     render={<Link href={routes.dashboard} />}

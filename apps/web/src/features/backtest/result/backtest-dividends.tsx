@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { useApiErrorMessages } from "@/lib/api-error"
 import { useFormatters } from "@/lib/format"
 import { routes } from "@/lib/routes"
-import { trendOf } from "@/lib/trend"
+import { directionOf, toneOf } from "@/lib/trend"
 import { useBacktest } from "../hook"
 import { StatusBadge } from "../status-badge"
 import type { BacktestResult } from "../types"
@@ -39,7 +39,8 @@ function DividendStats({ result }: { result: BacktestResult }) {
                 label={<InfoHint entry="finalValue">{t("finalValue")}</InfoHint>}
                 value={finalValue == null ? <Dash /> : formatAmount(f, finalValue)}
                 delta={totalReturn == null ? undefined : f.formatRatio(totalReturn)}
-                trend={trendOf(totalReturn ?? 0)}
+                trend={directionOf(totalReturn ?? 0)}
+                tone={toneOf(totalReturn ?? 0)}
                 caption={invested == null ? undefined : t("invested", { amount: formatAmount(f, invested) })}
             />
             <StatCard
@@ -50,7 +51,8 @@ function DividendStats({ result }: { result: BacktestResult }) {
                         <InfoHint entry="dividendContribution">{points(returnBreakdown.dividends)}</InfoHint>
                     )
                 }
-                trend={trendOf(returnBreakdown?.dividends ?? 0)}
+                trend={directionOf(returnBreakdown?.dividends ?? 0)}
+                tone={toneOf(returnBreakdown?.dividends ?? 0)}
                 caption={
                     priceReturn == null ? undefined : (
                         <InfoHint entry="priceReturn">{t("priceOnly", { value: f.formatRatio(priceReturn) })}</InfoHint>
@@ -67,7 +69,8 @@ function DividendStats({ result }: { result: BacktestResult }) {
                 <StatCard
                     label={<InfoHint entry="fxContribution">{t("fx")}</InfoHint>}
                     value={points(returnBreakdown.fx)}
-                    trend={trendOf(returnBreakdown.fx)}
+                    trend={directionOf(returnBreakdown.fx)}
+                    tone={toneOf(returnBreakdown.fx)}
                     caption={
                         <InfoHint entry="localReturn">
                             {t("fxCaption", { value: f.formatRatio(returnBreakdown.local) })}

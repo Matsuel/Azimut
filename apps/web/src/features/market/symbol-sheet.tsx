@@ -8,7 +8,7 @@ export function SymbolSheet({ symbol }: { symbol: string }) {
     const t = useTranslations("market.sheet")
 
     return (
-        <AppSheet title={t("title", { symbol })} trigger={<Button size="lg">{t("trigger")}</Button>}>
+        <AppSheet title={t("title", { symbol })} trigger={<Button>{t("trigger")}</Button>}>
             <div className="flex flex-1 flex-col px-4 pb-4">
                 <QuickBacktestForm symbol={symbol} />
             </div>

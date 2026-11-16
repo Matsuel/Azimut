@@ -15,6 +15,9 @@ const badgeVariants = cva(
           "bg-destructive text-white focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/80",
         success:
           "border-success text-success [a]:hover:bg-success/10",
+        // Ajout du projet : avertissement (contrat écarté, valeur approximative), contour et texte --warning
+        warning:
+          "border-warning text-warning [a]:hover:bg-warning/10",
         outline:
           "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
         ghost:

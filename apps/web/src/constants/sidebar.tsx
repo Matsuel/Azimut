@@ -8,7 +8,6 @@ import {
     FlaskConical,
     GitCompareArrows,
     LayoutDashboard,
-    Plus,
     ShieldAlert,
     Sparkles,
     TrendingUp,
@@ -27,39 +26,39 @@ export type SidebarSection = {
     tabs: SidebarTab[]
 }
 
-// Sections du menu, dans l'ordre de la roadmap : marché, Strategy Lab, analyses (mois 6 à 9), administration
+// Sections du menu (maquette Figma) : laboratoire, analyse, trading virtuel, suivi, administration.
+// Les sections « Dérivés » (taux, options, structuration) et l'onglet « Alertes » arrivent avec leurs features.
 export const sidebarSections: SidebarSection[] = [
     {
-        key: "overview",
+        key: "laboratory",
         adminOnly: false,
         tabs: [
             { key: "dashboard", url: routes.dashboard, icon: <LayoutDashboard /> },
-            { key: "notifications", url: routes.notifications, icon: <Bell /> },
-        ],
-    },
-    {
-        key: "market",
-        adminOnly: false,
-        tabs: [{ key: "market", url: routes.market, icon: <ChartCandlestick /> }],
-    },
-    {
-        key: "strategyLab",
-        adminOnly: false,
-        tabs: [
+            { key: "market", url: routes.market, icon: <ChartCandlestick /> },
             { key: "backtests", url: routes.backtests, icon: <FlaskConical /> },
-            { key: "newBacktest", url: routes.newBacktest, icon: <Plus /> },
-            { key: "compare", url: routes.compare, icon: <GitCompareArrows /> },
-            { key: "paperTrading", url: routes.paperTrading, icon: <TrendingUp /> },
         ],
     },
     {
         key: "analysis",
         adminOnly: false,
         tabs: [
+            { key: "compare", url: routes.compare, icon: <GitCompareArrows /> },
             { key: "risk", url: routes.risk, icon: <ShieldAlert /> },
             { key: "projection", url: routes.projection, icon: <Sparkles /> },
             { key: "optimization", url: routes.optimization, icon: <BrainCircuit /> },
+        ],
+    },
+    {
+        key: "virtualTrading",
+        adminOnly: false,
+        tabs: [{ key: "paperTrading", url: routes.paperTrading, icon: <TrendingUp /> }],
+    },
+    {
+        key: "followUp",
+        adminOnly: false,
+        tabs: [
             { key: "reports", url: routes.reports, icon: <FileText /> },
+            { key: "notifications", url: routes.notifications, icon: <Bell /> },
         ],
     },
     {

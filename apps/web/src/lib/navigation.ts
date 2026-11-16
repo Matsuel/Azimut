@@ -13,7 +13,7 @@ const matches = (pathname: string, url: string) =>
 
 /**
  * Onglet de la sidebar qui correspond à `pathname`, avec la clé de sa section : le plus long préfixe d'URL gagne
- * (`/app/backtest/new` désigne « Nouveau backtest », pas « Backtests »). `undefined` hors du menu (paramètres).
+ * (`/app/backtest/new` désigne « Backtests »). `undefined` hors du menu (paramètres).
  */
 export function findActiveTab(pathname: string): ActiveTab | undefined {
     return tabs.filter((tab) => matches(pathname, tab.url)).sort((a, b) => b.url.length - a.url.length)[0]
