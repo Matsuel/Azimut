@@ -126,6 +126,10 @@
         }
     },
     "components": {
+        "backtestPicker": {
+            "choose": "Choose a backtest",
+            "empty": "No completed backtest."
+        },
         "symbolSearch": {
             "tooShort": "Enter at least {count} characters.",
             "failed": "The search failed",
@@ -1140,8 +1144,6 @@
         "titleEmpty": "Risk",
         "computed": "Computed",
         "subtitle": "{allocations} · {period} · daily returns",
-        "choose": "Choose a backtest",
-        "noBacktest": "No completed backtest.",
         "states": {
             "empty": "Choose a completed backtest to see where its risk comes from.",
             "insufficientData": "Fewer than 250 trading days shared by every asset: risk is not computed.",

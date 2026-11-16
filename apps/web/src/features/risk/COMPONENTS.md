@@ -10,14 +10,6 @@ Page Risque d'un backtest (feature 13, maquette `33 · Risque`, états du cadre 
   - `backtestId` : id du backtest de l'URL ; `""` affiche l'état « Choisissez un backtest terminé ».
 - **Source** : `src/features/risk/backtest-risk.tsx`.
 
-### BacktestPicker
-
-- **Import** : `import { BacktestPicker } from "@/features/risk/backtest-picker"`.
-- **Rôle** : bouton « Choisir un backtest » ouvrant un menu des `RISK_PICKER_LIMIT` backtests terminés les plus récents (`useBacktests` avec `hasResult`).
-- **Props** :
-  - `onSelect` : reçoit l'id choisi.
-- **Source** : `src/features/risk/backtest-picker.tsx`.
-
 ### RiskStats
 
 - **Import** : `import { RiskStats } from "@/features/risk/risk-stats"`.
@@ -61,16 +53,6 @@ Page Risque d'un backtest (feature 13, maquette `33 · Risque`, états du cadre 
   - `risk` : `Risk` reçu.
 - **Source** : `src/features/risk/asset-exposures.tsx`.
 
-### RiskStateCard
-
-- **Import** : `import { RiskStateCard } from "@/features/risk/risk-state-card"`.
-- **Rôle** : carte d'un état de la page (vide, données insuffisantes, sans risque, erreur) : message centré et action facultative.
-- **Props** :
-  - `message` : texte affiché.
-  - `action` (optionnel) : bouton sous le message.
-  - `error` (optionnel) : message en `destructive`.
-- **Source** : `src/features/risk/risk-state-card.tsx`.
-
 ### `features/risk/api.ts`
 
 - **Import** : `import { getRisk, setRiskLimit } from "@/features/risk/api"`.
@@ -105,7 +87,6 @@ Page Risque d'un backtest (feature 13, maquette `33 · Risque`, états du cadre 
 | Export | Rôle (et unité) |
 | --- | --- |
 | `RISK_LIMIT_PERCENT` | Bornes de la limite saisie, en pourcent entier (miroir de `RISK_LIMIT_BOUNDS` du contrat). |
-| `RISK_PICKER_LIMIT` | Nombre de backtests proposés par le sélecteur. |
 | `RISK_POLL_MS`, `RISK_WAIT_MS` | Intervalle de rafraîchissement du risque attendu (ms) et délai d'attente après la fin d'une exécution (ms). |
 
 ### `features/risk/utils.ts`

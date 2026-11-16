@@ -65,6 +65,8 @@ Une ligne par entrée : le détail (import, props, exemple) est dans l'entrée l
   - [FilterTabs](#filtertabs) : onglets de filtre contrôlés, typés par l'union des valeurs
   - [StatCard](#statcard) : carte de métrique 
   - [EmptyCard](#emptycard) : carte d'état vide (`Card` + `Empty`) 
+  - [StateCard](#statecard) : carte d'état d'une page (message centré, action facultative, ton erreur)
+  - [BacktestPicker](#backtestpicker) : bouton « Choisir un backtest » et menu des backtests terminés
   - [DetailRow](#detailrow) : ligne d'une liste `<dl>` 
   - [LoadingState](#loadingstate) : spinner `Loader2` centré, pendant le chargement d'une requête (`isPending`)
   - [ErrorState](#errorstate) : message d'erreur d'une requête et bouton « Réessayer », centrés (`isError`)
@@ -166,17 +168,17 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/market/types.ts`](src/features/market/COMPONENTS.md#featuresmarkettypests) : exports `Period`, `MarketAsset`, `MarketDetails`, `MarketData`
 - [`features/risk`](src/features/risk/COMPONENTS.md)
   - [BacktestRisk](src/features/risk/COMPONENTS.md#backtestrisk) : écran Risque (maquette 33, route `routes.backtestRisk(id)`) et ses états
-  - [BacktestPicker](src/features/risk/COMPONENTS.md#backtestpicker) : bouton « Choisir un backtest » et menu des backtests terminés
+  
   - [RiskStats](src/features/risk/COMPONENTS.md#riskstats) : quatre cartes volatilité, VaR, CVaR, concentration
   - [CorrelationMatrix](src/features/risk/COMPONENTS.md#correlationmatrix) : carte de chaleur des corrélations
   - [RiskContributions](src/features/risk/COMPONENTS.md#riskcontributions) : barres de contribution au risque
   - [DrawdownConstraint](src/features/risk/COMPONENTS.md#drawdownconstraint) : saisie et vérifications de la limite de drawdown
   - [AssetExposures](src/features/risk/COMPONENTS.md#assetexposures) : tableau des expositions par actif
-  - [RiskStateCard](src/features/risk/COMPONENTS.md#riskstatecard) : carte d'état (vide, insuffisant, sans risque, erreur)
+  
   - [`features/risk/api.ts`](src/features/risk/COMPONENTS.md#featuresriskapits) : exports `getRisk`, `setRiskLimit`
   - [`features/risk/hook.ts`](src/features/risk/COMPONENTS.md#featuresriskhookts) : exports `useRisk`, `useSetRiskLimit`
   - [`features/risk/schema.ts`](src/features/risk/COMPONENTS.md#featuresriskschemats) : exports `createRiskLimitSchema(t)` / `RiskLimitValues`
-  - [`features/risk/constants.ts`](src/features/risk/COMPONENTS.md#featuresriskconstantsts) : exports `RISK_LIMIT_PERCENT`, `RISK_PICKER_LIMIT`, `RISK_POLL_MS`, `RISK_WAIT_MS`
+  - [`features/risk/constants.ts`](src/features/risk/COMPONENTS.md#featuresriskconstantsts) : exports `RISK_LIMIT_PERCENT`, `RISK_POLL_MS`, `RISK_WAIT_MS`
   - [`features/risk/utils.ts`](src/features/risk/COMPONENTS.md#featuresriskutilsts) : exports `riskPollMs`
   - [`features/risk/types.ts`](src/features/risk/COMPONENTS.md#featuresrisktypests) : réexports des types de risque du contrat
 - [`features/settings`](src/features/settings/COMPONENTS.md)
@@ -503,6 +505,40 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 - **Rôle** : carte d'état vide (`Card` + `Empty`) : un message centré à la place d'un contenu pas encore disponible (comparaison sans sélection, backtest sans résultat).
 - **Props** : `children` (le message).
 - **Source** : `src/components/empty-card.tsx`.
+
+### StateCard
+
+- **Import** : `import { StateCard } from "@/components/state-card"` (export nommé).
+- **Rôle** : carte d'un état de page (vide, données insuffisantes, erreur) : message centré et action facultative ; contrairement à `EmptyCard`, accepte un bouton et le ton erreur.
+- **Props** :
+
+  | Nom | Type | Requis | Défaut | Description |
+  | --- | --- | --- | --- | --- |
+  | `message` | `string` | oui | — | Texte affiché. |
+  | `action` | `ReactNode` | non | — | Bouton sous le message. |
+  | `error` | `boolean` | non | `false` | Message en `destructive`. |
+
+- **Exemple** (tiré de `src/features/risk/backtest-risk.tsx`) :
+  ```tsx
+  <StateCard error message={errorMessage(failed.error) || t("states.error")} action={retry} />
+  ```
+- **Source** : `src/components/state-card.tsx`.
+
+### BacktestPicker
+
+- **Import** : `import { BacktestPicker } from "@/components/backtest-picker"` (export nommé).
+- **Rôle** : bouton « Choisir un backtest » ouvrant un menu des `BACKTEST_PICKER_LIMIT` backtests terminés les plus récents (`useBacktests` avec `hasResult`) ; textes dans `components.backtestPicker`.
+- **Props** :
+
+  | Nom | Type | Requis | Défaut | Description |
+  | --- | --- | --- | --- | --- |
+  | `onSelect` | `(backtestId: string) => void` | oui | — | Reçoit l'id choisi. |
+
+- **Exemple** (tiré de `src/features/risk/backtest-risk.tsx`) :
+  ```tsx
+  <BacktestPicker onSelect={(id) => router.replace(routes.backtestRisk(id), { scroll: false })} />
+  ```
+- **Source** : `src/components/backtest-picker.tsx`.
 
 ### DetailRow
 
@@ -965,11 +1001,12 @@ Source : `src/lib/session.ts`.
 
 ### `constants/pagination.ts`
 
-- **Import** : `import { PAGE_SIZE } from "@/constants/pagination"`.
+- **Import** : `import { BACKTEST_PICKER_LIMIT, PAGE_SIZE } from "@/constants/pagination"`.
 
 | Export | Rôle |
 | --- | --- |
 | `PAGE_SIZE` | Lignes par page des tableaux (`pageSize` envoyé au backend, découpage client). |
+| `BACKTEST_PICKER_LIMIT` | Nombre de backtests terminés proposés par `BacktestPicker`. |
 
 Source : `src/constants/pagination.ts`.
 

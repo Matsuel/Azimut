@@ -4,8 +4,10 @@ import { type UseQueryResult, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
+import { BacktestPicker } from "@/components/backtest-picker"
 import { PageHeader } from "@/components/page-layout"
 import { LoadingState } from "@/components/query-status"
+import { StateCard } from "@/components/state-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useBacktest, useRerunBacktest } from "@/features/backtest/hook"
@@ -15,12 +17,10 @@ import { useApiErrorMessages } from "@/lib/api-error"
 import { type Formatters, useFormatters } from "@/lib/format"
 import { routes } from "@/lib/routes"
 import { AssetExposures } from "./asset-exposures"
-import { BacktestPicker } from "./backtest-picker"
 import { CorrelationMatrix } from "./correlation-matrix"
 import { DrawdownConstraint } from "./drawdown-constraint"
 import { useRisk, useSetRiskLimit } from "./hook"
 import { RiskContributions } from "./risk-contributions"
-import { RiskStateCard } from "./risk-state-card"
 import { RiskStats } from "./risk-stats"
 import type { RiskTranslator } from "./schema"
 import type { RiskView } from "./types"
@@ -47,7 +47,7 @@ export function BacktestRisk({ backtestId }: { backtestId: string }) {
         return (
             <>
                 <PageHeader title={t("titleEmpty")} actions={picker} />
-                <RiskStateCard message={t("states.empty")} />
+                <StateCard message={t("states.empty")} />
             </>
         )
     }
@@ -98,10 +98,10 @@ function RiskBody({ backtestId, queries, view, execution }: RiskBodyProps) {
                 {tc("retry")}
             </Button>
         )
-        return <RiskStateCard error message={errorMessage(failed.error) || t("states.error")} action={retry} />
+        return <StateCard error message={errorMessage(failed.error) || t("states.error")} action={retry} />
     }
     if (!view || queries.some((query) => query.isPending)) return <LoadingState className="h-64" />
-    if (view.state === "INSUFFICIENT_DATA") return <RiskStateCard message={t("states.insufficientData")} />
+    if (view.state === "INSUFFICIENT_DATA") return <StateCard message={t("states.insufficientData")} />
     if (view.state === "UNAVAILABLE") {
         const onRerun = () =>
             rerun.mutate(undefined, { onSuccess: () => queryClient.invalidateQueries({ queryKey: ["risk"] }) })
@@ -111,7 +111,7 @@ function RiskBody({ backtestId, queries, view, execution }: RiskBodyProps) {
                 {t("states.rerun")}
             </Button>
         )
-        return <RiskStateCard message={t("states.unavailable")} action={action} />
+        return <StateCard message={t("states.unavailable")} action={action} />
     }
     return (
         <ComputedRisk

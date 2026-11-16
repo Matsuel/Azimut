@@ -126,6 +126,10 @@
         }
     },
     "components": {
+        "backtestPicker": {
+            "choose": "Choisir un backtest",
+            "empty": "Aucun backtest terminé."
+        },
         "symbolSearch": {
             "tooShort": "Saisis au moins {count} caractères.",
             "failed": "La recherche a échoué",
@@ -1140,8 +1144,6 @@
         "titleEmpty": "Risque",
         "computed": "Calculé",
         "subtitle": "{allocations} · {period} · rendements journaliers",
-        "choose": "Choisir un backtest",
-        "noBacktest": "Aucun backtest terminé.",
         "states": {
             "empty": "Choisissez un backtest terminé pour voir d’où vient son risque.",
             "insufficientData": "Moins de 250 jours de cotation communs à tous les actifs : le risque n’est pas calculé.",
