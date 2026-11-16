@@ -3,7 +3,6 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { NextIntlClientProvider } from "next-intl"
 import type { ReactNode } from "react"
 import fr from "../messages/fr.json"
-import { awaitResultPollMs } from "../src/features/backtest/result-wait"
 import type { BacktestExecution } from "../src/features/backtest/types"
 import { AssetExposures } from "../src/features/risk/asset-exposures"
 import { CorrelationMatrix } from "../src/features/risk/correlation-matrix"
@@ -11,6 +10,7 @@ import { DrawdownConstraint } from "../src/features/risk/drawdown-constraint"
 import { RiskContributions } from "../src/features/risk/risk-contributions"
 import { RiskStats } from "../src/features/risk/risk-stats"
 import type { Risk, RiskReading, RiskView } from "../src/features/risk/types"
+import { awaitResultPollMs } from "../src/features/risk/utils"
 
 afterEach(cleanup)
 

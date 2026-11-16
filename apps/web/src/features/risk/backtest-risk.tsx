@@ -11,7 +11,6 @@ import { StateCard } from "@/components/state-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useBacktest, useRerunBacktest } from "@/features/backtest/hook"
-import { awaitResultPollMs } from "@/features/backtest/result-wait"
 import type { BacktestDetails, BacktestExecution } from "@/features/backtest/types"
 import { formatAllocation, getExecution, isActive } from "@/features/backtest/utils"
 import { useApiErrorMessages } from "@/lib/api-error"
@@ -25,6 +24,7 @@ import { RiskContributions } from "./risk-contributions"
 import { RiskStats } from "./risk-stats"
 import type { RiskTranslator } from "./schema"
 import type { RiskView } from "./types"
+import { awaitResultPollMs } from "./utils"
 
 // Sous-titre de la maquette : allocation, période, fréquence des rendements
 const describe = (f: Formatters, t: RiskTranslator, b: BacktestDetails) =>

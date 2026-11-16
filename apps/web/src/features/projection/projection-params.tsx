@@ -18,7 +18,13 @@ type ProjectionParamsProps = { projection: Projection; horizon: number; onHorizo
 export function ProjectionParams({ projection, horizon, onHorizonChange }: ProjectionParamsProps) {
     const f = useFormatters()
     const t = useTranslations("pages.projection.params")
-    const options = HORIZON_YEARS.map((years) => ({ value: String(years), label: f.formatYears(years) }))
+    // Affichage : seuls les horizons présents dans la projection reçue (un résultat ancien couvre moins d'années)
+    const options = HORIZON_YEARS.filter((years) => projection.years.some((year) => year.years === years)).map(
+        (years) => ({
+            value: String(years),
+            label: f.formatYears(years),
+        }),
+    )
 
     return (
         <Card>

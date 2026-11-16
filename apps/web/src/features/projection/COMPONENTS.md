@@ -5,7 +5,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 ### BacktestProjection
 
 - **Import** : `import { BacktestProjection } from "@/features/projection/backtest-projection"`.
-- **Rôle** : écran de la route `routes.backtestProjection(id)` (`/app/projection?backtest=<id>`) : en-tête « Projection · <nom> » avec badge `Calculée` ou badge `En cours` (`StatusBadge` RUNNING) pendant le calcul, allocation, période, scénarios, horizon et `BacktestPicker` ; puis un seul état : erreur (« Réessayer »), chargement, calcul en cours (« Projection en cours de calcul… », sans bouton, rafraîchi toutes les 2 s ; passé 2 min : « Le calcul prend plus de temps que prévu » + « Réessayer » et « Relancer le backtest »), données insuffisantes, sans projection, y compris un calcul attendu depuis plus de 10 min, expiré par le serveur (« Relancer le backtest », désactivé pendant une exécution) ou `ComputedProjection` ; puis `ProjectionHistory` si l'historique n'est pas vide. Garde l'horizon choisi (5 par défaut) dans l'état local : le changer ne déclenche aucune requête. Instancie `useBacktest`, `useProjection` (rafraîchi par `awaitResultPollMs` de `features/backtest/result-wait`) et `useRerunBacktest`.
+- **Rôle** : écran de la route `routes.backtestProjection(id)` (`/app/projection?backtest=<id>`) : en-tête « Projection · <nom> » avec badge `Calculée` ou badge `En cours` (`StatusBadge` RUNNING) pendant le calcul, allocation, période, scénarios, horizon et `BacktestPicker` ; puis un seul état : erreur (« Réessayer »), chargement, calcul en cours (« Projection en cours de calcul… », sans bouton, rafraîchi toutes les 2 s tant qu'il est attendu, sans délai côté web : un calcul bloqué est expiré par le serveur), données insuffisantes, sans projection, y compris un calcul attendu depuis plus de 10 min, expiré par le serveur (« Relancer le backtest », désactivé pendant une exécution) ou `ComputedProjection` ; puis `ProjectionHistory` si l'historique n'est pas vide. Garde l'horizon choisi (5 par défaut) dans l'état local : le changer ne déclenche aucune requête. Instancie `useBacktest`, `useProjection` (rafraîchi par `projectionPollMs`) et `useRerunBacktest`.
 - **Props** :
   - `backtestId` : id du backtest de l'URL ; `""` affiche l'état « Choisissez un backtest terminé ».
 - **Source** : `src/features/projection/backtest-projection.tsx`.
@@ -13,7 +13,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 ### ProjectionBody
 
 - **Import** : `import { ProjectionBody } from "@/features/projection/projection-body"`.
-- **Rôle** : corps de `BacktestProjection` : une `StateCard` selon l'état (erreur, chargement, calcul en cours ou trop long avec « Relire » et « Relancer le backtest », données insuffisantes, indisponible) ou `ComputedProjection`.
+- **Rôle** : corps de `BacktestProjection` : une `StateCard` selon l'état (erreur, chargement, calcul en cours, données insuffisantes, indisponible) ou `ComputedProjection`.
 - **Props** : `backtestId`, `backtestQuery` et `projectionQuery` (requêtes TanStack), `view` (`ProjectionView`), `execution`, `horizon` (années), `onHorizonChange`.
 - **Source** : `src/features/projection/projection-body.tsx`.
 
@@ -64,7 +64,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 ### ProjectionParams
 
 - **Import** : `import { ProjectionParams } from "@/features/projection/projection-params"`.
-- **Rôle** : carte « Paramètres de la projection » : `FilterTabs` 1 / 3 / 5 / 10 ans, puis `DetailRow` en lecture seule : montant investi, scénarios, seed, taille des blocs (effective, peut être inférieure à 21), historique utilisé (période et nombre de jours, dès 2 jours).
+- **Rôle** : carte « Paramètres de la projection » : `FilterTabs` des horizons de `HORIZON_YEARS` présents dans `projection.years` (1 / 3 / 5 / 10 / 20 / 30 ans pour un calcul de 30 ans, jusqu'à 10 pour un ancien), puis `DetailRow` en lecture seule : montant investi, scénarios, seed, taille des blocs (effective, peut être inférieure à 21), historique utilisé (période et nombre de jours, dès 2 jours).
 - **Props** :
   - `projection` : `Projection` reçue.
   - `horizon` : horizon choisi, années.
@@ -85,7 +85,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 
 | Export | Rôle (et unité) |
 | --- | --- |
-| `useProjection` | Requête `["projection", "detail", id]`, aucune sans id ; `pollMs(view)` donne l'intervalle de rafraîchissement (ms) ou `false`. |
+| `useProjection(backtestId)` | Requête `["projection", "detail", id]`, aucune sans id ; rafraîchie selon `projectionPollMs`. |
 
 ### `features/projection/constants.ts`
 
@@ -93,7 +93,7 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 
 | Export | Rôle (et unité) |
 | --- | --- |
-| `HORIZON_YEARS` | Horizons proposés, années : 1, 3, 5, 10 (choix d'affichage du web, borné par `PROJECTION_PARAMS.horizonYears` du contrat). |
+| `HORIZON_YEARS` | Horizons proposés, années : 1, 3, 5, 10, 20, 30, filtrés par `projection.years` à l'affichage (choix d'affichage du web, borné par `PROJECTION_PARAMS.horizonYears` du contrat). |
 | `DEFAULT_PROJECTION_HORIZON` | Horizon initial, 5 ans. |
 
 ### `features/projection/types.ts`
@@ -103,8 +103,9 @@ Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carl
 
 ### `features/projection/utils.ts`
 
-- **Import** : `import { formatComputationDuration } from "@/features/projection/utils"`.
+- **Import** : `import { formatComputationDuration, projectionPollMs } from "@/features/projection/utils"`.
 
 | Export | Rôle (et unité) |
 | --- | --- |
 | `formatComputationDuration(f, t, durationMs)` | Durée du calcul reçue en millisecondes, au format de la page backtest : « 0,7 s » sous une minute (une décimale), « 1 min 5 s » au-delà (`t` = traducteur `backtest`). |
+| `projectionPollMs(view)` | Intervalle de rafraîchissement (ms, `RESULT_POLL_MS`) tant que `projection.completed` est attendu (`PENDING`, ou `UNAVAILABLE` avec un calcul `PENDING` dans l'historique) ; `false` sinon. Sans horloge. |

@@ -152,9 +152,8 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/backtest/api.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestapits) : exports `createBacktest`, `createBacktestBatch`, `getBacktestBatch`, `restartBacktestBatch`,
   - [`features/backtest/hook.ts`](src/features/backtest/COMPONENTS.md#featuresbacktesthookts) : exports `useCreateBacktest`, `useCreateBacktestBatch`, `useRestartBacktestBatch`, `useRerunBacktestBatch`,
   - [`features/backtest/schema.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestschemats) : exports `createBacktestFormSchema(t)`, `BacktestValues`, `createQuickBacktestFormSchema(t)`,
-  - [`features/backtest/constants.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestconstantsts) : exports `BACKTEST_CURRENCY`, `RESULT_POLL_MS`, `RESULT_WAIT_MS`, `activeStatuses`, `investmentModes`, `rebalanceFrequencies`,
+  - [`features/backtest/constants.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestconstantsts) : exports `BACKTEST_CURRENCY`, `RESULT_POLL_MS`, `activeStatuses`, `investmentModes`, `rebalanceFrequencies`,
   - [`features/backtest/utils.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestutilsts) : exports `getExecution`, `hasStatus`, `isActive`, `formatWholeAmount(f, v)`, `formatSeconds(t, seconds)`, `getExecutionDuration(t, e)`, `fromDecimal`,
-  - [`features/backtest/result-wait.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestresult-waitts) : exports `awaitResultPollMs(state, execution)`
   - [`features/backtest/column.tsx`](src/features/backtest/COMPONENTS.md#featuresbacktestcolumntsx) : exports `useBacktestColumns()`, `useBatchColumns(endDate)`, `useRollingColumns()`, `useTradeColumns()`,
   - [`features/backtest/types.ts`](src/features/backtest/COMPONENTS.md#featuresbacktesttypests) : voir l'entrée
 - [`features/market`](src/features/market/COMPONENTS.md)
@@ -179,7 +178,7 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/projection/api.ts`](src/features/projection/COMPONENTS.md#featuresprojectionapits) : exports `getProjection`
   - [`features/projection/hook.ts`](src/features/projection/COMPONENTS.md#featuresprojectionhookts) : exports `useProjection`
   - [`features/projection/constants.ts`](src/features/projection/COMPONENTS.md#featuresprojectionconstantsts) : exports `HORIZON_YEARS`, `DEFAULT_PROJECTION_HORIZON`
-  - [`features/projection/utils.ts`](src/features/projection/COMPONENTS.md#featuresprojectionutilsts) : exports `formatComputationDuration(f, t, durationMs)`
+  - [`features/projection/utils.ts`](src/features/projection/COMPONENTS.md#featuresprojectionutilsts) : exports `formatComputationDuration(f, t, durationMs)`, `projectionPollMs(view)`
   - [`features/projection/types.ts`](src/features/projection/COMPONENTS.md#featuresprojectiontypests) : réexports des types de projection du contrat
 - [`features/risk`](src/features/risk/COMPONENTS.md)
   - [BacktestRisk](src/features/risk/COMPONENTS.md#backtestrisk) : écran Risque (maquette 33, route `routes.backtestRisk(id)`) et ses états
@@ -191,7 +190,8 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/risk/api.ts`](src/features/risk/COMPONENTS.md#featuresriskapits) : exports `getRisk`, `setRiskLimit`
   - [`features/risk/hook.ts`](src/features/risk/COMPONENTS.md#featuresriskhookts) : exports `useRisk`, `useSetRiskLimit`
   - [`features/risk/schema.ts`](src/features/risk/COMPONENTS.md#featuresriskschemats) : exports `createRiskLimitSchema(t)` / `RiskLimitValues`
-  - [`features/risk/constants.ts`](src/features/risk/COMPONENTS.md#featuresriskconstantsts) : exports `RISK_LIMIT_PERCENT`
+  - [`features/risk/constants.ts`](src/features/risk/COMPONENTS.md#featuresriskconstantsts) : exports `RISK_LIMIT_PERCENT`, `RESULT_WAIT_MS`
+  - [`features/risk/utils.ts`](src/features/risk/COMPONENTS.md#featuresriskutilsts) : exports `awaitResultPollMs(state, execution)`
   - [`features/risk/types.ts`](src/features/risk/COMPONENTS.md#featuresrisktypests) : réexports des types de risque du contrat
 - [`features/settings`](src/features/settings/COMPONENTS.md)
   - [SettingsTabs](src/features/settings/COMPONENTS.md#settingstabs) : barre d'onglets des paramètres (`ui/tabs`) 

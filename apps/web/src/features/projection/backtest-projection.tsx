@@ -8,7 +8,6 @@ import { PageHeader } from "@/components/page-layout"
 import { StateCard } from "@/components/state-card"
 import { Badge } from "@/components/ui/badge"
 import { useBacktest } from "@/features/backtest/hook"
-import { awaitResultPollMs } from "@/features/backtest/result-wait"
 import { StatusBadge } from "@/features/backtest/status-badge"
 import { formatAllocation, getExecution } from "@/features/backtest/utils"
 import { useFormatters } from "@/lib/format"
@@ -47,7 +46,7 @@ function ProjectionContent({ backtestId, picker }: { backtestId: string; picker:
     const [horizon, setHorizon] = useState<number>(DEFAULT_PROJECTION_HORIZON)
     const backtest = useBacktest(backtestId)
     const execution = backtest.data && getExecution(backtest.data)
-    const projection = useProjection(backtestId, (view) => awaitResultPollMs(view.state, execution))
+    const projection = useProjection(backtestId)
     const view = projection.data
     const computed = view?.projection
 

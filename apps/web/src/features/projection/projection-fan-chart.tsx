@@ -1,12 +1,12 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { Area, CartesianGrid, ComposedChart, Line, ReferenceDot, XAxis, YAxis } from "recharts"
+import { Area, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts"
 import { ChartLegend } from "@/components/chart-legend"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import { formatWholeAmount } from "@/features/backtest/utils"
-import { type Formatters, useFormatters } from "@/lib/format"
+import { useFormatters } from "@/lib/format"
 import { amountTooltip, chartSeries, endLabel, investedLine, toRow } from "./fan-chart-parts"
 import type { ProjectionPoint, ProjectionYear } from "./types"
 
@@ -27,7 +27,9 @@ export function ProjectionFanChart({ points, capital, horizonYears, paths, year 
     const t = useTranslations("pages.projection.chart")
     const daysPerYear = year.day / year.years // lu des données, pas écrit en dur
     const data = points.filter((p) => p.day <= year.day).map((p) => toRow(p, daysPerYear))
-    const ticks = Array.from({ length: horizonYears + 1 }, (_, i) => i)
+    // Une graduation par an jusqu'à 10 ans, puis tous les 5 ans : 31 libellés ne tiennent pas sur l'axe
+    const tickStep = horizonYears > 10 ? 5 : 1
+    const ticks = Array.from({ length: horizonYears + 1 }, (_, i) => i).filter((i) => i % tickStep === 0)
     const { names, config, legend } = chartSeries(t)
     return (
         <Card>

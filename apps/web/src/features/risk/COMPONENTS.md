@@ -87,6 +87,15 @@ Page Risque d'un backtest (feature 13, maquette `33 · Risque`, états du cadre 
 | Export | Rôle (et unité) |
 | --- | --- |
 | `RISK_LIMIT_PERCENT` | Bornes de la limite saisie, en pourcent entier (miroir de `RISK_LIMIT_BOUNDS` du contrat). |
+| `RESULT_WAIT_MS` | Attente (2 min) du risque après la fin d'une exécution, ms. |
+
+### `features/risk/utils.ts`
+
+- **Import** : `import { awaitResultPollMs } from "@/features/risk/utils"`.
+
+| Export | Rôle |
+| --- | --- |
+| `awaitResultPollMs(state, execution)` | Intervalle (ms, `RESULT_POLL_MS`) tant que le risque manque (`state` `UNAVAILABLE`) pendant ou juste après une exécution (moins de `RESULT_WAIT_MS`) ; `false` sinon. Propre au risque : son `UNAVAILABLE` est ambigu et le serveur n'expire pas l'attente. |
 
 ### `features/risk/types.ts`
 

@@ -326,7 +326,7 @@ Source : `src/features/backtest/schema.ts`.
 | Export | Rôle |
 | --- | --- |
 | `BACKTEST_CURRENCY` | Devise d'affichage des montants (cours non convertis). |
-| `RESULT_POLL_MS`, `RESULT_WAIT_MS` | Rafraîchissement (2 000 ms) d'un résultat publié après le backtest (risque, projection) et délai d'attente (2 min) après la fin d'une exécution. |
+| `RESULT_POLL_MS` | Rafraîchissement (2 000 ms) d'un résultat publié après le backtest (risque, projection) tant qu'il est attendu. |
 | `activeStatuses` | Statuts d'une exécution qui peut encore évoluer (miroir de `ACTIVE_STATUSES` backend). |
 | `investmentModes` | Modes d'investissement du `SelectField` ; libellés `backtest.investmentMode.<mode>`. |
 | `rebalanceFrequencies` | Fréquences de rebalancement (select et backtest stocké) ; libellés `backtest.rebalanceFrequency.<fréquence>`. |
@@ -368,14 +368,6 @@ Source : `src/features/backtest/constants.ts`.
 | `getComparisonBenchmark` | Benchmark affiché : celui de A, sinon celui de B ; `benchmark` null si aucun. |
 
 Source : `src/features/backtest/utils.ts`. Helpers purs : aucun JSX (`<Dash />` est ajouté par l'écran).
-
-### `features/backtest/result-wait.ts`
-
-- **Import** : `import { awaitResultPollMs } from "@/features/backtest/result-wait"`.
-
-| Export | Rôle |
-| --- | --- |
-| `awaitResultPollMs(state, execution)` | Intervalle (ms, `RESULT_POLL_MS`) tant qu'un résultat publié après le backtest manque (`state` `UNAVAILABLE`, ou `PENDING` : calcul attendu) pendant ou juste après une exécution ; `false` sinon, y compris `PENDING` au-delà de `RESULT_WAIT_MS` (l'écran propose « Réessayer »). Risque et projection. |
 
 ### `features/backtest/column.tsx`
 

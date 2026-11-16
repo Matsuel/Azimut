@@ -6,7 +6,6 @@ import { LoadingState } from "@/components/query-status"
 import { StateCard } from "@/components/state-card"
 import { Button } from "@/components/ui/button"
 import { useRerunBacktest } from "@/features/backtest/hook"
-import { awaitResultPollMs } from "@/features/backtest/result-wait"
 import type { BacktestExecution } from "@/features/backtest/types"
 import { isActive } from "@/features/backtest/utils"
 import { useApiErrorMessages } from "@/lib/api-error"
@@ -26,7 +25,7 @@ type ProjectionBodyProps = {
 }
 
 /**
- * Corps de la page : état unique (erreur, chargement, calcul en cours ou trop long, données insuffisantes, sans
+ * Corps de la page : état unique (erreur, chargement, calcul en cours, données insuffisantes, sans
  * projection) rendu en carte d'état, ou projection calculée.
  */
 export function ProjectionBody({
@@ -65,18 +64,8 @@ export function ProjectionBody({
         return <StateCard error message={errorMessage(failed.error) || t("states.error")} action={retry(failed)} />
     }
     if (!view || queries.some((query) => query.isPending)) return <LoadingState className="h-64" />
-    if (view.state === "PENDING") {
-        // Passé l'attente, `awaitResultPollMs` rend `false` : le calcul tarde, on propose de relire plutôt que d'attendre sans fin
-        const waiting = execution && awaitResultPollMs(view.state, execution) !== false
-        if (waiting) return <StateCard message={t("states.pending")} />
-        const slowActions = (
-            <>
-                {retry(projectionQuery)}
-                {rerunButton}
-            </>
-        )
-        return <StateCard message={t("states.slow")} action={slowActions} />
-    }
+    // Un calcul bloqué est expiré par le serveur (UNAVAILABLE) : le web n'a pas de délai à lui
+    if (view.state === "PENDING") return <StateCard message={t("states.pending")} />
     if (view.state === "INSUFFICIENT_DATA") return <StateCard message={t("states.insufficientData")} />
     if (view.state === "UNAVAILABLE" || !view.projection) {
         return <StateCard message={t("states.unavailable")} action={rerunButton} />
