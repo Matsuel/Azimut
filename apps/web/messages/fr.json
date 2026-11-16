@@ -1120,6 +1120,8 @@
             "titleEmpty": "Projection",
             "subtitle": "{allocations} · {period} · {paths} scénarios · horizon {horizon}",
             "states": {
+                "pending": "Projection en cours de calcul…",
+                "slow": "Le calcul prend plus de temps que prévu.",
                 "empty": "Choisissez un backtest terminé pour voir ses futurs plausibles.",
                 "insufficientData": "Données insuffisantes : moins de 2 jours de cotation communs à tous les actifs, la projection n’est pas calculée.",
                 "unavailable": "Ce résultat n’a pas encore de projection. Relancez le backtest pour la calculer.",

@@ -1120,6 +1120,8 @@
             "titleEmpty": "Projection",
             "subtitle": "{allocations} · {period} · {paths} scenarios · {horizon} horizon",
             "states": {
+                "pending": "Projection being computed…",
+                "slow": "The computation is taking longer than expected.",
                 "empty": "Choose a completed backtest to see its plausible futures.",
                 "insufficientData": "Insufficient data: fewer than 2 trading days common to all assets, the projection is not computed.",
                 "unavailable": "This result has no projection yet. Rerun the backtest to compute it.",

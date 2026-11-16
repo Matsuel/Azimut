@@ -11,8 +11,10 @@ import { StateCard } from "@/components/state-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useBacktest, useRerunBacktest } from "@/features/backtest/hook"
+import { awaitResultPollMs } from "@/features/backtest/result-wait"
+import { StatusBadge } from "@/features/backtest/status-badge"
 import type { BacktestExecution } from "@/features/backtest/types"
-import { awaitResultPollMs, formatAllocation, getExecution, isActive } from "@/features/backtest/utils"
+import { formatAllocation, getExecution, isActive } from "@/features/backtest/utils"
 import { useApiErrorMessages } from "@/lib/api-error"
 import { useFormatters } from "@/lib/format"
 import { routes } from "@/lib/routes"
@@ -54,6 +56,12 @@ function ProjectionContent({ backtestId, picker }: { backtestId: string; picker:
     const view = projection.data
     const computed = view?.projection
 
+    const badge = (
+        <>
+            {view?.state === "PENDING" && <StatusBadge status="RUNNING" />}
+            {view?.state === "COMPUTED" && <Badge variant="success">{t("computed")}</Badge>}
+        </>
+    )
     const subtitle =
         backtest.data &&
         computed &&
@@ -68,7 +76,7 @@ function ProjectionContent({ backtestId, picker }: { backtestId: string; picker:
         <>
             <PageHeader
                 title={backtest.data ? t("title", { name: backtest.data.name }) : t("titleEmpty")}
-                badge={view?.state === "COMPUTED" && <Badge variant="success">{t("computed")}</Badge>}
+                badge={badge}
                 description={subtitle || undefined}
                 actions={picker}
             />
@@ -93,7 +101,7 @@ type ProjectionBodyProps = {
     onHorizonChange: (horizon: number) => void
 }
 
-// État unique de la page : erreur, chargement, données insuffisantes, sans projection ou projection calculée
+// État unique de la page : erreur, chargement, calcul en cours (ou trop long), données insuffisantes, sans projection ou projection calculée
 function ProjectionBody({ backtestId, queries, view, execution, horizon, onHorizonChange }: ProjectionBodyProps) {
     const t = useTranslations("pages.projection")
     const tc = useTranslations("common")
@@ -102,15 +110,22 @@ function ProjectionBody({ backtestId, queries, view, execution, horizon, onHoriz
     const rerun = useRerunBacktest(backtestId)
     const failed = queries.find((query) => query.isError)
 
+    const retry = (query: Pick<UseQueryResult, "refetch">) => (
+        <Button variant="outline" onClick={() => query.refetch()}>
+            {tc("retry")}
+        </Button>
+    )
+
     if (failed) {
-        const retry = (
-            <Button variant="outline" onClick={() => failed.refetch()}>
-                {tc("retry")}
-            </Button>
-        )
-        return <StateCard error message={errorMessage(failed.error) || t("states.error")} action={retry} />
+        return <StateCard error message={errorMessage(failed.error) || t("states.error")} action={retry(failed)} />
     }
     if (!view || queries.some((query) => query.isPending)) return <LoadingState className="h-64" />
+    if (view.state === "PENDING") {
+        // Passé l'attente, `awaitResultPollMs` rend `false` : le calcul tarde, on propose de relire plutôt que d'attendre sans fin
+        const waiting = execution && awaitResultPollMs(view.state, execution) !== false
+        if (waiting) return <StateCard message={t("states.pending")} />
+        return <StateCard message={t("states.slow")} action={retry(queries[1]!)} />
+    }
     if (view.state === "INSUFFICIENT_DATA") return <StateCard message={t("states.insufficientData")} />
     if (view.state === "UNAVAILABLE" || !view.projection) {
         const onRerun = () =>

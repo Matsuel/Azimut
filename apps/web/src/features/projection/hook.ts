@@ -7,9 +7,13 @@ import type { ProjectionView } from "./types"
  * `pollMs(view)` : intervalle de rafraîchissement en ms, ou `false` ; sert à attendre `projection.completed` après une exécution.
  */
 export function useProjection(backtestId: string, pollMs: (view: ProjectionView) => number | false) {
-    return useQuery({
+    const query = useQuery({
         queryKey: ["projection", "detail", backtestId],
         queryFn: backtestId ? () => getProjection(backtestId) : skipToken,
-        refetchInterval: (query) => (query.state.data ? pollMs(query.state.data) : false),
+        refetchInterval: (q) => (q.state.data ? pollMs(q.state.data) : false),
     })
+    // Lue ici, `dataUpdatedAt` fait redessiner l'écran à chaque relecture, même sans changement de données : la dernière relecture
+    // de l'attente (qui arrête le rafraîchissement) doit faire passer l'écran de « en cours » à « prend plus de temps »
+    void query.dataUpdatedAt
+    return query
 }

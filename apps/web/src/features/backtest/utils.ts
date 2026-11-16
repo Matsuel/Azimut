@@ -1,7 +1,7 @@
 import type { useTranslations } from "next-intl"
 import type { ChartPoint } from "@/components/area-series-chart"
 import type { Formatters } from "@/lib/format"
-import { activeStatuses, BACKTEST_CURRENCY, MIN_YEARS_BEFORE_END, RESULT_POLL_MS, RESULT_WAIT_MS } from "./constants"
+import { activeStatuses, BACKTEST_CURRENCY, MIN_YEARS_BEFORE_END } from "./constants"
 import type {
     AllocationInput,
     Backtest,
@@ -39,14 +39,21 @@ export const isActiveStatus = (status: ExecutionStatus) =>
 
 export const isActive = (e: BacktestExecution) => isActiveStatus(e.status)
 
-/** Durée lisible d'une exécution terminée (« 1 min 5 s »), depuis son démarrage ; null tant qu'elle n'est pas finie. */
-export function getExecutionDuration(t: BacktestTranslator, e: BacktestExecution) {
-    if (!e.finishedAt) return null
-    const seconds = Math.max(1, Math.round((+new Date(e.finishedAt) - +new Date(e.startedAt ?? e.createdAt)) / 1000))
+/** Secondes entières lisibles : « 1 min 5 s » ou « 12 s ». */
+export function formatSeconds(t: BacktestTranslator, seconds: number) {
     const minutes = Math.floor(seconds / 60)
     return minutes
         ? t("duration.minutesSeconds", { minutes, seconds: seconds % 60 })
         : t("duration.seconds", { seconds })
+}
+
+/** Durée lisible d'une exécution terminée (« 1 min 5 s »), depuis son démarrage ; null tant qu'elle n'est pas finie. */
+export function getExecutionDuration(t: BacktestTranslator, e: BacktestExecution) {
+    if (!e.finishedAt) return null
+    return formatSeconds(
+        t,
+        Math.max(1, Math.round((+new Date(e.finishedAt) - +new Date(e.startedAt ?? e.createdAt)) / 1000)),
+    )
 }
 
 /** Allocation lisible : « AAPL 60 % · MSFT 40 % » (poids en ratio, au pourcent entier, D2) ; `separator` change le « · » (sous-titres : « , »). */
@@ -61,18 +68,6 @@ export const formatAmount = (f: Formatters, v: number) => f.formatPrice(v, BACKT
 
 /** Montant en `BACKTEST_CURRENCY`, arrondi à l'unité (`15 820 €`). */
 export const formatWholeAmount = (f: Formatters, v: number) => f.formatWholePrice(v, BACKTEST_CURRENCY)
-
-/**
- * Intervalle de rafraîchissement d'un résultat publié après le backtest (risque, projection) : `RESULT_POLL_MS` tant qu'il
- * manque (`state` « UNAVAILABLE ») alors qu'une exécution tourne ou vient de finir, `false` sinon (ancien résultat : il ne
- * viendra pas sans relance).
- */
-export function awaitResultPollMs(state: string, execution: BacktestExecution | undefined): number | false {
-    if (state !== "UNAVAILABLE" || !execution) return false
-    if (isActive(execution)) return RESULT_POLL_MS
-    const finishedAt = execution.finishedAt ? Date.parse(execution.finishedAt) : 0
-    return execution.status === "COMPLETED" && Date.now() - finishedAt < RESULT_WAIT_MS ? RESULT_POLL_MS : false
-}
 
 /**
  * Durée de récupération ; `recoveryDays` null : « Aucune baisse » sans baisse, « Non récupéré » si la baisse a un plus haut

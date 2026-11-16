@@ -3,8 +3,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { NextIntlClientProvider } from "next-intl"
 import type { ReactNode } from "react"
 import fr from "../messages/fr.json"
+import { awaitResultPollMs } from "../src/features/backtest/result-wait"
 import type { BacktestExecution } from "../src/features/backtest/types"
-import { awaitResultPollMs } from "../src/features/backtest/utils"
 import { AssetExposures } from "../src/features/risk/asset-exposures"
 import { CorrelationMatrix } from "../src/features/risk/correlation-matrix"
 import { DrawdownConstraint } from "../src/features/risk/drawdown-constraint"
@@ -115,7 +115,7 @@ test("contrainte : sans vérification, pas de tableau ; saisie hors plage refus�
 })
 
 test("awaitResultPollMs : attend le risque pendant une exécution ou juste après, pas pour un ancien résultat", () => {
-    const view = { state: "UNAVAILABLE" }
+    const view = { state: "UNAVAILABLE" as const }
     const execution = (status: string, finishedAt: string | null) => ({ status, finishedAt }) as BacktestExecution
 
     expect(awaitResultPollMs(view.state, execution("RUNNING", null))).toBe(2000)

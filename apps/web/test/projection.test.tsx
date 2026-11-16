@@ -13,6 +13,7 @@ mock.module("next/navigation", () => ({ useRouter: () => ({ replace: () => {} })
 // Le picker et le backtest passent par fetch : réponse vide, le backtest vient du cache
 const fetchMock = spyOn(globalThis, "fetch")
 
+const { awaitResultPollMs } = await import("../src/features/backtest/result-wait")
 const { BacktestProjection } = await import("../src/features/projection/backtest-projection")
 const { ProjectionPercentiles } = await import("../src/features/projection/projection-percentiles")
 const { ProjectionStats } = await import("../src/features/projection/projection-stats")
@@ -26,11 +27,11 @@ beforeEach(() => {
         Response.json(String(url).endsWith("/backtest/b1") ? backtest : { data: [] })) as typeof fetch)
 })
 
-const inFrench = (node: ReactNode) => {
+const inFrench = (node: ReactNode, cached: object = backtest) => {
     const client = new QueryClient({
         defaultOptions: { queries: { retry: false, staleTime: Number.POSITIVE_INFINITY } },
     })
-    client.setQueryData(["backtest", "detail", "b1"], backtest)
+    client.setQueryData(["backtest", "detail", "b1"], cached)
     return render(
         <QueryClientProvider client={client}>
             <NextIntlClientProvider locale="fr" messages={fr}>
@@ -90,7 +91,7 @@ test("horizon 3 : trois lignes au tableau et les valeurs de years[2] dans les ca
 })
 
 test("changer d'horizon ne déclenche aucune requête", async () => {
-    getProjection.mockResolvedValue({ state: "COMPUTED", projection })
+    getProjection.mockResolvedValue({ state: "COMPUTED", projection, history: [] })
     inFrench(<BacktestProjection backtestId="b1" />)
 
     await waitFor(() => expect(screen.getByText("Paramètres de la projection")).toBeTruthy())
@@ -101,14 +102,14 @@ test("changer d'horizon ne déclenche aucune requête", async () => {
 })
 
 test("INSUFFICIENT_DATA affiche « données insuffisantes »", async () => {
-    getProjection.mockResolvedValue({ state: "INSUFFICIENT_DATA", projection: null })
+    getProjection.mockResolvedValue({ state: "INSUFFICIENT_DATA", projection: null, history: [] })
     inFrench(<BacktestProjection backtestId="b1" />)
 
     expect(await screen.findByText(/données insuffisantes/i)).toBeTruthy()
 })
 
 test("UNAVAILABLE affiche « Relancer le backtest »", async () => {
-    getProjection.mockResolvedValue({ state: "UNAVAILABLE", projection: null })
+    getProjection.mockResolvedValue({ state: "UNAVAILABLE", projection: null, history: [] })
     inFrench(<BacktestProjection backtestId="b1" />)
 
     const button = await screen.findByText("Relancer le backtest")
@@ -126,4 +127,30 @@ test("horizon absent des années reçues : message au lieu d'un écran vide", ()
     inFrench(<ComputedProjection projection={projection} horizon={10} onHorizonChange={() => {}} />)
 
     expect(screen.getByText("Cet horizon n’est pas disponible pour cette projection.")).toBeTruthy()
+})
+
+test("PENDING juste après l'exécution : badge « En cours » et carte d'état, sans bouton", async () => {
+    getProjection.mockResolvedValue({ state: "PENDING", projection: null, history: [] })
+    const fresh = { ...backtest, executions: [execution("COMPLETED", new Date().toISOString())] }
+    inFrench(<BacktestProjection backtestId="b1" />, fresh)
+
+    expect(await screen.findByText("Projection en cours de calcul…")).toBeTruthy()
+    expect(screen.getByText("En cours")).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Relancer le backtest" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Réessayer" })).toBeNull()
+})
+
+test("PENDING au-delà de 2 minutes : « prend plus de temps » et « Réessayer » relit la projection", async () => {
+    getProjection.mockResolvedValue({ state: "PENDING", projection: null, history: [] })
+    inFrench(<BacktestProjection backtestId="b1" />)
+
+    expect(await screen.findByText("Le calcul prend plus de temps que prévu.")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Réessayer" }))
+    await waitFor(() => expect(getProjection).toHaveBeenCalledTimes(2))
+})
+
+test("awaitResultPollMs : PENDING rafraîchi dans la fenêtre d'attente, plus après", () => {
+    expect(awaitResultPollMs("PENDING", execution("COMPLETED", new Date().toISOString()))).toBe(2000)
+    expect(awaitResultPollMs("PENDING", execution("COMPLETED", "2024-01-01T00:00:00.000Z"))).toBe(false)
+    expect(awaitResultPollMs("PENDING", execution("FAILED", new Date().toISOString()))).toBe(false)
 })
