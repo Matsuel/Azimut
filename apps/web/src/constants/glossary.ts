@@ -14,6 +14,7 @@ const BACKTEST_SERVICE = "apps/core-backend/services/backtest.service.ts"
 const MARKET_REPOSITORY = "apps/market-service/repositories/market.repository.ts"
 const RISK_ENGINE = "apps/risk-engine/engine/risk.engine.ts"
 const RISK_UTILS = "apps/risk-engine/engine/risk.utils.ts"
+const PROJECTION_ENGINE = "apps/risk-engine/engine/projection.engine.ts"
 
 /**
  * Entrées du glossaire, une par donnée affichée ; la clé est aussi celle du dictionnaire (`glossary.<clé>`).
@@ -28,6 +29,9 @@ export const GLOSSARY = {
     concentration: { source: `${RISK_ENGINE} · computeRisk (hhi, effectiveAssets, maxWeight)` },
     correlation: { source: `${RISK_UTILS} · correlationMatrix` },
     riskContribution: { source: `${RISK_UTILS} · riskContributions` },
+    // Projection Monte Carlo (feature 14)
+    projectionPercentile: { source: `${PROJECTION_ENGINE} · computeProjection (points, years)` },
+    projectionLossProbability: { source: `${PROJECTION_ENGINE} · computeProjection (years.lossProbability)` },
     // Résultat d'un backtest
     finalValue: { source: `${ENGINE} · simulate (finalValue)` },
     profit: { source: `${ENGINE} · simulate (profit)` },

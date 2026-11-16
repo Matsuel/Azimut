@@ -1084,6 +1084,20 @@
             "formula": "contributionᵢ = wᵢ (Σw)ᵢ / (wᵀ Σ w)",
             "unit": "Ratio shown as a percentage.",
             "readingTip": "An asset that is 30% of capital can carry 44% of the risk."
+        },
+        "projectionPercentile": {
+            "title": "Projection percentiles",
+            "purpose": "The range of values the portfolio could reach: P10 an unfavourable scenario, median the central one, P90 a favourable one.",
+            "computation": "The risk engine draws 10,000 paths by resampling blocks of days from the common price history, at constant target weights, then reads the percentiles of their value at each horizon. Only the percentiles are stored.",
+            "unit": "Amount in euros, on the backtest's starting capital.",
+            "readingTip": "P10: 9 scenarios out of 10 do better. Median: a coin flip. P90: 1 scenario out of 10 does better."
+        },
+        "projectionLossProbability": {
+            "title": "Probability of loss",
+            "purpose": "The share of scenarios that end below the invested amount at the chosen horizon.",
+            "computation": "Share of the 10,000 paths whose value is strictly below the starting capital at that horizon.",
+            "unit": "Ratio shown as a percentage.",
+            "readingTip": "Computed on historical scenarios, not a promise: the future can fall outside this range."
         }
     },
     "pages": {
@@ -1100,7 +1114,66 @@
             "description": "Correlations, concentration, VaR/CVaR and risk contribution of a portfolio."
         },
         "projection": {
-            "description": "Plausible futures of a portfolio through Monte Carlo simulation."
+            "description": "Plausible futures of a portfolio through Monte Carlo simulation.",
+            "computed": "Computed",
+            "title": "Projection · {name}",
+            "titleEmpty": "Projection",
+            "subtitle": "{allocations} · {period} · {paths} scenarios · {horizon} horizon",
+            "states": {
+                "empty": "Choose a completed backtest to see its plausible futures.",
+                "insufficientData": "Insufficient data: fewer than 2 trading days common to all assets, the projection is not computed.",
+                "unavailable": "This result has no projection yet. Rerun the backtest to compute it.",
+                "rerun": "Rerun the backtest",
+                "error": "The projection could not be loaded."
+            },
+            "stats": {
+                "median": "Median capital at {horizon}",
+                "medianCaption": "Invested {capital}",
+                "pessimistic": "Unfavourable scenario",
+                "pessimisticCaption": "9 scenarios out of 10 do better",
+                "optimistic": "Favourable scenario",
+                "optimisticCaption": "1 scenario out of 10 does better",
+                "loss": "Probability of loss",
+                "lossCaption": "Historical scenarios, not a promise",
+                "p50": "P50",
+                "p10": "P10",
+                "p90": "P90"
+            },
+            "chart": {
+                "title": "Fan of trajectories",
+                "description": "Capital value over the horizon, in EUR · percentiles of {paths} scenarios",
+                "today": "Today",
+                "median": "Median",
+                "band50": "P25–P75",
+                "band80": "P10–P90",
+                "invested": "Amount invested",
+                "investedLabel": "Invested {capital}",
+                "note": "Probability of ending below the amount invested: {loss} at {horizon}, computed on historical scenarios, not a promise."
+            },
+            "percentiles": {
+                "title": "Percentiles by horizon",
+                "description": "Only the percentiles are stored, not the paths",
+                "columns": {
+                    "horizon": "Horizon",
+                    "p10": "P10",
+                    "median": "Median",
+                    "p90": "P90",
+                    "loss": "Loss prob."
+                },
+                "note": "Computed on historical scenarios, not a promise. Deposits and withdrawals are not modelled."
+            },
+            "params": {
+                "title": "Projection parameters",
+                "description": "Fixed: same seed, identical result",
+                "horizon": "Horizon",
+                "invested": "Amount invested",
+                "paths": "Scenarios",
+                "seed": "Seed",
+                "blockSize": "Block size",
+                "blockDays": "{count} business days",
+                "history": "History used",
+                "historyValue": "{period} ({days} days)"
+            }
         },
         "optimization": {
             "description": "Allocation explorer and efficient frontier."

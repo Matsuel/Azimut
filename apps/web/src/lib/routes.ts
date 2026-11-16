@@ -19,6 +19,7 @@ export const routes = {
     compareIds: (a: string, b: string) => `${prefix}/backtest/compare?ids=${a},${b}`,
     paperTrading: `${prefix}/paper-trading`,
     risk: `${prefix}/risk`,
+    backtestProjection: (backtestId: string) => `${prefix}/projection?backtest=${encodeURIComponent(backtestId)}`,
     backtestRisk: (backtestId: string) => `${prefix}/risk?backtest=${encodeURIComponent(backtestId)}`,
     projection: `${prefix}/projection`,
     optimization: `${prefix}/optimization`,

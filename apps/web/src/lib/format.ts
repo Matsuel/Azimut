@@ -45,9 +45,11 @@ function createFormatters(locale: string) {
         return (d: string | Date) => format.format(new Date(d))
     }
     const currencies = new Map<string, Intl.NumberFormat>()
-    const currencyFormat = (currency: string) => {
-        const format = currencies.get(currency) ?? new Intl.NumberFormat(locale, { style: "currency", currency })
-        currencies.set(currency, format)
+    const currencyFormat = (currency: string, whole = false) => {
+        const key = whole ? `${currency}:whole` : currency
+        const options = whole ? { maximumFractionDigits: 0 } : {}
+        const format = currencies.get(key) ?? new Intl.NumberFormat(locale, { style: "currency", currency, ...options })
+        currencies.set(key, format)
         return format
     }
 
@@ -70,6 +72,8 @@ function createFormatters(locale: string) {
         formatAxis: (v: number) => (v < 10 ? formatAxisSmall(v) : formatAxisLarge(v)),
         /** Montant dans la devise de la donnée : seul le format suit la langue (`1 234,50 €`, `€1,234.50`). */
         formatPrice: (v: number, currency: string) => currencyFormat(currency).format(v),
+        /** Montant arrondi à l'euro, sans décimales : `formatWholePrice(15820, "EUR")` → `15 820 €`. */
+        formatWholePrice: (v: number, currency: string) => currencyFormat(currency, true).format(v),
         ...numberFormatters(number),
         formatDate: date({ dateStyle: "short", timeStyle: "short" }),
         formatDay,

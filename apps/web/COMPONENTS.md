@@ -166,6 +166,18 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/market/constants.ts`](src/features/market/COMPONENTS.md#featuresmarketconstantsts) : exports `MARKET_CURRENCY`, `MIN_SEARCH_LENGTH`, `periods`
   - [`features/market/column.tsx`](src/features/market/COMPONENTS.md#featuresmarketcolumntsx) : exports `useMarketColumns()`
   - [`features/market/types.ts`](src/features/market/COMPONENTS.md#featuresmarkettypests) : exports `Period`, `MarketAsset`, `MarketDetails`, `MarketData`
+- [`features/projection`](src/features/projection/COMPONENTS.md)
+  - [BacktestProjection](src/features/projection/COMPONENTS.md#backtestprojection) : écran Projection (maquette 34, route `routes.backtestProjection(id)`) et ses états
+  - [ComputedProjection](src/features/projection/COMPONENTS.md#computedprojection) : corps de l'écran pour une projection calculée
+  - [ProjectionStats](src/features/projection/COMPONENTS.md#projectionstats) : quatre cartes P50, P10, P90, probabilité de perte
+  - [ProjectionFanChart](src/features/projection/COMPONENTS.md#projectionfanchart) : éventail des trajectoires (plages, médiane, montant investi)
+  - [ProjectionPercentiles](src/features/projection/COMPONENTS.md#projectionpercentiles) : tableau des percentiles par horizon
+  - [ProjectionParams](src/features/projection/COMPONENTS.md#projectionparams) : onglets d'horizon et hypothèses fixes
+  - [`features/projection/api.ts`](src/features/projection/COMPONENTS.md#featuresprojectionapits) : exports `getProjection`
+  - [`features/projection/hook.ts`](src/features/projection/COMPONENTS.md#featuresprojectionhookts) : exports `useProjection`
+  - [`features/projection/constants.ts`](src/features/projection/COMPONENTS.md#featuresprojectionconstantsts) : exports `HORIZON_YEARS`, `DEFAULT_PROJECTION_HORIZON`, `PROJECTION_DAYS_PER_YEAR`, `PROJECTION_POLL_MS`, `PROJECTION_WAIT_MS`
+  - [`features/projection/utils.ts`](src/features/projection/COMPONENTS.md#featuresprojectionutilsts) : exports `projectionPollMs`
+  - [`features/projection/types.ts`](src/features/projection/COMPONENTS.md#featuresprojectiontypests) : réexports des types de projection du contrat
 - [`features/risk`](src/features/risk/COMPONENTS.md)
   - [BacktestRisk](src/features/risk/COMPONENTS.md#backtestrisk) : écran Risque (maquette 33, route `routes.backtestRisk(id)`) et ses états
   
@@ -867,6 +879,7 @@ Source : `src/components/form/form-issues.ts`.
 | `formatPointChange` | Écart en points de pourcentage, 1 décimale, signé : `4.4` → « +4,4 ». |
 | `formatAxis` | Graduation numérique d'un axe : 2 décimales sous 10, entier au-delà. |
 | `formatPrice` | Montant dans la devise ISO **obligatoire** : `formatPrice(1234.5, "EUR")` → « 1 234,50 € ». |
+| `formatWholePrice` | Montant arrondi à l'unité, sans décimales : `formatWholePrice(15820, "EUR")` → « 15 820 € ». Projection (percentiles). |
 | `formatChange` | Nombre signé, 2 décimales, sans « % » : `1.5` → « +1,50 ». Pour un pourcentage déjà en %, ou un écart de Sharpe. |
 | `formatRatio` | Ratio en **fraction** → variation signée en % : `0.342` → « +34,20 % ». Rendement, drawdown. |
 | `formatRate` | Proportion en **fraction** → % non signé, arrondi à l'unité : `0.3846` → « 38 % ». Taux de réussite/échec, poids d'allocation, axe du drawdown. |

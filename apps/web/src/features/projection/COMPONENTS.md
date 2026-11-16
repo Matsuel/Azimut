@@ -1,0 +1,98 @@
+# Catalogue web : `features/projection`
+
+Page Projection d'un backtest (feature 14, maquette `34 · Projection Monte Carlo`, états `34.1` indisponible et données insuffisantes). Toutes les valeurs viennent de `GET /api/projection/:backtestId` (calculées par risk-engine, stockées par core-backend) : le web sélectionne l'année de l'horizon dans `years`, filtre `points`, convertit les ratios en pourcentages et `day / 252` en années, sans rien calculer d'autre. Gabarits d'entrée : [`COMPONENTS.md`](../../../COMPONENTS.md#gabarits).
+
+### BacktestProjection
+
+- **Import** : `import { BacktestProjection } from "@/features/projection/backtest-projection"`.
+- **Rôle** : écran de la route `routes.backtestProjection(id)` (`/app/projection?backtest=<id>`) : en-tête « Projection · <nom> » avec badge `Calculée`, allocation, période, scénarios, horizon et `BacktestPicker` ; puis un seul état : erreur (« Réessayer »), chargement, données insuffisantes, sans projection (« Relancer le backtest », désactivé pendant une exécution) ou `ComputedProjection`. Garde l'horizon choisi (5 par défaut) dans l'état local : le changer ne déclenche aucune requête. Instancie `useBacktest`, `useProjection` (rafraîchi par `projectionPollMs`) et `useRerunBacktest`.
+- **Props** :
+  - `backtestId` : id du backtest de l'URL ; `""` affiche l'état « Choisissez un backtest terminé ».
+- **Source** : `src/features/projection/backtest-projection.tsx`.
+
+### ComputedProjection
+
+- **Import** : `import { ComputedProjection } from "@/features/projection/computed-projection"`.
+- **Rôle** : `ProjectionStats`, `ProjectionFanChart`, puis `ProjectionParams` et `ProjectionPercentiles` côte à côte, pour l'année `years[horizon − 1]`.
+- **Props** : `projection` (`Projection` reçu), `horizon` (années), `onHorizonChange`.
+- **Source** : `src/features/projection/computed-projection.tsx`.
+
+### ProjectionStats
+
+- **Import** : `import { ProjectionStats } from "@/features/projection/projection-stats"`.
+- **Rôle** : quatre `StatCard` : capital médian (pastille P50, sous-titre « Investi »), scénario défavorable (P10), favorable (P90), probabilité de perte (pastille de l'horizon).
+- **Props** :
+  - `year` : `ProjectionYear` de l'horizon.
+  - `capital` : capital de départ, EUR.
+- **Source** : `src/features/projection/projection-stats.tsx`.
+
+### ProjectionFanChart
+
+- **Import** : `import { ProjectionFanChart } from "@/features/projection/projection-fan-chart"`.
+- **Rôle** : carte « Éventail des trajectoires » : `ComposedChart` dans `ChartContainer` (aires `[p10, p90]` et `[p25, p75]`, ligne p50, `ReferenceLine` au capital, étiquettes P10 / médiane / P90 de fin d'horizon), `ChartLegend` et phrase de probabilité de perte. Axe X en années (`day / 252`), points limités à l'horizon.
+- **Props** :
+  - `points` : `ProjectionPoint[]` reçus (EUR).
+  - `capital` : capital de départ, EUR (ligne de référence).
+  - `horizonYears` : horizon affiché, années.
+  - `paths` : nombre de scénarios (description).
+  - `year` : `ProjectionYear` de l'horizon (étiquettes, probabilité).
+- **Source** : `src/features/projection/projection-fan-chart.tsx` (séries, infobulle et étiquettes dans `fan-chart-parts.tsx`).
+
+### ProjectionPercentiles
+
+- **Import** : `import { ProjectionPercentiles } from "@/features/projection/projection-percentiles"`.
+- **Rôle** : carte « Percentiles par horizon » : une ligne par année ≤ `horizonYears` (P10, médiane, P90 en EUR entiers ; probabilité de perte en rouge à partir de 20 %) et mention « pas une promesse ».
+- **Props** :
+  - `years` : `ProjectionYear[]` reçus.
+  - `horizonYears` : dernière année affichée.
+- **Source** : `src/features/projection/projection-percentiles.tsx`.
+
+### ProjectionParams
+
+- **Import** : `import { ProjectionParams } from "@/features/projection/projection-params"`.
+- **Rôle** : carte « Paramètres de la projection » : `FilterTabs` 1 / 3 / 5 / 10 ans, puis `DetailRow` en lecture seule : montant investi, scénarios, seed, taille des blocs (effective, peut être inférieure à 21), historique utilisé (période et nombre de jours, dès 2 jours).
+- **Props** :
+  - `projection` : `Projection` reçue.
+  - `horizon` : horizon choisi, années.
+  - `onHorizonChange` : reçoit le nouvel horizon (état local, aucune requête).
+- **Source** : `src/features/projection/projection-params.tsx`.
+
+### `features/projection/api.ts`
+
+- **Import** : `import { getProjection } from "@/features/projection/api"`.
+
+| Export | Rôle (et unité) |
+| --- | --- |
+| `getProjection` | `GET /api/projection/:backtestId` → `ProjectionView` (`COMPUTED`, `INSUFFICIENT_DATA`, `UNAVAILABLE`). |
+
+### `features/projection/hook.ts`
+
+- **Import** : `import { useProjection } from "@/features/projection/hook"`.
+
+| Export | Rôle (et unité) |
+| --- | --- |
+| `useProjection` | Requête `["projection", "detail", id]`, aucune sans id ; `pollMs(view)` donne l'intervalle de rafraîchissement (ms) ou `false`. |
+
+### `features/projection/constants.ts`
+
+- **Import** : `import { HORIZON_YEARS, DEFAULT_PROJECTION_HORIZON } from "@/features/projection/constants"`.
+
+| Export | Rôle (et unité) |
+| --- | --- |
+| `HORIZON_YEARS` | Horizons proposés, années : 1, 3, 5, 10 (miroir de `PROJECTION_HORIZONS`). |
+| `DEFAULT_PROJECTION_HORIZON` | Horizon initial, 5 ans. |
+| `PROJECTION_DAYS_PER_YEAR` | 252 jours ouvrés par année, pour l'axe X. |
+| `PROJECTION_POLL_MS`, `PROJECTION_WAIT_MS` | Intervalle de rafraîchissement (2 000 ms) et délai d'attente après la fin d'un backtest (2 min). |
+
+### `features/projection/utils.ts`
+
+- **Import** : `import { projectionPollMs } from "@/features/projection/utils"`.
+
+| Export | Rôle (et unité) |
+| --- | --- |
+| `projectionPollMs(view, execution)` | `PROJECTION_POLL_MS` tant que la projection manque (`UNAVAILABLE`) alors qu'une exécution tourne ou vient de finir ; `false` sinon. |
+
+### `features/projection/types.ts`
+
+- **Import** : `import type { Projection, ProjectionView } from "@/features/projection/types"`.
+- **Rôle** : réexporte `Projection`, `ProjectionPoint`, `ProjectionYear`, `ProjectionState`, `ProjectionView` du contrat (EUR, probabilités en ratio).
