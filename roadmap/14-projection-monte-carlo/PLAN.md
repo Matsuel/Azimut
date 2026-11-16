@@ -20,7 +20,7 @@
 | D9 | **Un seul calcul sur 10 ans** : la projection couvre 2 520 jours ouvrés (10 × 252). Le sélecteur d'horizon tronque l'affichage : les trajectoires sur 5 ans sont les 5 premières années de celles sur 10 ans, avec la même seed. | — |
 | D10 | **Courbe** : un point tous les 21 jours ouvrés (fin de bloc), jour 0 compris. Cela donne 121 points sur 10 ans, au lieu d'un point par jour. | D3 (précisée) |
 | D11 | **Moteur** : il tourne dans `risk-engine`, pas dans `backtest-engine`. Les rendements EUR sur dates communes (`toEuros`, `commonDates`, `dailyReturns`) y existent déjà. | README « Comment » |
-| D12 | **Historique minimal** : 2 jours communs (1 rendement), pas 250. Les blocs font `min(21, rendements disponibles)` jours ; `blockDays` du résultat = longueur effective. Un historique court donne une projection peu précise, affichée avec son nombre de jours. `null` seulement sous 2 jours ou si un actif n'a aucun cours. Décision utilisateur du 2026-11-16. | `MIN_COMMON_DAYS` (250) pour la projection |
+| D12 | **Historique minimal** : 2 jours communs (1 rendement), pas 250. Les blocs font `min(21, rendements disponibles)` jours ; `blockDays` du résultat = longueur effective. Un historique court donne une projection peu précise, affichée avec son nombre de jours. `null` seulement sous 2 jours ou si un actif n'a aucun cours. Décision utilisateur du 2026-11-16. | `MIN_PROJECTION_DAYS` (2, D12) pour la projection |
 
 ## Contraintes globales
 
@@ -96,7 +96,7 @@ export interface ProjectionView { state: ProjectionState; projection: Projection
 **Fichiers** : créer `apps/risk-engine/engine/projection.utils.ts` et `engine/projection.engine.ts` ; modifier `engine/risk.utils.ts` et `engine/risk.engine.ts` ; tests `test/projection.utils.test.ts`, `test/projection.engine.test.ts`.
 
 **Interfaces** :
-- Consomme : `commonDates`, `dailyReturns` (`risk.utils.ts`), `MIN_COMMON_DAYS` (250), `PROJECTION_PARAMS`, `Projection`, `TRADING_DAYS_PER_YEAR` (252), `round`.
+- Consomme : `commonDates`, `dailyReturns` (`risk.utils.ts`), `MIN_PROJECTION_DAYS` (2, D12), `PROJECTION_PARAMS`, `Projection`, `TRADING_DAYS_PER_YEAR` (252), `round`.
 - Produit :
   - `portfolioReturns(weights: number[], returns: number[][]): number[]` : rendement pondéré de chaque jour (poids constants). `computeRisk` l'utilise à la place du calcul inline.
   - `mulberry32(seed: number): () => number` : PRNG dans [0, 1).
@@ -143,7 +143,7 @@ export interface ProjectionView { state: ProjectionState; projection: Projection
 **Fichiers** : modifier `prisma/schema.prisma` et ajouter la migration `add_backtest_result_projection` ; créer `repositories/projection.repository.ts`, `services/projection.service.ts`, `controller/projection.controller.ts`, `consumers/projection.consumer.ts`, `routes/projection/{index.ts,projection.routes.ts}` ; modifier `index.ts` (subscribe + router après `riskRouter`) ; tests `test/projection.{repository,service,consumer,routes}.test.ts` ; `API.md`.
 
 **Interfaces** :
-- Prisma : `projection Json?` (commentaire : `Projection`, contrat projection.ts ; null tant que `projection.completed` n'est pas reçu, ou sous 250 jours communs) et `projectionComputedAt DateTime?` (même sémantique que `riskComputedAt`).
+- Prisma : `projection Json?` (commentaire : `Projection`, contrat projection.ts ; null tant que `projection.completed` n'est pas reçu, ou sous 2 jours communs (D12)) et `projectionComputedAt DateTime?` (même sémantique que `riskComputedAt`).
 - `IProjectionRepository.getByBacktestId(backtestId, statuses): Promise<{ projection, projectionComputedAt } | null>` et `setProjection(executionId, projection: Projection | null, computedAt: Date): Promise<boolean>`. Même garde que `setRisk` : `where: { executionId, projectionComputedAt: null }`, et `Prisma.DbNull` pour null.
 - `ProjectionService.store(payload: ProjectionCompletedPayload): Promise<void>` et `ProjectionService.get(backtestId, userId): Promise<ProjectionView>`. L'autorisation est la même que `RiskService.get` : `NotFoundError` si le backtest n'est pas à l'utilisateur.
 - Route `GET /api/projection/:backtestId`, authentifiée, qui renvoie `ProjectionView`.
