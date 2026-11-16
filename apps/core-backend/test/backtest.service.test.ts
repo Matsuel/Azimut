@@ -330,3 +330,40 @@ test("restartBatch recrée la stratégie du lot à de nouvelles dates dans un no
     const error = await service.restartBatch("l1", "u1", { startDates: [new Date("2018-01-01"), new Date("2025-12-31")] }).catch((e) => e)
     expect(error).toMatchObject({ code: "START_TOO_CLOSE_TO_END", statusCode: 400 })
 })
+
+test("backtest.completed : la recopie `request` destinée à risk-engine n'est pas écrite dans le résultat", async () => {
+    const completed: Record<string, unknown>[] = []
+    const { repo } = fakeRepo({
+        completeExecution: async (_id: string, _from: BacktestStatus[], data: Record<string, unknown>) => {
+            completed.push(data)
+            return true
+        },
+    })
+    const service = new BacktestService()
+    service.repo = repo
+
+    await service.complete({
+        executionId: "e1",
+        finishedAt: "2024-01-01T00:00:00.000Z",
+        request: { allocations: [{ symbol: "AAPL", weight: 1 }], startDate: "2023-01-01T00:00:00.000Z", endDate: "2024-01-01T00:00:00.000Z" },
+        maxDrawdownDate: null,
+        maxDrawdownPeakDate: null,
+        maxDrawdownRecoveryDate: null,
+        finalValue: 1100,
+    } as never)
+
+    expect(completed[0]).toMatchObject({ finalValue: 1100 })
+    expect(completed[0]).not.toHaveProperty("request")
+})
+
+test("hasDividendDetails : dividendes ou change à détailler, jamais sans résultat ni pour un résultat antérieur", async () => {
+    const { hasDividendDetails } = await import("../services/backtest.service")
+    const decimal = (value: number) => ({ toNumber: () => value }) as never
+    const breakdown = { price: 1.898, dividends: 0.186, local: 2.084, fx: 0.064 }
+
+    expect(hasDividendDetails({ returnBreakdown: breakdown, dividendTotal: decimal(0) })).toBe(true)
+    expect(hasDividendDetails({ returnBreakdown: { ...breakdown, fx: null }, dividendTotal: decimal(12.5) })).toBe(true)
+    expect(hasDividendDetails({ returnBreakdown: { ...breakdown, fx: null }, dividendTotal: decimal(0) })).toBe(false)
+    expect(hasDividendDetails({ returnBreakdown: null, dividendTotal: decimal(12.5) })).toBe(false)
+    expect(hasDividendDetails(null)).toBe(false)
+})

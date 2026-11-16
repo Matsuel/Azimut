@@ -1,6 +1,9 @@
 /** Millisecondes dans un jour calendaire. */
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** Jours de cotation par an : base d'annualisation de la volatilité (écart-type journalier × √252). */
+export const TRADING_DAYS_PER_YEAR = 252;
+
 /** Fréquence calendaire d'un versement ou d'un rebalancement ; `DAILY` ou null : chaque jour est sa propre période. */
 export type PeriodFrequency = "DAILY" | "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY" | null;
 

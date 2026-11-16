@@ -17,12 +17,13 @@ import {
     type ComparedMetric,
     type ComparisonParameter,
     type Paginated,
+    type ReturnBreakdown,
 } from "@azimut/contracts";
 import { ACTIVE_STATUSES, COMPARABLE_STATUSES, EXECUTION_TIMEOUT_MS } from "../constants/backtest.constants";
 import { BadRequestError, ConflictError, ForbiddenError, InternalError, NotFoundError } from "@azimut/http";
 import { producer } from "../lib/kafka";
 import BacktestRepository, { type IBacktestRepository } from "../repositories/backtest.repository";
-import type { Backtest, BacktestStatus, Prisma } from "../generated/prisma/client";
+import type { Backtest, BacktestResult, BacktestStatus, Prisma } from "../generated/prisma/client";
 import { latestBatchStart } from "../interfaces/backtest.interface";
 import type {
     BacktestCompareQuery,
@@ -48,6 +49,16 @@ const toCompared = (record: ComparedBacktestRecord | undefined): ComparedBacktes
     if (!record || !result) throw new NotFoundError(API_ERROR_CODES.BACKTEST_NOT_FOUND)
     const { executions, ...backtest } = record
     return { ...backtest, result }
+}
+
+/**
+ * Un résultat a-t-il des dividendes perçus ou un effet de change à détailler (écran « Dividendes et change ») ?
+ * Faux sans résultat ou pour un résultat antérieur à la décomposition (`returnBreakdown` null).
+ */
+export const hasDividendDetails = (result: Pick<BacktestResult, "dividendTotal" | "returnBreakdown"> | null) => {
+    // Colonne Json : écrite par `backtest.completed` sous la forme `ReturnBreakdown`
+    const breakdown = result?.returnBreakdown as ReturnBreakdown | null | undefined
+    return breakdown != null && ((result?.dividendTotal?.toNumber() ?? 0) > 0 || breakdown.fx != null)
 }
 
 /** Statut d'un lot : échoué dès qu'un départ l'est, terminé quand tous le sont, sinon en cours (`RUNNING` si l'un tourne). */
@@ -235,7 +246,8 @@ class BacktestService {
 
     async getById(id: string, userId: string) {
         logger.info("Fetching backtest", { id, userId })
-        return this.assertOwner(await this.repo.getDetailsById(id, COMPARABLE_STATUSES), userId)
+        const details = this.assertOwner(await this.repo.getDetailsById(id, COMPARABLE_STATUSES), userId)
+        return { ...details, hasDividendDetails: hasDividendDetails(details.result) }
     }
 
     async getAll(userId: string, { status, hasResult, ...pagination }: BacktestListQuery): Promise<Paginated<BacktestWithExecutions>> {
@@ -307,6 +319,8 @@ class BacktestService {
     async complete({
         executionId,
         finishedAt,
+        // Recopie de la requête destinée à risk-engine : pas une colonne du résultat
+        request: _request,
         maxDrawdownDate,
         maxDrawdownPeakDate,
         maxDrawdownRecoveryDate,

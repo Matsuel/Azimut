@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import { fxPairSymbol, foreignCurrencies, toReferenceCurrency } from "../engine/backtest.fx";
+import { fxPairSymbol } from "@azimut/utils";
+import { foreignCurrencies, toReferenceCurrency } from "../engine/backtest.fx";
 import BacktestError from "../errors/backtest.error";
 
 const usd = { AAA: "USD", BBB: "EUR" };

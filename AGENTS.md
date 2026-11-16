@@ -19,11 +19,13 @@ Ces règles sont **strictes** : un écart doit être justifié dans le résumé 
 | --- | --- |
 | `apps/core-backend` | API Express 5 + Prisma + better-auth (port 8000). **Référence d'architecture backend**, seul accès à la base. |
 | `apps/backtest-engine` | Worker Kafka sans serveur HTTP ni base : consomme `backtest.requested`, lit les cours auprès de market-service, calcule, publie le résultat. |
+| `apps/risk-engine` | Worker Kafka sans serveur HTTP ni base : consomme `backtest.completed`, lit les cours auprès de market-service, calcule le risque (corrélations, VaR/CVaR, contributions), publie `risk.completed`. |
 | `apps/market-service` | **Seul service qui appelle yahoo-finance2** (port 8001, cache mémoire) : appelé via le proxy de core-backend pour le web, directement par backtest-engine pour les cours d'un backtest. |
 | `apps/web` | Next.js 16 (App Router) + React 19 + Tailwind 4 + shadcn/base-ui. N'appelle que core-backend. |
 | `packages/contracts` | Schémas zod et topics partagés entre services. |
 | `packages/kafka` | `KafkaClient`, `KafkaProducer`, `KafkaConsumer`, `createKafkaEvent`. |
-| `packages/utils` | `Logger` partagé, `onShutdown`, `DAY_MS`, calendrier de simulation (`periodKey`, `businessDays`, `estimateSchedule`). |
+| `packages/utils` | `Logger` partagé, `onShutdown`, `DAY_MS`, `round`, `TRADING_DAYS_PER_YEAR`, change (`fxPairSymbol`, `rateOn`), calendrier de simulation (`periodKey`, `businessDays`, `estimateSchedule`). |
+| `packages/market-client` | `MarketClient` : cours et dividendes lus auprès de market-service (clé interne, délai, seconde tentative, réponse validée par le contrat) pour backtest-engine et risk-engine. |
 | `packages/http` | Socle des services Express : `AppError` et sous-classes, `RouteDescriptor`/`registerRoutes`, `errorMiddleware`. |
 | `roadmap/` | Suivi des features : un dossier par feature (`README.md`, `US.md`, `TASKS.md`), maintenu avec le skill `feature-roadmap`. |
 
@@ -34,6 +36,7 @@ Chaque valeur a **un seul propriétaire**. Le propriétaire la calcule, la stock
 | Propriétaire | Responsabilité |
 | --- | --- |
 | `backtest-engine/engine/` | Tout calcul de simulation : valeur, montant investi, rendement, drawdown, ordres, courbes. Pur et testé. |
+| `risk-engine/engine/` | Tout calcul de risque : corrélations, VaR/CVaR, contributions, concentration. Pur et testé. |
 | `core-backend/services/` | Règles métier : autorisation, transitions de statut, invariants (« une exécution active à la fois »), mapping entrée → DTO, publication d'événements. Seul écrivain en base. |
 | `packages/contracts` | Forme et unités des données échangées entre services. |
 | `web` | **Affichage** des valeurs reçues de l'API. |
@@ -89,10 +92,11 @@ Chaque app qui expose quelque chose de réutilisable tient un **catalogue** : co
 
 ```bash
 bun install
-bun run dev            # API + market + web + backtest-engine
+bun run dev            # API + market + web + backtest-engine + risk-engine
 bun run dev:backend    # core-backend seul
 bun run dev:web        # web seul
 bun run dev:backtest   # backtest-engine seul
+bun run dev:risk       # risk-engine seul
 ```
 
 ## Dette technique

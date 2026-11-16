@@ -20,6 +20,7 @@
         "BACKTEST_NO_RESULT": "This backtest has no completed result yet.",
         "EXECUTION_IN_PROGRESS": "An execution is already in progress for this backtest.",
         "BACKTEST_QUEUE_FAILED": "The backtest could not be queued. Run it again.",
+        "INVALID_RISK_LIMIT": "The drawdown limit must be a whole number from 1% to 99%.",
         "SYMBOLS_NOT_UNIQUE": "Each asset can only appear once.",
         "WEIGHTS_NOT_100": "Weights must add up to 100%.",
         "END_BEFORE_START": "The end date must be after the start date.",
@@ -189,7 +190,8 @@
             "rebalancing": "{frequency} rebalancing",
             "benchmark": "benchmark {symbol}",
             "executedIn": "ran in {duration}",
-            "robustness": "Robustness"
+            "robustness": "Robustness",
+            "risk": "Risk"
         },
         "noBenchmark": "None",
         "executionErrors": {
@@ -1030,6 +1032,51 @@
             "computation": "Share of rolling windows whose return is strictly negative, on the earliest start.",
             "unit": "Ratio displayed as a percentage of windows.",
             "readingTip": "8%: out of 100 possible entry days, 8 would have lost money over the chosen duration."
+        },
+        "riskVolatility": {
+            "title": "Volatility (risk)",
+            "purpose": "How much the portfolio at target weights, and each asset, swings.",
+            "computation": "The risk engine takes daily returns in euros (FX included) on the trading days shared by every asset, weighted at constant target weights, then annualizes their standard deviation by √252. Contributions and rebalancing play no part.",
+            "formula": "volatility = √(wᵀ Σ w) × √252",
+            "unit": "Annual ratio shown as a percentage.",
+            "readingTip": "It may differ from the result volatility, which follows the actually simulated portfolio."
+        },
+        "valueAtRisk": {
+            "title": "Historical VaR 95%",
+            "purpose": "The loss of a bad day: 1 day in 20 was worse in history.",
+            "computation": "Daily portfolio returns at target weights are sorted; with n returns and k = ⌈5% × n⌉, the VaR is the k-th smallest.",
+            "unit": "One-day ratio shown as a percentage (negative = loss).",
+            "readingTip": "−1.4%: one day in twenty, the portfolio lost more than 1.4%."
+        },
+        "expectedShortfall": {
+            "title": "Historical CVaR 95%",
+            "purpose": "The average loss of the worst days, beyond the VaR.",
+            "computation": "Mean of the k smallest daily returns, with the same k as the VaR.",
+            "unit": "One-day ratio shown as a percentage (negative = loss).",
+            "readingTip": "Always lower than or equal to the VaR: it tells how much a very bad day costs."
+        },
+        "concentration": {
+            "title": "Concentration",
+            "purpose": "Measures whether capital rests on few assets.",
+            "computation": "Herfindahl index of target weights: sum of squared weights. Effective assets = 1 / HHI; the large value is the maximum weight.",
+            "formula": "HHI = Σ wᵢ²",
+            "unit": "HHI: ratio from 0 to 1; effective assets: number.",
+            "readingTip": "30/30/30/10: HHI 0.28, i.e. 3.6 effective assets."
+        },
+        "correlation": {
+            "title": "Correlation",
+            "purpose": "Tells whether two assets rise and fall together.",
+            "computation": "Pearson correlation of daily returns in euros, on shared trading days.",
+            "unit": "Number from −1 to +1.",
+            "readingTip": "Close to 1: little diversification; negative: one cushions the other."
+        },
+        "riskContribution": {
+            "title": "Risk contribution",
+            "purpose": "Each asset’s share of portfolio volatility, to compare with its weight.",
+            "computation": "Share of portfolio variance carried by the asset at target weights: wᵢ (Σw)ᵢ / σ². Shares sum to 100%.",
+            "formula": "contributionᵢ = wᵢ (Σw)ᵢ / (wᵀ Σ w)",
+            "unit": "Ratio shown as a percentage.",
+            "readingTip": "An asset that is 30% of capital can carry 44% of the risk."
         }
     },
     "pages": {
@@ -1083,6 +1130,76 @@
                 "title": "Virtual portfolio",
                 "description": "Coming soon: place orders with a fictional balance and follow your positions in real time."
             }
+        }
+    },
+    "risk": {
+        "title": "Risk · {name}",
+        "titleEmpty": "Risk",
+        "computed": "Computed",
+        "subtitle": "{allocations} · {period} · daily returns",
+        "choose": "Choose a backtest",
+        "noBacktest": "No completed backtest.",
+        "states": {
+            "empty": "Choose a completed backtest to see where its risk comes from.",
+            "insufficientData": "Fewer than 250 trading days shared by every asset: risk is not computed.",
+            "unavailable": "This result has no computed risk yet. Run the backtest again to compute it.",
+            "rerun": "Run the backtest again",
+            "error": "Risk could not be loaded."
+        },
+        "stats": {
+            "volatility": "Annualized volatility",
+            "period": "period",
+            "volatilityCaption": "On daily returns",
+            "var": "VaR 95%",
+            "cvar": "CVaR 95%",
+            "historical": "historical",
+            "varCaption": "Historical, one day · 1 day in 20 is worse",
+            "cvarCaption": "Historical, one day · beyond the VaR",
+            "concentration": "Concentration",
+            "hhi": "HHI {value}",
+            "concentrationCaption": "Max weight · {count} effective assets"
+        },
+        "matrix": {
+            "title": "Correlation matrix",
+            "description": "Correlation of daily returns, from −1 to +1",
+            "reading": "{first} and {second} move together ({correlation}): holding both adds little diversification."
+        },
+        "contributions": {
+            "title": "Risk contribution",
+            "description": "Share of total volatility brought by each asset",
+            "row": "Weight {weight} · Risk {risk}",
+            "total": "Total of contributions",
+            "reading": "Reading: {symbol} is {weight} of the capital but {risk} of the risk."
+        },
+        "constraint": {
+            "title": "Drawdown constraint",
+            "description": "Checked on the backtest history · only constraint of the MVP",
+            "limit": "Maximum accepted drawdown (%)",
+            "check": "Check",
+            "invalid": "Enter a whole number from 1 to 99%.",
+            "columns": {
+                "check": "Check",
+                "limit": "Limit",
+                "measured": "Measured",
+                "status": "Status"
+            },
+            "current": "Current",
+            "previous": "Previous · {limit}",
+            "respected": "Respected",
+            "violated": "Not respected",
+            "disclaimer": "The past does not guarantee the future: a limit respected on history may be exceeded tomorrow."
+        },
+        "exposures": {
+            "title": "Exposures by asset",
+            "description": "Weight, own volatility and share of risk",
+            "columns": {
+                "asset": "Asset",
+                "weight": "Weight",
+                "volatility": "Volatility",
+                "share": "Share of risk"
+            },
+            "total": "Total",
+            "note": "Exposures by sector and region: not available in this version."
         }
     }
 }

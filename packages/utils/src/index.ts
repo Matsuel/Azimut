@@ -1,5 +1,6 @@
 export { Logger, createLogger } from './logger'
-export { DAY_MS, addYears, periodKey, type PeriodFrequency } from './period'
-export { median } from './stats'
+export { DAY_MS, TRADING_DAYS_PER_YEAR, addYears, periodKey, type PeriodFrequency } from './period'
+export { median, round } from './stats'
 export { onShutdown } from './shutdown'
 export { businessDays, estimateSchedule, type ScheduleEstimate } from './schedule'
+export { REFERENCE_CURRENCY, fxPairSymbol, rateOn } from './fx'

@@ -166,6 +166,10 @@ model Backtest {
   benchmarkSymbol     String?
   // Lot de départs (D1) : les backtests créés ensemble pour comparer des dates d'entrée partagent cet identifiant ; null hors lot
   batchId             String?
+  // Drawdown maximal accepté (D9) : ratio au pourcent près (0.15 = 15 %), saisi sur la page Risque ; null sans limite
+  maxDrawdownLimit         Decimal? @db.Decimal(3, 2)
+  // Limite saisie avant la dernière (D12) ; null à la première vérification
+  previousMaxDrawdownLimit Decimal? @db.Decimal(3, 2)
 
   // Dernière exécution créée : permet de filtrer/compter par statut courant avec Prisma (mise à jour à chaque création d'exécution)
   latestExecutionId String? @unique
@@ -255,6 +259,10 @@ model BacktestResult {
   riskFreeRate            Decimal?       @db.Decimal(12, 6)
   // [{ years, count, worst, median, best, negativeShare }] : fenêtres glissantes de 1, 3 et 5 ans couvertes par l'historique (ratios non annualisés) ; null pour les résultats antérieurs
   rollingSummary          Json?
+  // Risque calculé par risk-engine (`Risk`, contrat risk.ts), reçu après le résultat ; null tant que `risk.completed` n'est pas reçu, ou sous 250 jours communs
+  risk                    Json?
+  // Instant de réception de `risk.completed` ; non null avec `risk` null = « données insuffisantes » (D16), null = pas de risque (D17)
+  riskComputedAt          DateTime?
   // [{ date: "YYYY-MM-DD", value, invested, lumpSumValue? }], écrite une seule fois à la complétion
   equityCurve             Json           @default("[]")
   // [{ date: "YYYY-MM-DD", symbol, side, price, quantity, amount, fee }] : ordres exécutés, achats et ventes (side absent = achat)

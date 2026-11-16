@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import type { BacktestRequestedPayload } from "@azimut/contracts"
 import type { IBacktestPublisher } from "../publishers/backtest.publisher"
-import type { IMarketRepository } from "../repositories/market.repository"
+import type { IMarketClient } from "@azimut/market-client"
 import BacktestService from "../services/backtest.service"
 import { syntheticSeries } from "./backtest.fixture"
 
@@ -33,12 +33,12 @@ function recordingPublisher() {
 }
 
 // Sans dividende, cotations en euros
-const marketWith = (getDailyCloses: IMarketRepository["getDailyCloses"]) =>
+const marketWith = (getDailyCloses: IMarketClient["getDailyCloses"]) =>
     ({
         source: { provider: "test", priceType: "close" },
         getDailyCloses,
         getDividends: async (symbols: string[]) => Object.fromEntries(symbols.map((symbol) => [symbol, { currency: "EUR", dividends: [] }])),
-    }) as unknown as IMarketRepository
+    }) as unknown as IMarketClient
 
 test("un backtest réussi publie started puis completed avec la provenance des cours", async () => {
     const { publisher, events } = recordingPublisher()
@@ -85,7 +85,7 @@ test("un actif en dollars charge sa paire EURUSD=X avec les cours et publie la c
             requested.push(symbols)
             return { AAA: syntheticSeries(1, "2024-01-02", 8, 10000), "EURUSD=X": syntheticSeries(2, "2024-01-02", 8, 110) }
         },
-    } as unknown as IMarketRepository
+    } as unknown as IMarketClient
 
     await service.run(request)
 

@@ -32,11 +32,12 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
 - [Market (proxy)](#market-proxy) : `GET /api/market/{search,details/:id,defaults}`
 - [Portfolio](#portfolio) : `POST`, `GET`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
 - [Backtest](#backtest) : `POST`, `POST /preview`, `POST /:id/executions`, `GET /stats`, `POST /batch`, `GET /batch/:batchId`, `POST /batch/:batchId/starts`, `POST /batch/:batchId/executions`, `GET /compare`, `GET /:id`, `GET`
+- [Risque](#risque) : `GET /api/risk/:backtestId`, `PUT /api/risk/:backtestId/constraint`
 
 ## Conventions communes
 
 - **Base** : `http://localhost:8000`. Le web appelle via `apiFetch(path)` (`apps/web/src/lib/api.ts`) avec `NEXT_PUBLIC_API_URL=http://localhost:8000/api` : `apiFetch("/backtest")` → `GET /api/backtest`. Cookies envoyés (`credentials: "include"`), CORS limité à `env.WEB_URL` (défaut `http://localhost:3000`, `env.ts`).
-- **Ordre d'enregistrement** (`index.ts`) : `helmet`, `cors`, `GET /health`, limiteur `/api/auth` + `authRouter`, `marketRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
+- **Ordre d'enregistrement** (`index.ts`) : `helmet`, `cors`, `GET /health`, limiteur `/api/auth` + `authRouter`, `marketRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
 - **Santé** : `GET /health` (sans auth) → `200 { "status": "ok" }`, `503 { "status": "unavailable" }` si la base ne répond pas.
 - **Limites de débit** (par IP, fenêtre 60 s, en-têtes `RateLimit-*`) : `POST /api/auth/*` 30 requêtes (les `GET`, dont `get-session` appelé à chaque page, ne comptent pas) ; `POST /api/backtest` et `POST /api/backtest/:id/executions` 20 requêtes (les lectures et `POST /api/backtest/preview` ne comptent pas). Au-delà : `429`. Body JSON refusé au-delà de 100 ko (`413`).
 - **Auth** : `authMiddleware` lit la session better-auth depuis les en-têtes (cookie, ou `Authorization: Bearer` via le plugin `bearer`) et pose `req.userId`. Sans session : `401 { "error": "Unauthorized", "code": "UNAUTHORIZED" }`.
@@ -318,7 +319,7 @@ Les montants sont dans la devise saisie, affichée `EUR` par le web (`BACKTEST_C
 
 - **Auth** : session requise.
 - **Entrée** : params `id`.
-- **Réponse** : `200`, `BacktestDetails` : `Backtest` + `executions` (toutes, plus récente d'abord, chacune avec son résumé de résultat ou `null`) + `result` (`BacktestResult` complet de la dernière exécution `COMPLETED`, ou `null`).
+- **Réponse** : `200`, `BacktestDetails` : `Backtest` + `executions` (toutes, plus récente d'abord, chacune avec son résumé de résultat ou `null`) + `result` (`BacktestResult` de la dernière exécution `COMPLETED`, ou `null`, hors `risk` : voir [Risque](#risque)) + `hasDividendDetails` (booléen : dividendes perçus ou effet de change à détailler sur l'écran « Dividendes et change » ; faux sans résultat ou pour un résultat antérieur à `returnBreakdown`).
   ```json
   { "id": "cm…", "name": "…", "executions": [{ "status": "COMPLETED", "attempt": 1, "result": { "totalReturn": "0.123456", "totalTrades": 12, "...": "…" } }], "result": { "finalValue": "11234.56", "totalInvested": "10010", "totalFees": "10.01", "profit": "1224.56", "totalReturn": "0.123456", "rebalanceCount": 3, "maxDrawdown": "-0.08", "maxDrawdownDate": "2026-03-10T00:00:00.000Z", "maxDrawdownPeakDate": "2026-02-12T00:00:00.000Z", "maxDrawdownRecoveryDate": "2026-05-04T00:00:00.000Z", "recoveryDays": 81, "cagr": "0.071234", "volatility": "0.153201", "sharpeRatio": "0.464973", "riskFreeRate": "0", "equityCurve": [{ "date": "2025-11-03", "value": 1000, "invested": 1001, "lumpSumValue": 10000 }], "trades": [{ "date": "2025-11-03", "symbol": "AAPL", "price": 268.5, "quantity": 3.720670, "amount": 1000, "fee": 1 }], "holdings": [{ "symbol": "AAPL", "quantity": 41.2, "value": 11234.56 }], "lumpSumComparison": { "finalValue": 11890.2, "totalReturn": 0.187831, "maxDrawdown": -0.12, "dcaAdvantage": -655.64 }, "benchmark": { "symbol": "URTH", "finalValue": 11502.3, "totalReturn": 0.149081, "cagr": 0.081, "volatility": 0.141, "sharpeRatio": 0.574468, "maxDrawdown": -0.07, "recoveryDays": 64, "excessCagr": -0.009766, "excessVolatility": 0.012201, "excessMaxDrawdown": -0.01, "excessSharpe": -0.109495 }, "executionRule": "CLOSE_ON_SCHEDULED_DAY", "dataSource": { "provider": "yahoo-finance2", "priceType": "TOTAL_RETURN", "fetchedAt": "2026-10-30T10:12:03.000Z", "fingerprint": "7e2c42c9…" }, "...": "…" } }
   ```
@@ -346,3 +347,35 @@ Les montants sont dans la devise saisie, affichée `EUR` par le web (`BACKTEST_C
 - **Effets** : aucun.
 - **Appelant** : `getBacktests(params)` de `apps/web/src/features/backtest/api.ts`, hook `useBacktests(params)` (clé `["backtest", "list", params]`, `keepPreviousData`) ; utilisé par `BacktestList` (colonnes Allocation et CAGR) et `ComparisonSelection` (`hasResult=true`).
 - **Source** : `routes/backtest/backtest.routes.ts`, `controller/backtest.controller.ts`, `services/backtest.service.ts`, `repositories/backtest.repository.ts`.
+
+## Risque
+
+Calculé par `risk-engine` après chaque backtest (`risk.completed`), stocké avec le résultat par core-backend. Les ratios sont des nombres JSON (pas des `Decimal` sérialisés) : `0.132` = 13,2 %.
+
+### GET /api/risk/:backtestId
+
+- **Auth** : session requise.
+- **Entrée** : params `backtestId` (string, cuid).
+- **Réponse** : `200`, `RiskView` (`packages/contracts/src/risk.ts`), calculé sur le **dernier résultat terminé** du backtest. `state` : `COMPUTED` (`risk` et `reading` renseignés), `INSUFFICIENT_DATA` (moins de 250 jours de cotation communs : aucun chiffre partiel), `UNAVAILABLE` (ancien résultat, exécution en cours ou en échec, `risk.completed` pas encore reçu : bouton « Relancer le backtest »). `reading` : paire la plus corrélée (`null` avec un seul actif) et actif contribuant le plus. `constraint` : `null` sans limite saisie ou sans résultat terminé ; `measured` = `maxDrawdown` du résultat (ratio ≤ 0), `previous` = limite précédente (`null` à la première vérification).
+  ```json
+  { "state": "COMPUTED", "risk": { "commonDays": 502, "volatility": 0.153, "var95": -0.021, "cvar95": -0.031, "assets": [{ "symbol": "AAPL", "weight": 0.6, "volatility": 0.27, "riskContribution": 0.72 }, { "symbol": "URTH", "weight": 0.4, "volatility": 0.14, "riskContribution": 0.28 }], "correlations": [[1, 0.62], [0.62, 1]], "hhi": 0.52, "effectiveAssets": 1.92, "maxWeight": 0.6 }, "reading": { "mostCorrelatedPair": { "first": "AAPL", "second": "URTH", "correlation": 0.62 }, "topContributor": { "symbol": "AAPL", "riskContribution": 0.72 } }, "constraint": { "measured": -0.214, "current": { "limit": 0.15, "status": "VIOLATED" }, "previous": { "limit": 0.25, "status": "RESPECTED" } } }
+  ```
+- **Erreurs** : `401` ; `403 { "error": "Access denied" }` ; `404 { "error": "Backtest not found" }`.
+- **Effets** : aucun.
+- **Appelant** : aucun pour l'instant (page Risque, T-06).
+- **Source** : `routes/risk/risk.routes.ts`, `controller/risk.controller.ts`, `services/risk.service.ts`, `repositories/risk.repository.ts`.
+
+### PUT /api/risk/:backtestId/constraint
+
+- **Auth** : session requise (propriétaire seulement).
+- **Entrée** :
+  - params : `backtestId`.
+  - body : `riskConstraintInputSchema` (`packages/contracts/src/risk.ts`) : `maxDrawdownLimit` ratio de `0.01` à `0.99`, au pourcent près (le web convertit l'entier saisi de 1 à 99 %).
+    ```json
+    { "maxDrawdownLimit": 0.15 }
+    ```
+- **Réponse** : `200`, `RiskView` (cf. ci-dessus) avec la contrainte réévaluée à partir du `maxDrawdown` stocké, sans relancer l'engine. La limite précédente devient `previous` (D12) ; une limite identique à l'actuelle ne change rien. Respectée si `|maxDrawdown| ≤ limite`.
+- **Erreurs** : `400 { "code": "INVALID_RISK_LIMIT", "issues": [ZodIssue] }` → limite hors plage, non entière en pourcent ou non numérique (limite inchangée) ; `400 { "code": "BACKTEST_NO_RESULT" }` → aucun résultat terminé ; `401` ; `403` ; `404`.
+- **Effets** : écrit `maxDrawdownLimit` et `previousMaxDrawdownLimit` du backtest ; aucun événement.
+- **Appelant** : aucun pour l'instant (page Risque, T-07).
+- **Source** : `routes/risk/risk.routes.ts`, `controller/risk.controller.ts`, `services/risk.service.ts`, `repositories/risk.repository.ts`.

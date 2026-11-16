@@ -3,6 +3,41 @@ import { useLocale } from "next-intl"
 // Mois moyen du calendrier grégorien, pour convertir des jours calendaires en mois
 const DAYS_PER_MONTH = 365.25 / 12
 
+type NumberFormat = (options?: Intl.NumberFormatOptions) => (value: number) => string
+
+/** Formatters de nombres sans devise ni date (ratios, pourcentages, quantités), dans la langue de `number`. */
+function numberFormatters(number: NumberFormat) {
+    const twoDecimals = number({ minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    return {
+        /** Écart en points de pourcentage, 1 décimale, signé (`+4,4`). */
+        formatPointChange: number({ minimumFractionDigits: 1, maximumFractionDigits: 1, signDisplay: "always" }),
+        /** Nombre signé à 2 décimales, sans unité (`+1,25`). */
+        formatChange: number({ minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: "always" }),
+        /** Ratio en fraction (0,342) affiché en variation signée (`+34,20 %`). */
+        formatRatio: number({
+            style: "percent",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+            signDisplay: "always",
+        }),
+        /** Taux en fraction (0,3846) affiché sans signe, arrondi à l'unité (`38 %`). */
+        formatRate: number({ style: "percent", maximumFractionDigits: 0 }),
+        /** Taux en fraction affiché sans signe, jusqu'à 2 décimales (0,001 → `0,1 %` ; 0,1532 → `15,32 %`). */
+        formatPercent: number({ style: "percent", maximumFractionDigits: 2 }),
+        /** Taux en fraction affiché sans signe, 1 décimale (0,1324 → `13,2 %` ; −0,014 → `−1,4 %`). */
+        formatPercent1: number({ style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+        /** Nombre sans unité, 1 décimale au plus (`3,6` actifs effectifs). */
+        formatDecimal1: number({ maximumFractionDigits: 1 }),
+        /** Corrélation de −1 à 1, sans unité, 2 décimales (`0,71`, `−0,18`). */
+        formatCorrelation: twoDecimals,
+        /** Ratio de Sharpe, sans unité, 2 décimales (`1,25`). */
+        formatSharpe: twoDecimals,
+        /** Quantité de titres, fractionnaires inclus (DCA) : jusqu'à 6 décimales. */
+        formatQuantity: number({ maximumFractionDigits: 6 }),
+        formatVolume: number({ notation: "compact", maximumFractionDigits: 2 }),
+    }
+}
+
 function createFormatters(locale: string) {
     const number = (options?: Intl.NumberFormatOptions) => new Intl.NumberFormat(locale, options).format
     const date = (options: Intl.DateTimeFormatOptions) => {
@@ -31,30 +66,11 @@ function createFormatters(locale: string) {
         formatDateWith: (options: Intl.DateTimeFormatOptions) => date(options),
         /** Année seule (`2024`), pour l'axe des fenêtres glissantes. */
         formatYear: date({ year: "numeric" }),
-        /** Écart en points de pourcentage, 1 décimale, signé (`+4,4`). */
-        formatPointChange: number({ minimumFractionDigits: 1, maximumFractionDigits: 1, signDisplay: "always" }),
         /** Graduation numérique d'un axe : 2 décimales sous 10 (cours bas), entier au-delà. */
         formatAxis: (v: number) => (v < 10 ? formatAxisSmall(v) : formatAxisLarge(v)),
         /** Montant dans la devise de la donnée : seul le format suit la langue (`1 234,50 €`, `€1,234.50`). */
         formatPrice: (v: number, currency: string) => currencyFormat(currency).format(v),
-        /** Nombre signé à 2 décimales, sans unité (`+1,25`). */
-        formatChange: number({ minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: "always" }),
-        /** Ratio en fraction (0,342) affiché en variation signée (`+34,20 %`). */
-        formatRatio: number({
-            style: "percent",
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-            signDisplay: "always",
-        }),
-        /** Taux en fraction (0,3846) affiché sans signe, arrondi à l'unité (`38 %`). */
-        formatRate: number({ style: "percent", maximumFractionDigits: 0 }),
-        /** Taux en fraction affiché sans signe, jusqu'à 2 décimales (0,001 → `0,1 %` ; 0,1532 → `15,32 %`). */
-        formatPercent: number({ style: "percent", maximumFractionDigits: 2 }),
-        /** Ratio de Sharpe, sans unité, 2 décimales (`1,25`). */
-        formatSharpe: number({ minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        /** Quantité de titres, fractionnaires inclus (DCA) : jusqu'à 6 décimales. */
-        formatQuantity: number({ maximumFractionDigits: 6 }),
-        formatVolume: number({ notation: "compact", maximumFractionDigits: 2 }),
+        ...numberFormatters(number),
         formatDate: date({ dateStyle: "short", timeStyle: "short" }),
         formatDay,
         formatDayRange: (start: string | Date, end: string | Date) => `${formatDay(start)} – ${formatDay(end)}`,

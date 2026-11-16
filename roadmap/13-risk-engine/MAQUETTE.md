@@ -2,6 +2,13 @@
 
 > Source : Figma `Trading` (clé `DmpvF0SdUJGCBfA6GsdErm`), section `Feature 13 · Risk Engine (33)` (node `454:12125`). Cadre `33 · Risque` (node `454:12126`, 1440 × 1141) et copie `13 · Résultat d’un backtest · à modifier (F13)` (node `497:16476`, 1440 × 1855). Lue le 2026-11-13 d'après la capture et le contexte de design du cadre ; les libellés sont recopiés tels quels (espaces et signe moins `−` U+2212 compris). Les nombres sont ceux de la maquette : un exemple, pas une règle.
 
+## Mises à jour du 2026-11-15 (codage)
+
+- Cadre `33 · Risque` : pastille `1 an` remplacée par `période` (D13) ; pastille `Données au …` de la barre du haut retirée (D15).
+- Nouveau cadre `33 · Risque · états (F13)` (node `532:17845`), **proposé** : vide (aucun backtest dans l'URL ; le bouton reste dans l'en-tête), sélecteur ouvert (backtests terminés), chargement, données insuffisantes, sans risque (« Relancer le backtest »), erreur (« Réessayer »).
+- Cadre `13 · Résultat d’un backtest` original (`350:7214`) : boutons `Robustesse` (`531:17339`, feature 12) et `Risque` (`531:17341`) ajoutés après `Dividendes et change`.
+- Écarts du code : libellé du champ `Drawdown maximal accepté (%)` (un champ numérique n'affiche pas « % ») ; champ prérempli avec la limite actuelle après une vérification ; signe moins écrit par `Intl` (« - » ou « − » selon ICU) ; cartes d'une rangée de même hauteur (grille).
+
 ## Ce que la maquette ne montre pas
 
 La section ne contient que deux cadres : `33 · Risque` et la copie du cadre 13. Il n'y a **aucun cadre pour** l'état vide (aucun backtest choisi), le chargement, les données insuffisantes, l'erreur, ni la version sombre. Les seuls états dessinés sont le badge `Calculé` et, pour la contrainte de drawdown, les statuts `Respectée` et `Non respectée`. Tout le reste est **à trancher** (voir la fin).

@@ -12,6 +12,8 @@ const ENGINE = "apps/backtest-engine/engine/backtest.engine.ts"
 const ENGINE_UTILS = "apps/backtest-engine/engine/backtest.utils.ts"
 const BACKTEST_SERVICE = "apps/core-backend/services/backtest.service.ts"
 const MARKET_REPOSITORY = "apps/market-service/repositories/market.repository.ts"
+const RISK_ENGINE = "apps/risk-engine/engine/risk.engine.ts"
+const RISK_UTILS = "apps/risk-engine/engine/risk.utils.ts"
 
 /**
  * Entrées du glossaire, une par donnée affichée ; la clé est aussi celle du dictionnaire (`glossary.<clé>`).
@@ -19,6 +21,13 @@ const MARKET_REPOSITORY = "apps/market-service/repositories/market.repository.ts
  * langue dans `glossary.shared` et insérés par `InfoHint` (`{moneyUnit}`, `{marketMoneyUnit}`, `{twr}`).
  */
 export const GLOSSARY = {
+    // Risque d'un backtest (feature 13)
+    riskVolatility: { source: `${RISK_ENGINE} · computeRisk (volatility, assets.volatility)` },
+    valueAtRisk: { source: `${RISK_UTILS} · historicalVar (var95)` },
+    expectedShortfall: { source: `${RISK_UTILS} · historicalVar (cvar95)` },
+    concentration: { source: `${RISK_ENGINE} · computeRisk (hhi, effectiveAssets, maxWeight)` },
+    correlation: { source: `${RISK_UTILS} · correlationMatrix` },
+    riskContribution: { source: `${RISK_UTILS} · riskContributions` },
     // Résultat d'un backtest
     finalValue: { source: `${ENGINE} · simulate (finalValue)` },
     profit: { source: `${ENGINE} · simulate (profit)` },

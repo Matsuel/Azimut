@@ -40,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [core-backend, market-service, backtest-engine, web]
+        app: [core-backend, market-service, backtest-engine, risk-engine, web]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2

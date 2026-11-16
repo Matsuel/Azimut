@@ -18,9 +18,10 @@ interface PageHeaderProps {
 /** En-tête d'une page : `h2` du titre, description, slots `leading`, `badge` et `actions`. */
 export function PageHeader({ title, description, badge, leading, actions, className }: PageHeaderProps) {
     return (
-        <div className={cn("flex items-center gap-4", className)}>
+        // Quand la largeur manque, les actions passent sous le titre au lieu de pousser la page en largeur
+        <div className={cn("flex flex-wrap items-center gap-4", className)}>
             {leading}
-            <div className="flex flex-1 flex-col gap-1">
+            <div className="flex min-w-60 flex-1 flex-col gap-1">
                 {title && (
                     <div className="flex items-center gap-3">
                         <h2 className="text-h2">{title}</h2>

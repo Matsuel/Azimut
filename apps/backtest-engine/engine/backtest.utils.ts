@@ -1,23 +1,13 @@
 import { createHash } from "node:crypto";
-import { DAY_MS } from "@azimut/utils";
+import { DAY_MS, TRADING_DAYS_PER_YEAR } from "@azimut/utils";
 import type { BacktestParams, DividendSeries, PriceSeries, TwrPoint } from "../interfaces/backtest.interface";
 
 // Année calendaire moyenne (années bissextiles comprises), base d'annualisation du CAGR
 const DAYS_PER_YEAR = 365.25;
-export const TRADING_DAYS_PER_YEAR = 252;
 // Taux sans risque du Sharpe : ratio annuel, hypothèse fixe publiée avec le résultat (riskFreeRate)
 export const RISK_FREE_RATE = 0;
 
 const calendarDaysBetween = (from: string, to: string) => Math.round((Date.parse(to) - Date.parse(from)) / DAY_MS);
-
-/**
- * Arrondit au nombre de décimales demandé (2 pour un montant, 4 pour un cours, 6 pour un ratio ou une quantité).
- * À n'appliquer qu'aux valeurs publiées : les cumuls se font sur les valeurs non arrondies.
- */
-export const round = (value: number, decimals: number) => {
-    const factor = 10 ** decimals;
-    return Math.round(value * factor) / factor;
-};
 
 /**
  * Suit la perte maximale depuis un plus haut (max drawdown) sur un indice de performance

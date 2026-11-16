@@ -1,6 +1,7 @@
 export { kafkaEventSchema } from "./event";
 export * from "./backtest";
 export * from "./market";
+export * from "./risk";
 export * from "./pagination";
 export * from "./error";
 export * from "./internal";

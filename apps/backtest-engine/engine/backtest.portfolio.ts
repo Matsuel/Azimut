@@ -1,6 +1,6 @@
 import type { DividendEvent, Trade, TradeSide } from "@azimut/contracts";
 import type { BacktestParams, DividendSeries, PriceSeries } from "../interfaces/backtest.interface";
-import { round } from "./backtest.utils";
+import { round } from "@azimut/utils";
 
 // Écart minimal à la cible, EUR, pour passer un ordre de rebalancement : un ordre arrondi à 0 € serait invalide (amount > 0)
 const MIN_REBALANCE_ORDER = 0.01;

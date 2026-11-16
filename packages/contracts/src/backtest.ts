@@ -252,6 +252,8 @@ export const rollingWindowSchema = z.object({
 export const backtestCompletedPayloadSchema = z.object({
     executionId: z.string().min(1),
     finishedAt: z.iso.datetime(),
+    // Recopie de la requête (non stockée) : risk-engine calcule le risque depuis cet événement seul, sans état
+    request: backtestRequestedPayloadSchema.pick({ allocations: true, startDate: true, endDate: true }),
     // Valeur finale du portefeuille, devise saisie
     finalValue: z.number(),
     // Total versé, frais compris

@@ -58,11 +58,12 @@ function NoResult({ backtest }: { backtest: BacktestDetails }) {
 type DetailActionsProps = {
     dividendsHref?: string | null | false // absent sans résultat
     batchHref?: string | null // lot de robustesse d'origine
+    riskHref?: string | null | false // page Risque, absent sans résultat
     onRerun: () => void
     canRerun: boolean
 }
 
-function DetailActions({ dividendsHref, batchHref, onRerun, canRerun }: DetailActionsProps) {
+function DetailActions({ dividendsHref, batchHref, riskHref, onRerun, canRerun }: DetailActionsProps) {
     const t = useTranslations("backtest.detail")
 
     return (
@@ -75,6 +76,11 @@ function DetailActions({ dividendsHref, batchHref, onRerun, canRerun }: DetailAc
             {batchHref && (
                 <Button variant="outline" nativeButton={false} render={<Link href={batchHref} />}>
                     {t("robustness")}
+                </Button>
+            )}
+            {riskHref && (
+                <Button variant="outline" nativeButton={false} render={<Link href={riskHref} />}>
+                    {t("risk")}
                 </Button>
             )}
             <Button onClick={onRerun} disabled={!canRerun}>
@@ -116,6 +122,7 @@ export function BacktestDetail({ id }: { id: string }) {
                     <DetailActions
                         dividendsHref={result && routes.backtestDividends(id)}
                         batchHref={backtest.batchId && routes.backtestBatch(backtest.batchId)}
+                        riskHref={result && routes.backtestRisk(id)}
                         onRerun={() => rerun.mutate()}
                         canRerun={canRerun}
                     />

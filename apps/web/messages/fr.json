@@ -20,6 +20,7 @@
         "BACKTEST_NO_RESULT": "Ce backtest n’a pas encore de résultat terminé.",
         "EXECUTION_IN_PROGRESS": "Une exécution est déjà en cours pour ce backtest.",
         "BACKTEST_QUEUE_FAILED": "Le backtest n’a pas pu être mis en file d’attente. Relancez-le.",
+        "INVALID_RISK_LIMIT": "Le seuil de drawdown doit être un entier de 1 % à 99 %.",
         "SYMBOLS_NOT_UNIQUE": "Chaque actif ne peut apparaître qu’une fois.",
         "WEIGHTS_NOT_100": "Les poids doivent totaliser 100 %.",
         "END_BEFORE_START": "La date de fin doit être postérieure à la date de début.",
@@ -189,7 +190,8 @@
             "rebalancing": "rebalancement {frequency}",
             "benchmark": "benchmark {symbol}",
             "executedIn": "exécuté en {duration}",
-            "robustness": "Robustesse"
+            "robustness": "Robustesse",
+            "risk": "Risque"
         },
         "noBenchmark": "Aucun",
         "executionErrors": {
@@ -1030,6 +1032,51 @@
             "computation": "Part des fenêtres glissantes dont le rendement est strictement négatif, sur le départ le plus ancien.",
             "unit": "Ratio affiché en pourcentage des fenêtres.",
             "readingTip": "8 % : sur 100 jours d’entrée possibles, 8 auraient perdu de l’argent à la durée choisie."
+        },
+        "riskVolatility": {
+            "title": "Volatilité (risque)",
+            "purpose": "L’amplitude des variations du portefeuille aux poids cibles, et celle de chaque actif.",
+            "computation": "Le moteur de risque prend les rendements journaliers en euros (change inclus) sur les jours de cotation communs à tous les actifs, pondérés aux poids cibles constants, puis annualise leur écart-type par √252. Versements et rebalancements n’interviennent pas.",
+            "formula": "volatilité = √(wᵀ Σ w) × √252",
+            "unit": "Ratio annuel affiché en pourcentage.",
+            "readingTip": "Elle peut différer de la volatilité du résultat, qui suit le portefeuille réellement simulé."
+        },
+        "valueAtRisk": {
+            "title": "VaR 95 % historique",
+            "purpose": "La perte d’un mauvais jour : 1 jour sur 20 a fait pire sur l’historique.",
+            "computation": "Les rendements journaliers du portefeuille aux poids cibles sont triés ; avec n rendements et k = ⌈5 % × n⌉, la VaR est le k-ième plus petit.",
+            "unit": "Ratio sur un jour affiché en pourcentage (négatif = perte).",
+            "readingTip": "−1,4 % : un jour sur vingt, le portefeuille a perdu plus de 1,4 %."
+        },
+        "expectedShortfall": {
+            "title": "CVaR 95 % historique",
+            "purpose": "La perte moyenne des pires jours, au-delà de la VaR.",
+            "computation": "Moyenne des k plus petits rendements journaliers, avec le même k que la VaR.",
+            "unit": "Ratio sur un jour affiché en pourcentage (négatif = perte).",
+            "readingTip": "Toujours inférieure ou égale à la VaR : elle dit combien coûte un très mauvais jour."
+        },
+        "concentration": {
+            "title": "Concentration",
+            "purpose": "Mesure si le capital repose sur peu d’actifs.",
+            "computation": "Indice de Herfindahl des poids cibles : somme des poids au carré. Le nombre d’actifs effectifs vaut 1 / HHI ; la valeur en grand est le poids maximal.",
+            "formula": "HHI = Σ wᵢ²",
+            "unit": "HHI : ratio de 0 à 1 ; actifs effectifs : nombre.",
+            "readingTip": "30/30/30/10 : HHI 0,28, soit 3,6 actifs effectifs."
+        },
+        "correlation": {
+            "title": "Corrélation",
+            "purpose": "Dit si deux actifs montent et baissent ensemble.",
+            "computation": "Corrélation de Pearson des rendements journaliers en euros, sur les jours de cotation communs.",
+            "unit": "Nombre de −1 à +1.",
+            "readingTip": "Proche de 1 : diversification faible ; négative : l’un amortit l’autre."
+        },
+        "riskContribution": {
+            "title": "Contribution au risque",
+            "purpose": "La part de la volatilité du portefeuille apportée par chaque actif, à comparer à son poids.",
+            "computation": "Part de la variance du portefeuille portée par l’actif, aux poids cibles : wᵢ (Σw)ᵢ / σ². Les parts somment à 100 %.",
+            "formula": "contributionᵢ = wᵢ (Σw)ᵢ / (wᵀ Σ w)",
+            "unit": "Ratio affiché en pourcentage.",
+            "readingTip": "Un actif qui pèse 30 % du capital peut porter 44 % du risque."
         }
     },
     "pages": {
@@ -1083,6 +1130,76 @@
                 "title": "Portefeuille virtuel",
                 "description": "Bientôt : passez des ordres avec un solde fictif et suivez vos positions en temps réel."
             }
+        }
+    },
+    "risk": {
+        "title": "Risque · {name}",
+        "titleEmpty": "Risque",
+        "computed": "Calculé",
+        "subtitle": "{allocations} · {period} · rendements journaliers",
+        "choose": "Choisir un backtest",
+        "noBacktest": "Aucun backtest terminé.",
+        "states": {
+            "empty": "Choisissez un backtest terminé pour voir d’où vient son risque.",
+            "insufficientData": "Moins de 250 jours de cotation communs à tous les actifs : le risque n’est pas calculé.",
+            "unavailable": "Ce résultat n’a pas encore de risque calculé. Relancez le backtest pour le calculer.",
+            "rerun": "Relancer le backtest",
+            "error": "Le risque n’a pas pu être chargé."
+        },
+        "stats": {
+            "volatility": "Volatilité annualisée",
+            "period": "période",
+            "volatilityCaption": "Sur rendements journaliers",
+            "var": "VaR 95 %",
+            "cvar": "CVaR 95 %",
+            "historical": "historique",
+            "varCaption": "Historique, un jour · 1 jour sur 20 fait pire",
+            "cvarCaption": "Historique, un jour · au-delà de la VaR",
+            "concentration": "Concentration",
+            "hhi": "HHI {value}",
+            "concentrationCaption": "Poids max · {count} actifs effectifs"
+        },
+        "matrix": {
+            "title": "Matrice de corrélation",
+            "description": "Corrélation des rendements journaliers, de −1 à +1",
+            "reading": "{first} et {second} bougent ensemble ({correlation}) : les détenir tous les deux diversifie peu."
+        },
+        "contributions": {
+            "title": "Contribution au risque",
+            "description": "Part de la volatilité totale apportée par chaque actif",
+            "row": "Poids {weight} · Risque {risk}",
+            "total": "Total des contributions",
+            "reading": "Lecture : {symbol} pèse {weight} du capital mais {risk} du risque."
+        },
+        "constraint": {
+            "title": "Contrainte de drawdown",
+            "description": "Vérifiée sur l’historique du backtest · seule contrainte du MVP",
+            "limit": "Drawdown maximal accepté (%)",
+            "check": "Vérifier",
+            "invalid": "Saisissez un entier de 1 à 99 %.",
+            "columns": {
+                "check": "Vérification",
+                "limit": "Limite",
+                "measured": "Mesuré",
+                "status": "Statut"
+            },
+            "current": "Actuelle",
+            "previous": "Précédente · {limit}",
+            "respected": "Respectée",
+            "violated": "Non respectée",
+            "disclaimer": "Le passé ne garantit pas l’avenir : une limite respectée sur l’historique peut être dépassée demain."
+        },
+        "exposures": {
+            "title": "Expositions par actif",
+            "description": "Poids, volatilité propre et part du risque",
+            "columns": {
+                "asset": "Actif",
+                "weight": "Poids",
+                "volatility": "Volatilité",
+                "share": "Part du risque"
+            },
+            "total": "Total",
+            "note": "Expositions par secteur et par zone : non disponibles dans cette version."
         }
     }
 }

@@ -5,11 +5,12 @@
         "packages/*"
     ],
     "scripts": {
-        "dev": "concurrently --kill-others --names API,MARKET,WEB,BACKTEST \"bun run --cwd apps/core-backend index.ts\" \"bun run --cwd apps/market-service index.ts\" \"bun run --cwd apps/web dev\" \"bun run --cwd apps/backtest-engine index.ts\"",
+        "dev": "concurrently --kill-others --names API,MARKET,WEB,BACKTEST,RISK \"bun run --cwd apps/core-backend index.ts\" \"bun run --cwd apps/market-service index.ts\" \"bun run --cwd apps/web dev\" \"bun run --cwd apps/backtest-engine index.ts\" \"bun run --cwd apps/risk-engine index.ts\"",
         "dev:backend": "bun run --cwd apps/core-backend index.ts",
         "dev:market": "bun run --cwd apps/market-service index.ts",
         "dev:web": "bun run --cwd apps/web dev",
         "dev:backtest": "bun run --cwd apps/backtest-engine index.ts",
+        "dev:risk": "bun run --cwd apps/risk-engine index.ts",
         "verify": "bun .claude/skills/verify/verify.ts"
     },
     "devDependencies": {
