@@ -877,7 +877,7 @@ Source : `src/components/form/form-issues.ts`.
 | `formatDateWith` | Formatter de dates propre à un composant : `formatDateWith({ month: "short" })(date)`. |
 | `formatYear` | Année seule : « 2024 » (axe des fenêtres glissantes). |
 | `formatPointChange` | Écart en points de pourcentage, 1 décimale, signé : `4.4` → « +4,4 ». |
-| `formatAxis` | Graduation numérique d'un axe : 2 décimales sous 10, entier au-delà. |
+| `formatAxis` | Graduation numérique d'un axe : 2 décimales sous 10, entier jusqu'au million, compact au-delà (`2,6 M`). |
 | `formatPrice` | Montant dans la devise ISO **obligatoire** : `formatPrice(1234.5, "EUR")` → « 1 234,50 € ». |
 | `formatWholePrice` | Montant arrondi à l'unité, sans décimales : `formatWholePrice(15820, "EUR")` → « 15 820 € ». Projection (percentiles). |
 | `formatChange` | Nombre signé, 2 décimales, sans « % » : `1.5` → « +1,50 ». Pour un pourcentage déjà en %, ou un écart de Sharpe. |

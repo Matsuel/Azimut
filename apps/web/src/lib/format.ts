@@ -60,6 +60,7 @@ function createFormatters(locale: string) {
 
     const formatAxisSmall = number({ maximumFractionDigits: 2 })
     const formatAxisLarge = number({ maximumFractionDigits: 0 })
+    const formatAxisMillions = number({ notation: "compact", maximumFractionDigits: 1 })
 
     return {
         /** Langue active (à passer à une librairie qui attend une locale ; pour formater, utilise les formatters ci-dessous). */
@@ -68,8 +69,11 @@ function createFormatters(locale: string) {
         formatDateWith: (options: Intl.DateTimeFormatOptions) => date(options),
         /** Année seule (`2024`), pour l'axe des fenêtres glissantes. */
         formatYear: date({ year: "numeric" }),
-        /** Graduation numérique d'un axe : 2 décimales sous 10 (cours bas), entier au-delà. */
-        formatAxis: (v: number) => (v < 10 ? formatAxisSmall(v) : formatAxisLarge(v)),
+        /** Graduation numérique d'un axe : 2 décimales sous 10 (cours bas), entier jusqu'au million, compact au-delà (`2,6 M`) pour tenir dans la largeur de l'axe. */
+        formatAxis: (v: number) => {
+            if (Math.abs(v) >= 1_000_000) return formatAxisMillions(v)
+            return v < 10 ? formatAxisSmall(v) : formatAxisLarge(v)
+        },
         /** Montant dans la devise de la donnée : seul le format suit la langue (`1 234,50 €`, `€1,234.50`). */
         formatPrice: (v: number, currency: string) => currencyFormat(currency).format(v),
         /** Montant arrondi à l'euro, sans décimales : `formatWholePrice(15820, "EUR")` → `15 820 €`. */
