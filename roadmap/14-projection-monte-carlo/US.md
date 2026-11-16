@@ -90,7 +90,7 @@ Tâches : T-02, T-06 (détail dans `TASKS.md`).
 
 Critères d’acceptation :
 - [ ] Backtest antérieur à la projection ou exécution en cours (`UNAVAILABLE`) : message « Relancer le backtest », jamais une erreur 500.
-- [ ] Moins de 250 jours communs (`INSUFFICIENT_DATA`) : message « données insuffisantes », aucun chiffre partiel.
+- [ ] Moins de 2 jours communs ou actif sans cours (`INSUFFICIENT_DATA`, D12) : message « données insuffisantes », aucun chiffre partiel.
 
 Tâches : T-04, T-06 (détail dans `TASKS.md`).
 

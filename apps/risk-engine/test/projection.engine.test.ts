@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test"
 import { PROJECTION_PARAMS, projectionSchema } from "@azimut/contracts"
+import { round } from "@azimut/utils"
 import computeProjection from "../engine/projection.engine"
 
-// Jours ouvrés consécutifs à partir du 2023-01-02
+// Jours consécutifs à partir du 2023-01-02
 const days = (count: number) => Array.from({ length: count }, (_, i) => new Date(Date.UTC(2023, 0, 2 + i)).toISOString().slice(0, 10))
 const series = (count: number, close: (i: number) => number) => days(count).map((date, i) => ({ date, close: close(i) }))
 // Rendements pseudo-variés, déterministes
@@ -11,8 +12,25 @@ const noisy = (i: number) => 100 * (1 + 0.001 * i + 0.02 * Math.sin(i * 1.7))
 const capital = 10_000
 const one = [{ symbol: "A", weight: 1 }]
 
-test("moins de 250 jours communs : null", () => {
-    expect(computeProjection(one, { A: series(249, noisy) }, capital, 42)).toBeNull()
+test("un seul jour commun : null ; 249 jours : projection calculée (D12)", () => {
+    expect(computeProjection(one, { A: series(1, noisy) }, capital, 42)).toBeNull()
+    expect(computeProjection(one, { A: series(249, noisy) }, capital, 42)).not.toBeNull()
+})
+
+test("2 jours (1 rendement) : blocs d'1 jour, percentiles = capital × (1 + r)^252, r = 0,1 %", () => {
+    const result = computeProjection(one, { A: series(2, (i) => 100 + 0.1 * i) }, capital, 42)!
+    expect(projectionSchema.safeParse(result).success).toBe(true)
+    expect(result.blockDays).toBe(1)
+    expect(result.historyDays).toBe(2)
+    expect(result.years[0]!.p5).toBeCloseTo(round(capital * 1.001 ** 252, 2), 2)
+    expect(result.years[0]!.p95).toBeCloseTo(round(capital * 1.001 ** 252, 2), 2)
+})
+
+test("10 jours (9 rendements) : blocs de 9 jours, valide pour le contrat", () => {
+    const result = computeProjection(one, { A: series(10, noisy) }, capital, 42)!
+    expect(result.blockDays).toBe(9)
+    expect(result.points.length).toBe(121)
+    expect(projectionSchema.safeParse(result).success).toBe(true)
 })
 
 test("un actif sans cours : null", () => {
@@ -42,7 +60,7 @@ test("forme du résultat, valide pour le contrat", () => {
 test("rendement constant +0,1 %/jour : percentiles de l'année 1 = capital × 1,001^252, perte nulle", () => {
     const result = computeProjection(one, { A: series(300, (i) => 100 * 1.001 ** i) }, capital, 42)!
     const expected = capital * 1.001 ** 252
-    for (const key of ["p5", "p10", "p25", "p50", "p75", "p90", "p95"] as const) expect(result.years[0]![key]).toBeCloseTo(expected, 2)
+    for (const key of ["p5", "p10", "p25", "p50", "p75", "p90", "p95"] as const) expect(result.years[0]![key]).toBeCloseTo(round(expected, 2), 2)
     expect(result.years[0]!.lossProbability).toBe(0)
 })
 

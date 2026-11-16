@@ -35,6 +35,7 @@ Même patron que le Risque (feature 13). `risk-engine` consomme déjà `backtest
 | D9 | **Un seul calcul sur 10 ans** : 2 520 jours ouvrés (10 × 252). Le sélecteur d'horizon tronque l'affichage ; les trajectoires à 5 ans sont les 5 premières années de celles à 10 ans, même seed. | Un horizon changé ne coûte rien et reste cohérent entre les vues. | Décision du 2026-11-16 |
 | D10 | **Courbe** : un point tous les 21 jours ouvrés (fin de bloc), jour 0 compris : 121 points sur 10 ans. | Précise D3 : la taille du résultat stocké reste petite. | Décision du 2026-11-16 |
 | D11 | **Moteur dans `risk-engine`**, pas dans `backtest-engine` : `toEuros`, `commonDates` et `dailyReturns` y existent déjà. | Pas de second code de rendements EUR à maintenir. | Décision du 2026-11-16 |
+| D12 | **Historique minimal** : 2 jours communs (1 rendement), pas 250. Les blocs font `min(21, rendements disponibles)` jours ; `blockDays` du résultat = longueur effective. Un historique court donne une projection peu précise, affichée avec son nombre de jours. `null` seulement sous 2 jours ou si un actif n'a aucun cours. | `MIN_COMMON_DAYS` (250) ne vaut plus pour la projection. | Décision du 2026-11-16 |
 
 ## Écarts au plan
 

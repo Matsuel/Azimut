@@ -27,8 +27,8 @@ export const projectionPointSchema = z.object({
 
 // Point d'une fin d'année de la projection, avec la probabilité de perte
 export const projectionYearSchema = projectionPointSchema.extend({
-    // Années depuis aujourd'hui (entier de 1 à 10)
-    years: z.number().int().min(1).max(10),
+    // Années depuis aujourd'hui (entier de 1 à `horizonYears`)
+    years: z.number().int().min(1).max(PROJECTION_PARAMS.horizonYears),
     // Ratio 0..1 : part des chemins dont la valeur est sous le capital de départ à cet horizon
     lossProbability: z.number().min(0).max(1),
 });
@@ -38,16 +38,16 @@ export const projectionSchema = z.object({
     seed: z.number().int(),
     // Nombre de chemins simulés (entier)
     paths: z.number().int().min(1),
-    // Jours ouvrés par bloc du rééchantillonnage (entier)
-    blockDays: z.number().int().min(1),
+    // Longueur effective des blocs du rééchantillonnage, en jours (entier ≤ 21, raccourcie si l'historique est plus court, D12)
+    blockDays: z.number().int().min(1).max(PROJECTION_PARAMS.blockDays),
     // EUR : capital de départ de la projection
     capital: z.number(),
     // Premier jour de cotation commun utilisé, YYYY-MM-DD
     historyStart: z.iso.date(),
     // Dernier jour de cotation commun utilisé, YYYY-MM-DD
     historyEnd: z.iso.date(),
-    // Nombre de jours de cotation communs à tous les actifs (entier ≥ 250)
-    historyDays: z.number().int().min(1),
+    // Nombre de jours de cotation communs à tous les actifs (entier ≥ 2)
+    historyDays: z.number().int().min(2),
     points: z.array(projectionPointSchema),
     years: z.array(projectionYearSchema),
 });
@@ -55,7 +55,7 @@ export const projectionSchema = z.object({
 export const projectionCompletedPayloadSchema = z.object({
     executionId: z.string().min(1),
     finishedAt: z.iso.datetime(),
-    // null sous 250 jours de cotation communs : « données insuffisantes », aucun résultat partiel
+    // null sous 2 jours de cotation communs ou si un actif n'a aucun cours : « données insuffisantes », aucun résultat partiel
     projection: projectionSchema.nullable(),
 });
 

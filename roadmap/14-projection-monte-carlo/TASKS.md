@@ -75,7 +75,7 @@ Critères d’acceptation :
 - [ ] Blocs de 21 jours ouvrés, 10 000 trajectoires, un seul calcul sur 2 520 jours (D2, D6′, D9) ; 121 points tous les 21 jours (D10).
 - [ ] Mêmes jours tirés pour tous les actifs, poids du backtest : corrélation conservée (D5) ; `portfolioReturns` partagé avec `computeRisk`.
 - [ ] Percentiles P5 à P95 (D7) et probabilité de perte à chaque fin d'année (D8′), arrondis à la publication seulement.
-- [ ] Moins de 250 jours communs ou actif sans cours : `null`. Rendements constants ou nuls : pas de division par zéro.
+- [ ] Moins de 2 jours communs ou actif sans cours (D12) : `null`. Rendements constants ou nuls : pas de division par zéro.
 
 ### T-03 · Publication de `projection.completed` par risk-engine
 
