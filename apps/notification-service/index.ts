@@ -16,7 +16,9 @@ const client = new KafkaClient();
 
 const consumer = new KafkaConsumer(client.createConsumer(NOTIFICATION_CONSUMER_GROUP));
 
-const notificationConsumer = new NotificationConsumer(new NotificationService());
+const notificationService = new NotificationService();
+
+const notificationConsumer = new NotificationConsumer(notificationService);
 
 const app = express();
 
@@ -40,6 +42,8 @@ async function main(): Promise<void> {
     await consumer.subscribe(NOTIFICATION_TOPICS.requested);
     await consumer.consume(notificationConsumer.handle);
     onShutdown(() => consumer.disconnect());
+
+    onShutdown(notificationService.startPurge());
 
     // Le serveur n'écoute qu'une fois Kafka prêt : un démarrage raté ne laisse pas un process à moitié vivant
     const server = app.listen(env.PORT, () => {

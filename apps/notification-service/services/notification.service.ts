@@ -1,9 +1,9 @@
 import { API_ERROR_CODES, NOTIFICATION_CATEGORY_BY_TYPE, type NotificationList, type NotificationRequestedPayload, type NotificationView, type PaginationQuery } from "@azimut/contracts"
 import { NotFoundError } from "@azimut/http"
-import { Logger } from "@azimut/utils"
+import { DAY_MS, Logger } from "@azimut/utils"
 import NotificationRepository, { type INotificationRepository } from "../repositories/notification.repository"
 import type { NotificationListFilters } from "../interfaces/notification.interface"
-import { NOTIFICATION_RETENTION_DAYS } from "../constants/notification.constants"
+import { NOTIFICATION_PURGE_INTERVAL_MS, NOTIFICATION_RETENTION_DAYS } from "../constants/notification.constants"
 import NotificationStreamService, { notificationStream } from "./notification-stream.service"
 import { toNotificationView } from "../utils/notification.mapper"
 
@@ -53,6 +53,22 @@ class NotificationService {
 
     async markAllRead(userId: string): Promise<void> {
         await this.repo.markAllRead(userId)
+    }
+
+    /** Supprime les notifications créées il y a plus de `NOTIFICATION_RETENTION_DAYS` jours ; renvoie leur nombre. */
+    purgeExpired(now = new Date()): Promise<number> {
+        return this.repo.deleteOlderThan(new Date(now.getTime() - NOTIFICATION_RETENTION_DAYS * DAY_MS))
+    }
+
+    /** Lance la purge tout de suite puis une fois par heure ; renvoie l'arrêt. Une erreur est loggée sans arrêter le service. */
+    startPurge(): () => void {
+        const run = () =>
+            this.purgeExpired()
+                .then((count) => count > 0 && logger.info(`Purged ${count} expired notifications`))
+                .catch((error) => logger.error("Notification purge failed", error))
+        void run()
+        const timer = setInterval(run, NOTIFICATION_PURGE_INTERVAL_MS)
+        return () => clearInterval(timer)
     }
 }
 

@@ -95,3 +95,12 @@ test("record : diffuse à la création seulement, pas sur un rejeu", async () =>
 
     expect(pushed).toEqual(["RISK_CONSTRAINT_VIOLATED"])
 })
+
+test("purgeExpired : supprime ce qui a plus de 90 jours (rétention)", async () => {
+    let cutoff: Date | undefined
+    const service = new NotificationService()
+    service.repo = { deleteOlderThan: async (date: Date) => ((cutoff = date), 2) } as unknown as INotificationRepository
+
+    expect(await service.purgeExpired(new Date("2026-11-17T00:00:00.000Z"))).toBe(2)
+    expect(cutoff).toEqual(new Date("2026-08-19T00:00:00.000Z"))
+})
