@@ -17,7 +17,8 @@ Ces règles sont **strictes** : un écart doit être justifié dans le résumé 
 
 | Chemin | Rôle |
 | --- | --- |
-| `apps/core-backend` | API Express 5 + Prisma + better-auth (port 8000). **Référence d'architecture backend**, seul accès à la base. |
+| `apps/core-backend` | API Express 5 + Prisma + better-auth (port 8000). **Référence d'architecture backend**, accès à la base du domaine (`trading`). |
+| `apps/notification-service` | API Express 5 + consumer Kafka (port 8002) avec **sa propre base** `notifications` (Prisma) : enregistre les notifications de `notification.requested`, les expose derrière le proxy de core-backend et les pousse en SSE. |
 | `apps/backtest-engine` | Worker Kafka sans serveur HTTP ni base : consomme `backtest.requested`, lit les cours auprès de market-service, calcule, publie le résultat. |
 | `apps/risk-engine` | Worker Kafka sans serveur HTTP ni base : consomme `backtest.completed`, lit les cours auprès de market-service, calcule le risque (corrélations, VaR/CVaR, contributions), publie `risk.completed`. |
 | `apps/market-service` | **Seul service qui appelle yahoo-finance2** (port 8001, cache mémoire) : appelé via le proxy de core-backend pour le web, directement par backtest-engine pour les cours d'un backtest. |
@@ -37,7 +38,8 @@ Chaque valeur a **un seul propriétaire**. Le propriétaire la calcule, la stock
 | --- | --- |
 | `backtest-engine/engine/` | Tout calcul de simulation : valeur, montant investi, rendement, drawdown, ordres, courbes. Pur et testé. |
 | `risk-engine/engine/` | Tout calcul de risque : corrélations, VaR/CVaR, contributions, concentration. Pur et testé. |
-| `core-backend/services/` | Règles métier : autorisation, transitions de statut, invariants (« une exécution active à la fois »), mapping entrée → DTO, publication d'événements. Seul écrivain en base. |
+| `core-backend/services/` | Règles métier : autorisation, transitions de statut, invariants (« une exécution active à la fois »), mapping entrée → DTO, publication d'événements. Seul écrivain de la base `trading` (la base `notifications` appartient à `notification-service`). |
+| `notification-service/` | Notifications : enregistrement idempotent (`dedupKey`), liste, compteur, lu / non lu, flux SSE, purge à 90 jours. Seul écrivain de la base `notifications`. |
 | `packages/contracts` | Forme et unités des données échangées entre services. |
 | `web` | **Affichage** des valeurs reçues de l'API. |
 
@@ -70,6 +72,7 @@ Chaque app qui expose quelque chose de réutilisable tient un **catalogue** : co
 
 - Enveloppe `KafkaEvent<T>` (`eventId`, `eventType`, `occurredAt`, `version`, `payload`) via `createKafkaEvent` ; topics `domaine.action` en constantes dans `packages/contracts`.
 - Kafka est **at-least-once** : tout consommateur est idempotent (transitions gardées par statut côté core-backend). Un message invalide est loggué et ignoré, jamais une cause de crash. Un handler qui lève (base indisponible…) est loggué avec `topic`, `partition` et `offset` par `KafkaConsumer`, puis l'exception repart à kafkajs, qui rejoue le message.
+- `notification.requested` : publié par core-backend après chaque transition gardée qui a modifié une ligne, consommé par `notification-service`. Il porte un type et des valeurs chiffrées, jamais de texte rendu ; `dedupKey` métier unique côté service.
 - Changer un contrat = mettre à jour producteur **et** consommateur dans le même diff, puis signaler à l'utilisateur de redémarrer les services concernés.
 - Chaque champ numérique d'un contrat documente son unité en commentaire (ratio, devise, date `YYYY-MM-DD`).
 

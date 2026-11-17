@@ -413,7 +413,7 @@ Canal unique `/v1/ws`, authentifié lors de la connexion. Le client s’abonne �
 { "action": "subscribe", "channels": ["book:ACME-EUR", "trades:ACME-EUR", "portfolio"] }
 ```
 
-Le canal `notifications` pousse chaque nouvelle notification de l’utilisateur (voir [Notifications](#notifications)).
+Les notifications ne passent pas par ce canal : elles sont poussées en SSE (`GET /api/notifications/stream`, voir [Notifications](#notifications)).
 
 Chaque message de carnet contient `marketSequence`. À la reconnexion, le client récupère un snapshot REST, puis ignore les deltas antérieurs ou égaux à cette séquence. Prévoir heartbeat, limites de souscription et backpressure (un client lent reçoit un nouveau snapshot plutôt qu’une file infinie).
 
@@ -746,14 +746,16 @@ Sources, toutes issues d’événements déjà produits par le système :
 Fonctionnement :
 
 ```text
-Événement Kafka → consumer core-backend → ligne `notifications` (PostgreSQL, idempotente par eventId)
-               → push WebSocket canal `notifications` → toaster côté web
+core-backend (transition gardée appliquée) → `notification.requested` → notification-service
+    → ligne `notifications` (base propre, idempotente par `dedupKey`) → push SSE → toaster côté web
 ```
 
 - **Toaster** : si l’utilisateur est sur une autre page, la notification s’affiche en bas à droite de l’écran (empilement, fermeture automatique, action « Voir »).
 - **Page dédiée** `Notifications` (menu de la sidebar, avec compteur de non lues) : liste complète, filtres par type, état lu / non lu, « Tout marquer comme lu ».
-- Le `core-backend` est seul propriétaire des notifications (création, état lu) ; le web ne fait qu’afficher.
-- Une notification rejouée (Kafka at-least-once) ne crée pas de doublon : clé unique sur `eventId`.
+- Le `notification-service` (base `notifications` propre) est seul propriétaire des notifications (création, état lu, purge) ; `core-backend` publie l’événement et relaie l’API et le flux SSE ; le web ne fait qu’afficher.
+- Types : `BACKTEST_COMPLETED`, `BACKTEST_FAILED`, `RISK_CONSTRAINT_VIOLATED`, `PROJECTION_COMPLETED` ; l’événement porte des valeurs chiffrées, le web traduit.
+- Une notification rejouée (Kafka at-least-once) ne crée pas de doublon : clé unique sur `dedupKey`.
+- Conservation : 90 jours (purge périodique).
 
 ### Principes de validité des backtests
 
