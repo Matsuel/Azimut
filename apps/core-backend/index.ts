@@ -7,6 +7,7 @@ import { dbHealthCheck, isDbConnected } from './utils/db';
 import authRouter from './routes/auth';
 import portfolioRouter from './routes/portfolio';
 import marketRouter from './routes/market';
+import notificationRouter from './routes/notification';
 import backtestRouter from './routes/backtest';
 import riskRouter from './routes/risk';
 import projectionRouter from './routes/projection';
@@ -50,6 +51,7 @@ app.use(authRouter);
 
 // Routes proxifiées vers les microservices : avant express.json() pour garder le body intact.
 app.use(marketRouter);
+app.use(notificationRouter);
 
 app.use(express.json({ limit: JSON_BODY_LIMIT }));
 

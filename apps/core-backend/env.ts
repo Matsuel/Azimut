@@ -13,6 +13,7 @@ const envSchema = z.object({
     TRUST_PROXY: z.coerce.number().int().min(0).default(0),
     WEB_URL: z.url().default("http://localhost:3000"),
     MARKET_SERVICE_URL: z.url().default("http://localhost:8001"),
+    NOTIFICATION_SERVICE_URL: z.url().default("http://localhost:8002"),
 });
 
 const _env = envSchema.parse(process.env);
