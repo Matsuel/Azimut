@@ -8,6 +8,7 @@ import { NOTIFICATION_CONSUMER_GROUP } from "./constants/notification.constants"
 import NotificationConsumer from "./consumers/notification.consumer";
 import NotificationService from "./services/notification.service";
 import internalAuthMiddleware from "./middleware/internal-auth.middleware";
+import notificationRouter from "./routes/notification";
 
 const logger = Logger.here();
 
@@ -27,6 +28,8 @@ app.get("/health", (_req, res) => {
 });
 
 app.use(internalAuthMiddleware);
+
+app.use(notificationRouter);
 
 app.use(errorMiddleware);
 

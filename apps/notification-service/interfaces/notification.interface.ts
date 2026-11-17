@@ -1,4 +1,5 @@
-import type { NotificationCategory, NotificationCounts, NotificationType } from "@azimut/contracts"
+import { z } from "zod"
+import { notificationListQuerySchema, paginationQuerySchema, type NotificationCategory, type NotificationCounts, type NotificationType } from "@azimut/contracts"
 import type { Prisma } from "../generated/prisma/client"
 
 // Filtres de la liste (query validée : `notificationListQuerySchema` de `@azimut/contracts`)
@@ -16,5 +17,10 @@ export interface CreateNotificationDTO {
     dedupKey: string
     createdAt: Date
 }
+
+// ?category=RISK&unread=true&page=1&pageSize=20
+export const listNotificationsQuerySchema = notificationListQuerySchema.extend(paginationQuerySchema.shape)
+
+export const notificationIdSchema = z.string().trim().min(1)
 
 export type { NotificationCounts }

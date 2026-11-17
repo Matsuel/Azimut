@@ -55,3 +55,27 @@ test("record : une base indisponible lève (kafkajs rejoue)", async () => {
 
     await expect(service.record(payload)).rejects.toThrow("db down")
 })
+
+test("list : assemble la page, les nombres des onglets et la rétention", async () => {
+    const service = new NotificationService()
+    service.repo = {
+        list: async () => ({ data: [], count: 0 }),
+        counts: async () => ({ all: 4, unread: 2, BACKTESTS: 3, RISK: 1 }),
+    } as unknown as INotificationRepository
+
+    expect(await service.list("u1", {}, { page: 1, pageSize: 20 })).toEqual({
+        data: [],
+        count: 0,
+        page: 1,
+        pageSize: 20,
+        counts: { all: 4, unread: 2, BACKTESTS: 3, RISK: 1 },
+        retentionDays: 90,
+    })
+})
+
+test("markRead : notification absente ou d'un autre utilisateur → NotFoundError", async () => {
+    const service = new NotificationService()
+    service.repo = { markRead: async () => false } as unknown as INotificationRepository
+
+    await expect(service.markRead("n", "u1")).rejects.toThrow("Notification not found")
+})
