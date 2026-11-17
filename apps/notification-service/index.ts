@@ -36,6 +36,11 @@ app.use(notificationRouter);
 app.use(errorMiddleware);
 
 async function main(): Promise<void> {
+    // Le service écoute avant Kafka : l'entrée dans le groupe du consumer peut durer des dizaines de secondes après un redémarrage
+    // (l'ancien membre doit expirer) et le relais de core-backend ne doit pas tomber en `ECONNREFUSED` pendant ce temps.
+    const server = app.listen(env.PORT, () => logger.info(`Server is running on port ${env.PORT}`));
+    onShutdown(() => new Promise<void>((resolve) => server.close(() => resolve())));
+
     await client.ensureTopics([NOTIFICATION_TOPICS.requested]);
 
     await consumer.connect();
@@ -44,15 +49,10 @@ async function main(): Promise<void> {
     onShutdown(() => consumer.disconnect());
 
     onShutdown(notificationService.startPurge());
-
-    // Le serveur n'écoute qu'une fois Kafka prêt : un démarrage raté ne laisse pas un process à moitié vivant
-    const server = app.listen(env.PORT, () => {
-        logger.info(`Server is running on port ${env.PORT}`);
-    });
-    onShutdown(() => new Promise<void>((resolve) => server.close(() => resolve())));
 }
 
+// Sans Kafka le service ne reçoit rien : on s'arrête franchement (le serveur garde sinon le process en vie à moitié démarré)
 main().catch((error) => {
     logger.error("Failed to start notification service", error);
-    process.exitCode = 1;
+    process.exit(1);
 });
