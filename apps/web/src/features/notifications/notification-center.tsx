@@ -7,13 +7,12 @@ import { TableCard } from "@/components/data-table/table-card"
 import { TablePagination } from "@/components/data-table/table-pagination"
 import { FilterTabs } from "@/components/filter-tabs"
 import { PageHeader, PageLayout } from "@/components/page-layout"
-import { ErrorState, LoadingState } from "@/components/query-status"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PAGE_SIZE } from "@/constants/pagination"
 import { type NotificationTab, notificationTabs } from "./constants"
 import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from "./hook"
-import { NotificationGroups } from "./notification-groups"
+import { NotificationBody } from "./notification-body"
 import type { NotificationView } from "./types"
 import { notificationRoute } from "./utils"
 
@@ -64,14 +63,7 @@ export function NotificationCenter() {
                     )
                 }
             >
-                {query.isPending && <LoadingState className="h-40" />}
-                {query.isError && <ErrorState message={t("loadError")} onRetry={query.refetch} className="h-40" />}
-                {query.data && query.data.data.length === 0 && (
-                    <p className="py-10 text-center text-body text-muted-foreground">{t("empty")}</p>
-                )}
-                {query.data && query.data.data.length > 0 && (
-                    <NotificationGroups notifications={query.data.data} onView={view} />
-                )}
+                <NotificationBody query={query} onView={view} />
                 <TablePagination
                     page={page}
                     pageSize={PAGE_SIZE}
