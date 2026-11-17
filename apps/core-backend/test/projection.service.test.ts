@@ -29,17 +29,20 @@ function record(result: Partial<NonNullable<ProjectionRecord["result"]>> | null 
     }
 }
 
-function setup(current: ProjectionRecord | null) {
+function setup(current: ProjectionRecord | null, firstReception = true) {
+    const notified: Parameters<ProjectionService["notify"]>[0][] = []
     const stored: { executionId: string; projection: Projection | null; durationMs: number | null }[] = []
     const service = new ProjectionService()
+    service.notify = async (payload) => void notified.push(payload)
     service.repo = {
         getByBacktestId: async () => current,
         setProjection: async (executionId: string, value: Projection | null, _computedAt: Date, durationMs: number | null) => {
             stored.push({ executionId, projection: value, durationMs })
-            return true
+            return firstReception
         },
+        getExecutionBacktest: async () => ({ id: "b1", userId: "u1", name: "Mon backtest" }),
     } as IProjectionRepository
-    return { service, stored }
+    return { service, stored, notified }
 }
 
 test("projection calculée : COMPUTED", async () => {
@@ -142,4 +145,32 @@ test("store sans durationMs enregistre une durée null", async () => {
     await service.store({ executionId: "e3", finishedAt: "2024-01-01T00:00:00.000Z", projection })
 
     expect(stored).toEqual([{ executionId: "e3", projection, durationMs: null }])
+})
+
+test("projection.completed publie PROJECTION_COMPLETED (scénarios, perte à l'horizon final) à la première réception", async () => {
+    const withYears: Projection = { ...projection, years: [{ years: 1, lossProbability: 0.3 }, { years: 30, lossProbability: 0.05 }] as never }
+    const { service, notified } = setup(record())
+
+    await service.store({ executionId: "e1", finishedAt: "2024-01-01T00:00:00.000Z", projection: withYears })
+
+    expect(notified).toEqual([
+        {
+            userId: "u1",
+            type: "PROJECTION_COMPLETED",
+            dedupKey: "PROJECTION_COMPLETED:e1",
+            occurredAt: "2024-01-01T00:00:00.000Z",
+            params: { backtestId: "b1", name: "Mon backtest", scenarios: 10000, lossProbability: 0.05 },
+        },
+    ])
+})
+
+test("projection.completed : rien pour une projection null ni pour un rejeu", async () => {
+    const withYears: Projection = { ...projection, years: [{ years: 30, lossProbability: 0.05 }] as never }
+    const nullCase = setup(record())
+    await nullCase.service.store({ executionId: "e1", finishedAt: "2024-01-01T00:00:00.000Z", projection: null })
+    const replay = setup(record(), false)
+    await replay.service.store({ executionId: "e1", finishedAt: "2024-01-01T00:00:00.000Z", projection: withYears })
+
+    expect(nullCase.notified).toEqual([])
+    expect(replay.notified).toEqual([])
 })

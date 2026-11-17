@@ -11,6 +11,7 @@ import {
 import { BadRequestError, ForbiddenError, NotFoundError } from "@azimut/http"
 import { COMPARABLE_STATUSES } from "../constants/backtest.constants"
 import type { RiskRecord } from "../interfaces/risk.interface"
+import { publishNotification } from "./notification.publisher"
 import RiskRepository, { type IRiskRepository } from "../repositories/risk.repository"
 
 const logger = Logger.here()
@@ -49,6 +50,8 @@ function toReading({ assets, correlations }: Risk): RiskReading {
 
 class RiskService {
     repo: IRiskRepository = new RiskRepository()
+    // Publication de `notification.requested` (substituable en test)
+    notify = publishNotification
 
     /** `risk.completed` : enregistre le risque du résultat de l'exécution (`null` : données insuffisantes). Rejeu ou résultat absent : ignoré. */
     async store({ executionId, risk }: RiskCompletedPayload) {
@@ -64,6 +67,7 @@ class RiskService {
     /**
      * Enregistre la limite de drawdown (la précédente devient « Précédente », D12) et réévalue la contrainte à partir du
      * `maxDrawdown` stocké, sans relancer l'engine. Une limite identique à l'actuelle ne change rien.
+     * Publie `RISK_CONSTRAINT_VIOLATED` quand la nouvelle limite rend la contrainte `VIOLATED` (D5).
      * Lève `BadRequestError(BACKTEST_NO_RESULT)` sans résultat terminé.
      */
     async setLimit(backtestId: string, userId: string, limit: number): Promise<RiskView> {
@@ -73,7 +77,18 @@ class RiskService {
         const current = record.maxDrawdownLimit?.toNumber() ?? null
         if (current !== limit) {
             await this.repo.setMaxDrawdownLimit(backtestId, limit, current)
-            return this.get(backtestId, userId)
+            const view = await this.get(backtestId, userId)
+            if (view.constraint?.current.status === "VIOLATED") {
+                await this.notify({
+                    userId,
+                    type: "RISK_CONSTRAINT_VIOLATED",
+                    dedupKey: `RISK_CONSTRAINT_VIOLATED:${backtestId}:${limit}`,
+                    occurredAt: new Date().toISOString(),
+                    // Le résultat stocke le drawdown négatif ; la notification porte sa valeur absolue
+                    params: { backtestId, name: record.name, maxDrawdown: Math.abs(view.constraint.measured), limit },
+                })
+            }
+            return view
         }
         return this.toView(record)
     }
