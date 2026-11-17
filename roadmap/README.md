@@ -72,7 +72,7 @@ Planification : **toutes les features 10 à 25 sont planifiées** (dossiers `roa
 | 12 | Robustesse : dates de départ et métriques glissantes | 5 | 11 | Sensibilité à la date d’entrée, sur des rendements corrects. |
 | 13 | Risk Engine | 6 | 11 | Corrélations, expositions, concentration, VaR/CVaR, contraintes. Gel fonctionnel du moteur de simulation à la fin. |
 | 14 | Projection Monte Carlo | 7 | 12 | Moteur seedé réutilisé par le pricing (19). |
-| 15 | [Notifications : service dédié, page et toaster](15-notification-service/) | 7 ᶜ | 13, 14 | Remontée du COULD le 2026-11-17 (44 points). Les calculs de risque et de projection sont asynchrones : l'utilisateur doit être prévenu. |
+| 15 | [Notifications : service dédié, page et toaster](15-notification-service/) | 7 ᶜ | 13, 14 | Remontée du COULD le 2026-11-17 (46 points). Les calculs de risque et de projection sont asynchrones : l'utilisateur doit être prévenu. |
 | 16 | Taux et obligations | 8 | 08 | Source de taux (Yahoo, gratuit ; FRED reporté), courbe, actualisation, prix, duration. Indépendant du risque. |
 | 17 | Options vanilles : payoffs et Black-Scholes | 9 | 11, 16 | Besoin du taux (16) et des dividendes (11). |
 | 18 | Grecques, volatilité implicite et surface | 9 | 17 | Route `options/:symbol` dans `market-service` ; volatilité implicite recalculée par le moteur. |

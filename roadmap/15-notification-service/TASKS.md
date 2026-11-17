@@ -1,6 +1,6 @@
 # 15 · Service de notification — Tâches
 
-> Décisions : `README.md` (D1 à D12). Échelle de points, statuts et définition de terminé commune : [`roadmap/README.md`](../README.md). Points prévus. Le nouveau service copie l'architecture de `apps/market-service` et `apps/risk-engine` (règle d'or de `AGENTS.md`).
+> Décisions : `README.md` (D1 à D16). Échelle de points, statuts et définition de terminé commune : [`roadmap/README.md`](../README.md). Points prévus. Le nouveau service copie l'architecture de `apps/market-service` et `apps/risk-engine` (règle d'or de `AGENTS.md`).
 
 ## Synthèse
 
@@ -10,7 +10,7 @@
 | T-02 | core-backend : publier les notifications de backtest | US-01 | core-backend | MUST | 5 | T-01 | — |
 | T-03 | core-backend : publier projection et contrainte de risque | US-01 | core-backend | MUST | 3 | T-01 | — |
 | T-04 | Socle du service : env, health, consumer branché, script `dev` | US-01 | notification-service | MUST | 3 | T-01 | — |
-| T-05 | Base du service : schéma Prisma, migration, repository | US-01, US-02 | notification-service | MUST | 3 | T-04 | — |
+| T-05 | Base du service : schéma Prisma, migration, repository, CI | US-01, US-02 | notification-service | MUST | 5 | T-04 | — |
 | T-06 | Service et consumer : enregistrement idempotent | US-01 | notification-service | MUST | 5 | T-05 | — |
 | T-07 | Routes internes : liste, compteur, lu, tout lire | US-02, US-03 | notification-service | MUST | 3 | T-05 | — |
 | T-08 | Flux SSE par utilisateur | US-04 | notification-service | MUST | 3 | T-06, T-07 | — |
@@ -20,17 +20,17 @@
 | T-12 | Toaster et compteur de la sidebar | US-03, US-04 | web | MUST | 5 | T-10, T-11 | — |
 | T-13 | Règles, documentation et dette | US-01 | docs | MUST | 2 | T-04 | — |
 
-**Total** : 44 points — MUST 44, SHOULD 0.
+**Total** : 46 points — MUST 46, SHOULD 0.
 
 | Lot | Tâches | Points |
 | --- | --- | --- |
 | 1. Contrat et sources | T-01 → T-03 | 10 |
-| 2. Service | T-04 → T-09 | 19 |
+| 2. Service | T-04 → T-09 | 21 |
 | 3. Relais | T-10 | 3 |
 | 4. Web | T-11 → T-12 | 10 |
 | 5. Règles et dette | T-13 | 2 |
 
-**Chemin critique** (19 points) : T-01 → T-04 → T-05 → T-06 → T-08 → T-10 → T-12. T-08 : le flux SSE traverse le proxy de core-backend (`proxyTo` a un délai de 10 s et peut mettre les réponses en mémoire tampon) ; à vérifier avec un vrai flux avant de coder le toaster.
+**Chemin critique** (26 points) : T-01 → T-04 → T-05 → T-06 → T-08 → T-10 → T-12. T-08 : le flux SSE traverse le proxy de core-backend (`proxyTo` a un délai de 10 s et peut mettre les réponses en mémoire tampon) ; à vérifier avec un vrai flux avant de coder le toaster.
 
 **Parallélisable** : T-02 et T-03 pendant T-04 → T-06 (seul le contrat les lie) ; T-07 et T-09 après T-05 ; T-13 dès T-04.
 
@@ -67,7 +67,7 @@ flowchart LR
 Critères d’acceptation :
 - [ ] `NOTIFICATION_TOPICS.requested = "notification.requested"`, `NOTIFICATION_TYPES`, `NOTIFICATION_CATEGORIES` (`BACKTESTS`, `RISK`) et la table type → catégorie en constantes.
 - [ ] `notificationRequestedPayloadSchema` : `userId`, `type`, `dedupKey`, `occurredAt`, `params` discriminés par `type` (nom du backtest, `backtestId`, valeurs chiffrées affichées) ; chaque nombre commente son unité (ratio, nombre d'entiers) ; aucun texte rendu.
-- [ ] `NotificationView` (id, type, catégorie, params, `createdAt`, `readAt`) et `NotificationList` (`Paginated<NotificationView>` + `unreadCount` + `retentionDays`), dérivés des schémas.
+- [ ] `NotificationView` (id, type, catégorie, params, `createdAt`, `readAt`) et `NotificationList` (`Paginated<NotificationView>` + `counts` : `all`, `unread`, une entrée par catégorie + `retentionDays`), dérivés des schémas.
 - [ ] Test : un payload par type est accepté, un `type` inconnu ou un paramètre manquant est refusé.
 
 ### T-02 · core-backend : publier les notifications de backtest
@@ -107,15 +107,16 @@ Critères d’acceptation :
 - [ ] `AGENTS.md` du dossier : couches (routes, controller, consumer, service, repository), copie de la section « Règles par couche » de core-backend.
 - [ ] `bunx tsc --noEmit` passe ; `bun run dev` démarre le service.
 
-### T-05 · Base du service : schéma Prisma, migration, repository
+### T-05 · Base du service : schéma Prisma, migration, repository, CI
 
-- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-04 · **Commits** : —
-- **Fichiers** : `apps/notification-service/prisma/schema.prisma`, migration initiale, `prisma.config.ts`, `repositories/notification.repository.ts`, `test/notification.repository.test.ts`
+- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-04 · **Commits** : —
+- **Fichiers** : `apps/notification-service/prisma/schema.prisma`, migration initiale, `prisma.config.ts`, `.env.example`, `repositories/notification.repository.ts`, `test/notification.repository.test.ts`, `.github/workflows/ci.yml`
 
 Critères d’acceptation :
 - [ ] Modèle `Notification` : `id`, `userId`, `type`, `category`, `params` (Json), `dedupKey` (unique), `createdAt`, `readAt` (nullable) ; index `(userId, createdAt)`.
-- [ ] Repository (`I`/classe, Prisma Client seulement) : `create` idempotent (renvoie la ligne créée ou `null` sur `dedupKey` existante), `list` (filtre `category`, `unread`, pagination), `countUnread`, `markRead` (filtré sur `userId`), `markAllRead`, `deleteOlderThan`.
-- [ ] Base de test `notifications_test` forcée par `test/setup.ts` (`describeWithDb`, comme core-backend) ; tests ignorés si PostgreSQL est éteint.
+- [ ] Repository (`I`/classe, Prisma Client seulement) : `create` idempotent (renvoie la ligne créée ou `null` sur `dedupKey` existante), `list` (filtre `category`, `unread`, pagination), `counts` (total, non lues, par catégorie, sans filtre), `countUnread`, `markRead` (filtré sur `userId`), `markAllRead`, `deleteOlderThan`.
+- [ ] Base `notifications` (`DATABASE_URL` propre, `.env.example`) et base de test `notifications_test` forcée par `test/setup.ts` (`describeWithDb`, comme core-backend) ; tests ignorés si PostgreSQL est éteint (D16).
+- [ ] CI : `notification-service` dans la matrice de tests, `db:generate` avant ses tests, base `notifications_test` créée dans le service PostgreSQL.
 - [ ] Tests : doublon, isolation par utilisateur, filtres, pagination.
 
 ### T-06 · Service et consumer : enregistrement idempotent
@@ -135,7 +136,7 @@ Critères d’acceptation :
 - **Fichiers** : `apps/notification-service/routes/notification/`, `controller/notification.controller.ts`, `interfaces/notification.interface.ts`, `API.md`, `test/notification.routes.test.ts`
 
 Critères d’acceptation :
-- [ ] `GET /notifications` (filtres `category`, `unread`, pagination existante, réponse `NotificationList` avec `unreadCount`), `GET /notifications/unread-count`, `POST /notifications/:id/read`, `POST /notifications/read-all`.
+- [ ] `GET /notifications` (filtres `category`, `unread`, pagination existante, réponse `NotificationList` avec `counts` et `retentionDays`), `GET /notifications/unread-count`, `POST /notifications/:id/read`, `POST /notifications/read-all`.
 - [ ] `userId` vient du seul en-tête `x-user-id` ; la notification d'un autre utilisateur répond `404` (`NotFoundError`).
 - [ ] `read` et `read-all` sont idempotents.
 - [ ] `API.md` (gabarit de `market-service/API.md`) ; routes testées avec `startApp` de `@azimut/http/testing`.
@@ -158,7 +159,7 @@ Critères d’acceptation :
 
 Critères d’acceptation :
 - [ ] `NOTIFICATION_RETENTION_DAYS = 90` ; une tâche périodique (une fois par heure, arrêtée par `onShutdown`) supprime les notifications plus anciennes ; erreur loggué, sans arrêter le service.
-- [ ] La valeur est exposée au web (champ de la liste) pour la mention « Conservées 90 jours » : le web n'écrit pas « 90 ».
+- [ ] La valeur est exposée au web (`retentionDays` de la liste) pour la mention « Conservées 90 jours » : le web n'écrit pas « 90 ».
 - [ ] Test : seules les notifications de plus de 90 jours disparaissent.
 
 ## Lot 3 — Relais
@@ -182,9 +183,9 @@ Critères d’acceptation :
 - **Fichiers** : `apps/web/src/features/notifications/` (`api.ts`, `hook.ts`, `types.ts`, `constants.ts`, `utils.ts`, composants, `COMPONENTS.md`), `apps/web/src/app/app/notifications/page.tsx`, `apps/web/messages/fr.json`, `apps/web/messages/en.json`, `apps/web/COMPONENTS.md`, `apps/web/test/notifications.test.tsx`
 
 Critères d’acceptation :
-- [ ] Écran conforme à `22 · Notifications` : en-tête avec pastille « n non lues », « Tout marquer comme lu », onglets avec nombres, groupes par jour, ligne (icône d'état, titre, détail, « Voir », pastille non lu), état vide, « Conservées n jours ».
+- [ ] Écran conforme à `22 · Notifications` : en-tête avec pastille « n non lues », « Tout marquer comme lu », onglets avec nombres (`counts`), pagination existante, groupes par jour, ligne (icône d'état, titre, détail, « Voir », pastille non lu), état vide, « Conservées n jours ».
 - [ ] Textes de chaque type dans les dictionnaires FR/EN à partir des paramètres reçus (formatters de `lib/format.ts` pour ratios et dates) ; aucune valeur calculée ni comptée côté web.
-- [ ] « Voir » navigue vers le résultat et marque lue ; « Tout marquer comme lu » met la liste et le compteur à jour.
+- [ ] « Voir » navigue vers le résultat (`routes.backtest`, `routes.backtestRisk`, `routes.backtestProjection`) et marque lue ; « Tout marquer comme lu » met la liste et le compteur à jour.
 - [ ] Tests avec `test/render.tsx` : groupes, onglets, marquage lu, état vide. `COMPONENTS.md` à jour ; comparaison visuelle avec Figma (`verifier-rendu`).
 
 ### T-12 · Toaster et compteur de la sidebar
@@ -193,9 +194,9 @@ Critères d’acceptation :
 - **Fichiers** : `apps/web/src/components/` (primitive Toast, si absente de shadcn/base-ui), `apps/web/src/features/notifications/` (`stream.ts`, `toaster.tsx`), `apps/web/src/components/app-sidebar.tsx`, `apps/web/src/app/app/layout.tsx`, `apps/web/test/notifications-stream.test.tsx`
 
 Critères d’acceptation :
-- [ ] Un `EventSource` (cookies inclus) est ouvert une seule fois pour toute la zone `/app` ; à chaque notification : toaster `22.1` (empilement, fermeture automatique et par croix, « Voir »), compteur de la sidebar et liste mis à jour sans doublon.
+- [ ] Un `EventSource` (cookies inclus) est ouvert une seule fois pour toute la zone `/app` ; à chaque notification : toaster `22.1` (au plus 3 empilés, fermeture automatique et par croix, « Voir » qui marque lue), compteur de la sidebar et liste mis à jour sans doublon. Pas de toaster sur `/app/notifications` (D15).
 - [ ] À la reconnexion du flux, le compteur et la liste sont rechargés.
-- [ ] Le compteur de la sidebar vient de `unreadCount` ; masqué à 0.
+- [ ] Le compteur de la sidebar vient de `GET /api/notifications/unread-count` ; masqué à 0.
 - [ ] Aucune dépendance ajoutée sans la justifier (primitive shadcn/base-ui d'abord, `COMPONENTS.md` à jour).
 - [ ] Test avec un `EventSource` simulé : notification reçue → toaster, compteur et liste.
 
