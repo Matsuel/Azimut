@@ -6,6 +6,7 @@ import { Logger, onShutdown } from "@azimut/utils";
 import { env } from "./env";
 import { NOTIFICATION_CONSUMER_GROUP } from "./constants/notification.constants";
 import NotificationConsumer from "./consumers/notification.consumer";
+import NotificationService from "./services/notification.service";
 import internalAuthMiddleware from "./middleware/internal-auth.middleware";
 
 const logger = Logger.here();
@@ -14,7 +15,7 @@ const client = new KafkaClient();
 
 const consumer = new KafkaConsumer(client.createConsumer(NOTIFICATION_CONSUMER_GROUP));
 
-const notificationConsumer = new NotificationConsumer();
+const notificationConsumer = new NotificationConsumer(new NotificationService());
 
 const app = express();
 
