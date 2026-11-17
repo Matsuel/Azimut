@@ -1,0 +1,25 @@
+{
+  "name": "notification-service",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4"
+  },
+  "peerDependencies": {
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@azimut/contracts": "workspace:*",
+    "@azimut/http": "workspace:*",
+    "@azimut/kafka": "workspace:*",
+    "@azimut/utils": "workspace:*",
+    "@types/express": "^5.0.6",
+    "express": "^5.3.0",
+    "zod": "^4.6.7"
+  }
+}
