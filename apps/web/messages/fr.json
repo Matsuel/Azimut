@@ -126,6 +126,10 @@
         }
     },
     "components": {
+        "backtestPicker": {
+            "choose": "Choisir un backtest",
+            "empty": "Aucun backtest terminé."
+        },
         "symbolSearch": {
             "tooShort": "Saisis au moins {count} caractères.",
             "failed": "La recherche a échoué",
@@ -1080,6 +1084,20 @@
             "formula": "contributionᵢ = wᵢ (Σw)ᵢ / (wᵀ Σ w)",
             "unit": "Ratio affiché en pourcentage.",
             "readingTip": "Un actif qui pèse 30 % du capital peut porter 44 % du risque."
+        },
+        "projectionPercentile": {
+            "title": "Percentiles de la projection",
+            "purpose": "La fourchette des valeurs que le portefeuille pourrait atteindre : P10 un scénario défavorable, médiane le scénario central, P90 un scénario favorable.",
+            "computation": "Le moteur de risque tire des milliers de trajectoires en rééchantillonnant par blocs de jours l’historique commun des cours, au poids cibles constants, puis lit les percentiles de leur valeur à chaque horizon. Seuls les percentiles sont stockés.",
+            "unit": "Montant en euros, sur le capital de départ du backtest.",
+            "readingTip": "P10 : 9 scénarios sur 10 font mieux. Médiane : une chance sur deux. P90 : 1 scénario sur 10 fait mieux."
+        },
+        "projectionLossProbability": {
+            "title": "Probabilité de perte",
+            "purpose": "La part des scénarios qui finissent sous le montant investi à l’horizon choisi.",
+            "computation": "Part des trajectoires dont la valeur est strictement inférieure au capital de départ à cet horizon.",
+            "unit": "Ratio affiché en pourcentage.",
+            "readingTip": "Calculée sur des scénarios historiques, pas une promesse : le futur peut sortir de cette fourchette."
         }
     },
     "pages": {
@@ -1096,7 +1114,77 @@
             "description": "Corrélations, concentration, VaR/CVaR et contribution au risque d’un portefeuille."
         },
         "projection": {
-            "description": "Futurs plausibles d’un portefeuille par simulation Monte Carlo."
+            "description": "Futurs plausibles d’un portefeuille par simulation Monte Carlo.",
+            "computed": "Calculée",
+            "title": "Projection · {name}",
+            "titleEmpty": "Projection",
+            "subtitle": "{allocations} · {period} · {paths} scénarios · horizon {horizon}",
+            "history": {
+                "title": "Historique des calculs",
+                "duration": "en {duration}",
+                "state": {
+                    "COMPUTED": "Calculée",
+                    "INSUFFICIENT_DATA": "Données insuffisantes",
+                    "UNAVAILABLE": "Indisponible"
+                }
+            },
+            "states": {
+                "pending": "Projection en cours de calcul…",
+                "empty": "Choisissez un backtest terminé pour voir ses futurs plausibles.",
+                "insufficientData": "Données insuffisantes : moins de 2 jours de cotation communs à tous les actifs, la projection n’est pas calculée.",
+                "unavailable": "Ce résultat n’a pas encore de projection. Relancez le backtest pour la calculer.",
+                "rerun": "Relancer le backtest",
+                "error": "La projection n’a pas pu être chargée.",
+                "horizonMissing": "Cet horizon n’est pas disponible pour cette projection."
+            },
+            "stats": {
+                "median": "Capital médian à {horizon}",
+                "medianCaption": "Investi {capital}",
+                "pessimistic": "Scénario défavorable",
+                "pessimisticCaption": "9 scénarios sur 10 font mieux",
+                "optimistic": "Scénario favorable",
+                "optimisticCaption": "1 scénario sur 10 fait mieux",
+                "loss": "Probabilité de perte",
+                "lossCaption": "Scénarios historiques, pas une promesse",
+                "p50": "P50",
+                "p10": "P10",
+                "p90": "P90"
+            },
+            "chart": {
+                "title": "Éventail des trajectoires",
+                "description": "Valeur du capital sur l’horizon, en EUR · percentiles de {paths} scénarios",
+                "today": "Aujourd’hui",
+                "median": "Médiane",
+                "band50": "P25–P75",
+                "band80": "P10–P90",
+                "invested": "Montant investi",
+                "investedLabel": "Investi {capital}",
+                "note": "Probabilité de finir sous le montant investi : {loss} à {horizon}, calculée sur des scénarios historiques, pas une promesse."
+            },
+            "percentiles": {
+                "title": "Percentiles par horizon",
+                "description": "Seuls les percentiles sont stockés, pas les trajectoires",
+                "columns": {
+                    "horizon": "Horizon",
+                    "p10": "P10",
+                    "median": "Médiane",
+                    "p90": "P90",
+                    "loss": "Prob. de perte"
+                },
+                "note": "Calculée sur des scénarios historiques, pas une promesse. Versements et retraits non modélisés."
+            },
+            "params": {
+                "title": "Paramètres de la projection",
+                "description": "Fixes : même seed, résultat identique",
+                "horizon": "Horizon",
+                "invested": "Montant investi",
+                "paths": "Scénarios",
+                "seed": "Seed",
+                "blockSize": "Taille des blocs",
+                "blockDays": "{count} jours ouvrés",
+                "history": "Historique utilisé",
+                "historyValue": "{period} ({days} jours)"
+            }
         },
         "optimization": {
             "description": "Explorateur d’allocations et frontière efficiente."
@@ -1140,8 +1228,6 @@
         "titleEmpty": "Risque",
         "computed": "Calculé",
         "subtitle": "{allocations} · {period} · rendements journaliers",
-        "choose": "Choisir un backtest",
-        "noBacktest": "Aucun backtest terminé.",
         "states": {
             "empty": "Choisissez un backtest terminé pour voir d’où vient son risque.",
             "insufficientData": "Moins de 250 jours de cotation communs à tous les actifs : le risque n’est pas calculé.",

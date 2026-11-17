@@ -3,7 +3,6 @@ import { GalleryVerticalEnd } from "lucide-react"
 import Link from "next/link"
 import { NavUser } from "@/components/nav-user"
 import { SidebarNav } from "@/components/sidebar-nav"
-import { ThemeToggle } from "@/components/theme-toggle"
 import {
     Sidebar,
     SidebarContent,
@@ -46,10 +45,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
                 ))}
             </SidebarContent>
             <SidebarFooter className="flex-row items-center group-data-[collapsible=icon]:flex-col">
-                <div className="min-w-0 flex-1">
-                    <NavUser user={user} />
-                </div>
-                <ThemeToggle />
+                <NavUser user={user} />
             </SidebarFooter>
             <SidebarRail />
         </Sidebar>

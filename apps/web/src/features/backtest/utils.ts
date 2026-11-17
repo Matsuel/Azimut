@@ -39,25 +39,35 @@ export const isActiveStatus = (status: ExecutionStatus) =>
 
 export const isActive = (e: BacktestExecution) => isActiveStatus(e.status)
 
-/** Durée lisible d'une exécution terminée (« 1 min 5 s »), depuis son démarrage ; null tant qu'elle n'est pas finie. */
-export function getExecutionDuration(t: BacktestTranslator, e: BacktestExecution) {
-    if (!e.finishedAt) return null
-    const seconds = Math.max(1, Math.round((+new Date(e.finishedAt) - +new Date(e.startedAt ?? e.createdAt)) / 1000))
+/** Secondes entières lisibles : « 1 min 5 s » ou « 12 s ». */
+export function formatSeconds(t: BacktestTranslator, seconds: number) {
     const minutes = Math.floor(seconds / 60)
     return minutes
         ? t("duration.minutesSeconds", { minutes, seconds: seconds % 60 })
         : t("duration.seconds", { seconds })
 }
 
-/** Allocation lisible : « AAPL 60 % · MSFT 40 % » (poids en ratio, au pourcent entier, D2). */
-export const formatAllocation = (f: Formatters, allocations: Backtest["allocations"]) =>
-    allocations.map(({ symbol, weight }) => `${symbol} ${f.formatRate(Number(weight))}`).join(" · ")
+/** Durée lisible d'une exécution terminée (« 1 min 5 s »), depuis son démarrage ; null tant qu'elle n'est pas finie. */
+export function getExecutionDuration(t: BacktestTranslator, e: BacktestExecution) {
+    if (!e.finishedAt) return null
+    return formatSeconds(
+        t,
+        Math.max(1, Math.round((+new Date(e.finishedAt) - +new Date(e.startedAt ?? e.createdAt)) / 1000)),
+    )
+}
+
+/** Allocation lisible : « AAPL 60 % · MSFT 40 % » (poids en ratio, au pourcent entier, D2) ; `separator` change le « · » (sous-titres : « , »). */
+export const formatAllocation = (f: Formatters, allocations: Backtest["allocations"], separator = " · ") =>
+    allocations.map(({ symbol, weight }) => `${symbol} ${f.formatRate(Number(weight))}`).join(separator)
 
 /** Decimal sérialisé en string par l'API → number ; null ou absent → null (champ absent des résultats antérieurs). */
 export const fromDecimal = (value: string | null | undefined) => (value == null ? null : Number(value))
 
 /** Montant en `BACKTEST_CURRENCY`. */
 export const formatAmount = (f: Formatters, v: number) => f.formatPrice(v, BACKTEST_CURRENCY)
+
+/** Montant en `BACKTEST_CURRENCY`, arrondi à l'unité (`15 820 €`). */
+export const formatWholeAmount = (f: Formatters, v: number) => f.formatWholePrice(v, BACKTEST_CURRENCY)
 
 /**
  * Durée de récupération ; `recoveryDays` null : « Aucune baisse » sans baisse, « Non récupéré » si la baisse a un plus haut

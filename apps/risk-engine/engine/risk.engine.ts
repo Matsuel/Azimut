@@ -1,7 +1,7 @@
 import type { Allocation, DailyCloses, Risk } from "@azimut/contracts";
 import { round, TRADING_DAYS_PER_YEAR } from "@azimut/utils";
 import { MIN_COMMON_DAYS } from "../constants/risk.constants";
-import { commonDates, correlationMatrix, covarianceMatrix, dailyReturns, historicalVar, riskContributions } from "./risk.utils";
+import { commonDates, correlationMatrix, covarianceMatrix, dailyReturns, historicalVar, portfolioReturns, riskContributions } from "./risk.utils";
 
 const annualize = (variance: number) => Math.sqrt(Math.max(variance, 0) * TRADING_DAYS_PER_YEAR);
 
@@ -20,10 +20,9 @@ export default function computeRisk(allocations: Allocation[], prices: DailyClos
     const weights = allocations.map(({ weight }) => weight);
     const returns = series.map((points) => dailyReturns(points, dates));
     const cov = covarianceMatrix(returns);
-    const portfolioReturns = dates.slice(1).map((_, t) => returns.reduce((sum, asset, i) => sum + weights[i]! * asset[t]!, 0));
     const contributions = riskContributions(weights, cov);
     const portfolioVariance = weights.reduce((sum, weight, i) => sum + weight * weights.reduce((acc, other, j) => acc + other * cov[i]![j]!, 0), 0);
-    const { var95, cvar95 } = historicalVar(portfolioReturns);
+    const { var95, cvar95 } = historicalVar(portfolioReturns(weights, returns));
     const hhi = weights.reduce((sum, weight) => sum + weight * weight, 0);
 
     return {

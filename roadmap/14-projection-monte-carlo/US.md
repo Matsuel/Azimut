@@ -1,15 +1,16 @@
 # 14 · Projection Monte Carlo — User stories
 
-> Sources : README racine : Projection SHOULD « Monte Carlo seedé » ; section « Projection Monte Carlo » ; roadmap mois 7.
+> Sources : README racine : Projection SHOULD « Monte Carlo seedé » ; section « Projection Monte Carlo » ; roadmap mois 7. Décisions du 2026-11-16 : D4′, D6′, D8′, D9, D10 et D11 (`README.md`).
 
 ## Point de départ
 
 | Couche | Existant | Manque |
 | --- | --- | --- |
-| `apps/backtest-engine/engine/backtest.utils.ts` | Rendements TWR et volatilité déjà calculés. | Génération de trajectoires. |
-| `apps/backtest-engine/consumers/` | Consumer `backtest.requested`. | Consumer `projection.requested`. |
-| `packages/contracts/src/` | `backtest.ts`, `event.ts`, `market.ts`. | `projection.ts` avec topics et schémas. |
-| `apps/web/src/app/(base)/projection` | Dossier vide (pas de page). | Page et fan chart. |
+| `apps/risk-engine/engine/` | `toEuros`, `commonDates`, `dailyReturns` (`risk.utils.ts`), `MIN_COMMON_DAYS` (250), `computeRisk` ; `TRADING_DAYS_PER_YEAR` dans `@azimut/utils`. | PRNG seedé, bootstrap par blocs, percentiles, `portfolioReturns` partagé. |
+| `apps/risk-engine/{services,publishers,consumers}/` | Consumer `backtest.completed`, publication de `risk.completed`. | Publication de `projection.completed` après le risque. |
+| `packages/contracts/src/` | `backtest.ts`, `risk.ts`, `event.ts`, `market.ts`. | `projection.ts` : topic, paramètres, schémas, `ProjectionView`. |
+| `apps/core-backend` | `BacktestResult.risk` et `riskComputedAt`, route `GET /api/risk/:backtestId`. | Colonnes `projection` et `projectionComputedAt`, consumer, route `GET /api/projection/:backtestId`. |
+| `apps/web/src/features/risk/` | `BacktestPicker` et `RiskStateCard`, propres au Risque. | Composants partagés, page Projection (le dossier `projection` est vide). |
 
 ## Hors périmètre
 
@@ -17,72 +18,105 @@
 - Scénarios de crise personnalisés (COULD).
 - Modèles statistiques plus riches (COULD du README).
 - Trajectoires individuelles affichées.
+- Paramètres de projection modifiables (scénarios, seed, blocs, historique) et relance par l'utilisateur : voir D6′.
 
-## Décisions à valider
+## Décisions
 
-| # | Sujet | Proposition | Raison |
+| # | Sujet | Décision | Raison |
 | --- | --- | --- | --- |
-| D1 | Générateur | PRNG seedé implémenté dans l'engine (sans dépendance) | Une seed explicite rend le résultat testable ; une dépendance pour un générateur n'apporte rien ici. |
+| D1 | Générateur | PRNG seedé implémenté dans l'engine (sans dépendance) | Une seed explicite rend le résultat testable. |
 | D2 | Blocs | 21 jours ouvrés, fixe | Conserve un peu d'enchaînement des jours sans paramètre à exposer. |
-| D3 | Stockage | Percentiles seulement | 10 000 trajectoires × 1 260 jours ne se stockent pas ; on garde ce qui s'affiche. |
-| D4 | Transport | Deux nouveaux topics Kafka | Le calcul est lourd, asynchrone : même patron que le backtest, rejeu géré par statut. |
+| D3 | Stockage | Percentiles seulement | 10 000 trajectoires × 2 520 jours ne se stockent pas ; précisée par D10. |
+| D4′ | Transport | Un seul topic, `projection.completed` ; calcul automatique après chaque backtest, sans POST | Remplace D4 (deux topics, demande par POST). |
 | D5 | Source | Blocs tirés sur les actifs ensemble, pondérés aux poids du backtest | Les corrélations sont conservées. Validée le 2026-11-14. |
-| D6 | Paramètres | Horizon en années ; 10 000 trajectoires et seed non exposées | Seed stockée avec le résultat. Validée le 2026-11-14. |
+| D6′ | Paramètres | Adossée à un backtest ; paramètres fixes en lecture seule (10 000 scénarios, seed 42, blocs de 21 jours, historique du backtest, capital `totalInvested`) ; seul l'horizon se choisit, sans calcul | Remplace D6. |
 | D7 | Percentiles | P5, P10, P25, P50, P75, P90, P95 par date | Deux bandes et la médiane. Validée le 2026-11-14. |
-| D8 | Probabilité de perte | Valeur finale < capital initial (EUR) | Sans versements. Validée le 2026-11-14. |
+| D8′ | Probabilité de perte | À chaque fin d'année (1 à 10 ans) : part des scénarios dont la valeur est < capital (EUR) | Remplace D8 (horizon final seulement). |
+| D9 | Horizon | Un seul calcul sur 2 520 jours ouvrés ; le sélecteur tronque l'affichage | Même seed, vues cohérentes. |
+| D10 | Courbe | Un point tous les 21 jours ouvrés, jour 0 compris : 121 points | Résultat stocké de petite taille. |
+| D11 | Moteur | Dans `risk-engine`, pas dans `backtest-engine` | Les rendements EUR sur dates communes y existent déjà. |
+| D12 | Historique minimal | 2 jours communs (1 rendement), pas 250. Les blocs font `min(21, rendements disponibles)` jours ; `blockDays` du résultat = longueur effective. Un historique court donne une projection peu précise, affichée avec son nombre de jours. `null` seulement sous 2 jours ou si un actif n'a aucun cours. | `MIN_COMMON_DAYS` (250) ne vaut plus pour la projection. Décision du 2026-11-16. |
+| D13 | Statut et historique | `PENDING` (« En cours ») pendant le calcul ; `durationMs` publié par risk-engine ; `history` : une ligne par exécution (tentative, date, état, durée), carte « Historique des calculs » | Même retour d'information que la page backtest. Décision du 2026-11-16. |
 
 ---
 
 ## User stories
 
-### Lot 1 — Moteur
+### Lot 1 — Contrat
+
+#### US-03 · Rejouer une projection sans doublon — MUST
+
+**En tant que** développeur, **je veux** qu'un message Kafka rejoué ne crée pas deux résultats **afin de** respecter la règle at-least-once du projet.
+
+Critères d’acceptation :
+- [x] Un `projection.completed` rejoué n'écrase pas la première projection stockée (test).
+- [x] Un message invalide est loggué et ignoré, il ne fait pas lever le consumer (test).
+
+Tâches : T-01, T-03, T-04 (détail dans `TASKS.md`).
+
+---
+
+### Lot 2 — Moteur
 
 #### US-01 · Voir des futurs plausibles pour mon allocation — MUST
 
-**En tant que** utilisateur, **je veux** voir un éventail de trajectoires futures construit sur l'historique de mon allocation **afin de** comprendre l'incertitude au lieu d'un seul chiffre..
+**En tant que** utilisateur, **je veux** voir un éventail de trajectoires futures construit sur l'historique de mon backtest **afin de** comprendre l'incertitude au lieu d'un seul chiffre.
 
 Critères d’acceptation :
-- [ ] Un fan chart montre la médiane et les bandes P10-P90 sur l'horizon.
-- [ ] La projection est refaite à l'identique avec la même seed.
+- [x] Un fan chart montre la médiane et les bandes P25-P75 et P10-P90 sur l'horizon choisi (1, 3, 5 ou 10 ans).
+- [x] La projection est calculée après chaque backtest, avec les paramètres fixes affichés en lecture seule (D6′).
+- [x] La même seed et les mêmes rendements donnent le même résultat (test de reproductibilité).
+- [x] Changer l'horizon ne déclenche aucune requête.
 
-Tâches : T-01, T-02, T-04, T-05, T-07, T-08 (détail dans `TASKS.md`).
+Tâches : T-01, T-02, T-03, T-04, T-05, T-06, T-07 (détail dans `TASKS.md`).
 
 ---
 
 #### US-02 · Connaître la probabilité de perte — MUST
 
-**En tant que** utilisateur, **je veux** voir la probabilité que mon capital finisse sous son montant investi **afin de** mesurer le risque de perte sur l'horizon choisi..
+**En tant que** utilisateur, **je veux** voir la probabilité que mon capital finisse sous son montant investi, à chaque horizon, **afin de** mesurer le risque de perte.
 
 Critères d’acceptation :
-- [ ] La probabilité est affichée avec la mention « calculée sur des scénarios historiques, pas une promesse ».
+- [x] La probabilité est calculée à chaque fin d'année (D8′) et affichée avec la mention « calculée sur des scénarios historiques, pas une promesse ».
+- [x] Le tableau par horizon donne P10, médiane, P90 et probabilité de perte, une ligne par année jusqu'à l'horizon.
 
-Tâches : T-02, T-07 (détail dans `TASKS.md`).
+Tâches : T-02, T-06 (détail dans `TASKS.md`).
 
 ---
 
-#### US-03 · Rejouer une projection sans doublon — MUST
+### Lot 3 — Écrans
 
-**En tant que** développeur, **je veux** qu'un message Kafka rejoué ne crée pas deux résultats **afin de** respecter la règle at-least-once du projet..
+#### US-04 · Comprendre l'absence de projection — SHOULD
+
+**En tant que** utilisateur, **je veux** un message clair quand un backtest n'a pas de projection **afin de** savoir quoi faire (maquettes 34.1 et 34.2).
 
 Critères d’acceptation :
-- [ ] Le rejeu ne crée ni double projection ni double résultat (test).
+- [x] Backtest antérieur à la projection ou exécution en cours (`UNAVAILABLE`) : message « Relancer le backtest », jamais une erreur 500.
+- [x] Moins de 2 jours communs ou actif sans cours (`INSUFFICIENT_DATA`, D12) : message « données insuffisantes », aucun chiffre partiel.
 
-Tâches : T-01, T-03, T-06 (détail dans `TASKS.md`).
+Tâches : T-04, T-06 (détail dans `TASKS.md`).
+
+#### US-05 · Voir l'avancement et la durée du calcul — SHOULD
+
+**En tant que** utilisateur, **je veux** voir que la projection est en cours de calcul, puis la durée de chaque calcul **afin de** savoir si j'attends encore et de comparer mes exécutions (D13).
+
+Critères d’acceptation :
+- [x] Résultat terminé dont `projection.completed` n'est pas reçu (`PENDING`) : badge « En cours », carte « Projection en cours de calcul… » sans bouton, rafraîchissement toutes les 2 s.
+- [x] `PENDING` depuis plus de 2 minutes après la fin de l'exécution : rafraîchissement arrêté, « Le calcul prend plus de temps que prévu » et « Réessayer ».
+- [x] `projection.completed` porte `durationMs` ; absent (message antérieur à D13), il est accepté et la durée reste `null`.
+- [x] Carte « Historique des calculs » : une ligne par exécution (`#tentative`, état, date de réception, durée), la plus récente en haut ; `<Dash />` sans date ou sans durée.
+- [x] Ancien résultat (avant D13) : `UNAVAILABLE`, inchangé.
+
+Tâches : T-08 (détail dans `TASKS.md`).
 
 ---
-
-### Lot 2 — Contrat
-
-### Lot 3 — Service
-
-### Lot 4 — Worker
-
-### Lot 5 — Écrans
 
 ## Récapitulatif
 
 | US | Titre | Priorité | Lot | Couches |
 | --- | --- | --- | --- | --- |
-| US-01 | Voir des futurs plausibles pour mon allocation | MUST | 1 | backtest-engine, core-backend, web, docs |
-| US-02 | Connaître la probabilité de perte | MUST | 1 | backtest-engine, web |
-| US-03 | Rejouer une projection sans doublon | MUST | 1 | backtest-engine, contracts, core-backend |
+| US-01 | Voir des futurs plausibles pour mon allocation | MUST | 2 | contracts, risk-engine, core-backend, web, docs |
+| US-02 | Connaître la probabilité de perte | MUST | 2 | risk-engine, web |
+| US-03 | Rejouer une projection sans doublon | MUST | 1 | contracts, risk-engine, core-backend |
+| US-04 | Comprendre l'absence de projection | SHOULD | 3 | core-backend, web |
+| US-05 | Voir l'avancement et la durée du calcul | SHOULD | 5 | contracts, risk-engine, core-backend, web |

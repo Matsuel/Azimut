@@ -65,6 +65,8 @@ Une ligne par entrée : le détail (import, props, exemple) est dans l'entrée l
   - [FilterTabs](#filtertabs) : onglets de filtre contrôlés, typés par l'union des valeurs
   - [StatCard](#statcard) : carte de métrique 
   - [EmptyCard](#emptycard) : carte d'état vide (`Card` + `Empty`) 
+  - [StateCard](#statecard) : carte d'état d'une page (message centré, action facultative, ton erreur)
+  - [BacktestPicker](#backtestpicker) : bouton « Choisir un backtest » et menu des backtests terminés
   - [DetailRow](#detailrow) : ligne d'une liste `<dl>` 
   - [LoadingState](#loadingstate) : spinner `Loader2` centré, pendant le chargement d'une requête (`isPending`)
   - [ErrorState](#errorstate) : message d'erreur d'une requête et bouton « Réessayer », centrés (`isError`)
@@ -138,6 +140,7 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [ResultDetails](src/features/backtest/COMPONENTS.md#resultdetails) : carte de sections repliables (`ui/collapsible`) en bas du détail 
   - [BacktestAssumptions](src/features/backtest/COMPONENTS.md#backtestassumptions) : liste « Hypothèses » d'un résultat, sans carte, en deux colonnes à partir de `sm` 
   - [ExecutionList](src/features/backtest/COMPONENTS.md#executionlist) : lignes d'exécution, sans carte 
+  - [HistoryRow](src/features/backtest/COMPONENTS.md#historyrow) : ligne d'historique partagée par `ExecutionList` et `ProjectionHistory`
   - [BacktestStats](src/features/backtest/COMPONENTS.md#backteststats) : 4 `StatCard` de la liste 
   - [ResultMetrics](src/features/backtest/COMPONENTS.md#resultmetrics) : 3 `MetricBlock` d'un résultat, sur 2 colonnes à partir de `md` et 3 à partir de `xl` 
   - [`features/backtest/metrics.tsx`](src/features/backtest/COMPONENTS.md#featuresbacktestmetricstsx) : exports `Metric`, `metricDefinitions`, `resultValue(f, result, metric)`, `withBenchmark`
@@ -149,8 +152,8 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/backtest/api.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestapits) : exports `createBacktest`, `createBacktestBatch`, `getBacktestBatch`, `restartBacktestBatch`,
   - [`features/backtest/hook.ts`](src/features/backtest/COMPONENTS.md#featuresbacktesthookts) : exports `useCreateBacktest`, `useCreateBacktestBatch`, `useRestartBacktestBatch`, `useRerunBacktestBatch`,
   - [`features/backtest/schema.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestschemats) : exports `createBacktestFormSchema(t)`, `BacktestValues`, `createQuickBacktestFormSchema(t)`,
-  - [`features/backtest/constants.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestconstantsts) : exports `BACKTEST_CURRENCY`, `activeStatuses`, `investmentModes`, `rebalanceFrequencies`,
-  - [`features/backtest/utils.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestutilsts) : exports `getExecution`, `hasStatus`, `isActive`, `getExecutionDuration(t, e)`, `fromDecimal`,
+  - [`features/backtest/constants.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestconstantsts) : exports `BACKTEST_CURRENCY`, `RESULT_POLL_MS`, `activeStatuses`, `investmentModes`, `rebalanceFrequencies`,
+  - [`features/backtest/utils.ts`](src/features/backtest/COMPONENTS.md#featuresbacktestutilsts) : exports `getExecution`, `hasStatus`, `isActive`, `formatWholeAmount(f, v)`, `formatSeconds(t, seconds)`, `getExecutionDuration(t, e)`, `fromDecimal`,
   - [`features/backtest/column.tsx`](src/features/backtest/COMPONENTS.md#featuresbacktestcolumntsx) : exports `useBacktestColumns()`, `useBatchColumns(endDate)`, `useRollingColumns()`, `useTradeColumns()`,
   - [`features/backtest/types.ts`](src/features/backtest/COMPONENTS.md#featuresbacktesttypests) : voir l'entrée
 - [`features/market`](src/features/market/COMPONENTS.md)
@@ -164,20 +167,31 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/market/constants.ts`](src/features/market/COMPONENTS.md#featuresmarketconstantsts) : exports `MARKET_CURRENCY`, `MIN_SEARCH_LENGTH`, `periods`
   - [`features/market/column.tsx`](src/features/market/COMPONENTS.md#featuresmarketcolumntsx) : exports `useMarketColumns()`
   - [`features/market/types.ts`](src/features/market/COMPONENTS.md#featuresmarkettypests) : exports `Period`, `MarketAsset`, `MarketDetails`, `MarketData`
+- [`features/projection`](src/features/projection/COMPONENTS.md)
+  - [BacktestProjection](src/features/projection/COMPONENTS.md#backtestprojection) : écran Projection (maquette 34, route `routes.backtestProjection(id)`) et ses états
+  - [ComputedProjection](src/features/projection/COMPONENTS.md#computedprojection) : corps de l'écran pour une projection calculée
+  - [ProjectionStats](src/features/projection/COMPONENTS.md#projectionstats) : quatre cartes P50, P10, P90, probabilité de perte
+  - [ProjectionFanChart](src/features/projection/COMPONENTS.md#projectionfanchart) : éventail des trajectoires (plages, médiane, montant investi)
+  - [ProjectionPercentiles](src/features/projection/COMPONENTS.md#projectionpercentiles) : tableau des percentiles par horizon
+  - [ProjectionHistory](src/features/projection/COMPONENTS.md#projectionhistory) : historique des calculs (tentative, état, date, durée)
+  - [ProjectionParams](src/features/projection/COMPONENTS.md#projectionparams) : onglets d'horizon et hypothèses fixes
+  - [`features/projection/api.ts`](src/features/projection/COMPONENTS.md#featuresprojectionapits) : exports `getProjection`
+  - [`features/projection/hook.ts`](src/features/projection/COMPONENTS.md#featuresprojectionhookts) : exports `useProjection`
+  - [`features/projection/constants.ts`](src/features/projection/COMPONENTS.md#featuresprojectionconstantsts) : exports `HORIZON_YEARS`, `DEFAULT_PROJECTION_HORIZON`
+  - [`features/projection/utils.ts`](src/features/projection/COMPONENTS.md#featuresprojectionutilsts) : exports `formatComputationDuration(f, t, durationMs)`, `projectionPollMs(view)`
+  - [`features/projection/types.ts`](src/features/projection/COMPONENTS.md#featuresprojectiontypests) : réexports des types de projection du contrat
 - [`features/risk`](src/features/risk/COMPONENTS.md)
   - [BacktestRisk](src/features/risk/COMPONENTS.md#backtestrisk) : écran Risque (maquette 33, route `routes.backtestRisk(id)`) et ses états
-  - [BacktestPicker](src/features/risk/COMPONENTS.md#backtestpicker) : bouton « Choisir un backtest » et menu des backtests terminés
   - [RiskStats](src/features/risk/COMPONENTS.md#riskstats) : quatre cartes volatilité, VaR, CVaR, concentration
   - [CorrelationMatrix](src/features/risk/COMPONENTS.md#correlationmatrix) : carte de chaleur des corrélations
   - [RiskContributions](src/features/risk/COMPONENTS.md#riskcontributions) : barres de contribution au risque
   - [DrawdownConstraint](src/features/risk/COMPONENTS.md#drawdownconstraint) : saisie et vérifications de la limite de drawdown
   - [AssetExposures](src/features/risk/COMPONENTS.md#assetexposures) : tableau des expositions par actif
-  - [RiskStateCard](src/features/risk/COMPONENTS.md#riskstatecard) : carte d'état (vide, insuffisant, sans risque, erreur)
   - [`features/risk/api.ts`](src/features/risk/COMPONENTS.md#featuresriskapits) : exports `getRisk`, `setRiskLimit`
   - [`features/risk/hook.ts`](src/features/risk/COMPONENTS.md#featuresriskhookts) : exports `useRisk`, `useSetRiskLimit`
   - [`features/risk/schema.ts`](src/features/risk/COMPONENTS.md#featuresriskschemats) : exports `createRiskLimitSchema(t)` / `RiskLimitValues`
-  - [`features/risk/constants.ts`](src/features/risk/COMPONENTS.md#featuresriskconstantsts) : exports `RISK_LIMIT_PERCENT`, `RISK_PICKER_LIMIT`, `RISK_POLL_MS`, `RISK_WAIT_MS`
-  - [`features/risk/utils.ts`](src/features/risk/COMPONENTS.md#featuresriskutilsts) : exports `riskPollMs`
+  - [`features/risk/constants.ts`](src/features/risk/COMPONENTS.md#featuresriskconstantsts) : exports `RISK_LIMIT_PERCENT`, `RESULT_WAIT_MS`
+  - [`features/risk/utils.ts`](src/features/risk/COMPONENTS.md#featuresriskutilsts) : exports `awaitResultPollMs(state, execution)`
   - [`features/risk/types.ts`](src/features/risk/COMPONENTS.md#featuresrisktypests) : réexports des types de risque du contrat
 - [`features/settings`](src/features/settings/COMPONENTS.md)
   - [SettingsTabs](src/features/settings/COMPONENTS.md#settingstabs) : barre d'onglets des paramètres (`ui/tabs`) 
@@ -504,6 +518,40 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 - **Props** : `children` (le message).
 - **Source** : `src/components/empty-card.tsx`.
 
+### StateCard
+
+- **Import** : `import { StateCard } from "@/components/state-card"` (export nommé).
+- **Rôle** : carte d'un état de page (vide, données insuffisantes, erreur) : message centré et action facultative ; contrairement à `EmptyCard`, accepte un bouton et le ton erreur.
+- **Props** :
+
+  | Nom | Type | Requis | Défaut | Description |
+  | --- | --- | --- | --- | --- |
+  | `message` | `string` | oui | — | Texte affiché. |
+  | `action` | `ReactNode` | non | — | Bouton sous le message. |
+  | `error` | `boolean` | non | `false` | Message en `destructive`. |
+
+- **Exemple** (tiré de `src/features/risk/backtest-risk.tsx`) :
+  ```tsx
+  <StateCard error message={errorMessage(failed.error) || t("states.error")} action={retry} />
+  ```
+- **Source** : `src/components/state-card.tsx`.
+
+### BacktestPicker
+
+- **Import** : `import { BacktestPicker } from "@/components/backtest-picker"` (export nommé).
+- **Rôle** : bouton « Choisir un backtest » ouvrant un menu des `BACKTEST_PICKER_LIMIT` backtests terminés les plus récents (`useBacktests` avec `hasResult`) ; textes dans `components.backtestPicker`.
+- **Props** :
+
+  | Nom | Type | Requis | Défaut | Description |
+  | --- | --- | --- | --- | --- |
+  | `onSelect` | `(backtestId: string) => void` | oui | — | Reçoit l'id choisi. |
+
+- **Exemple** (tiré de `src/features/risk/backtest-risk.tsx`) :
+  ```tsx
+  <BacktestPicker onSelect={(id) => router.replace(routes.backtestRisk(id), { scroll: false })} />
+  ```
+- **Source** : `src/components/backtest-picker.tsx`.
+
 ### DetailRow
 
 - **Import** : `import { DetailRow } from "@/components/detail-row"`.
@@ -829,8 +877,9 @@ Source : `src/components/form/form-issues.ts`.
 | `formatDateWith` | Formatter de dates propre à un composant : `formatDateWith({ month: "short" })(date)`. |
 | `formatYear` | Année seule : « 2024 » (axe des fenêtres glissantes). |
 | `formatPointChange` | Écart en points de pourcentage, 1 décimale, signé : `4.4` → « +4,4 ». |
-| `formatAxis` | Graduation numérique d'un axe : 2 décimales sous 10, entier au-delà. |
+| `formatAxis` | Graduation numérique d'un axe : 2 décimales sous 10, entier jusqu'au million, compact au-delà (`2,6 M`). |
 | `formatPrice` | Montant dans la devise ISO **obligatoire** : `formatPrice(1234.5, "EUR")` → « 1 234,50 € ». |
+| `formatWholePrice` | Montant arrondi à l'unité, sans décimales : `formatWholePrice(15820, "EUR")` → « 15 820 € ». Projection (percentiles). |
 | `formatChange` | Nombre signé, 2 décimales, sans « % » : `1.5` → « +1,50 ». Pour un pourcentage déjà en %, ou un écart de Sharpe. |
 | `formatRatio` | Ratio en **fraction** → variation signée en % : `0.342` → « +34,20 % ». Rendement, drawdown. |
 | `formatRate` | Proportion en **fraction** → % non signé, arrondi à l'unité : `0.3846` → « 38 % ». Taux de réussite/échec, poids d'allocation, axe du drawdown. |
@@ -965,11 +1014,12 @@ Source : `src/lib/session.ts`.
 
 ### `constants/pagination.ts`
 
-- **Import** : `import { PAGE_SIZE } from "@/constants/pagination"`.
+- **Import** : `import { BACKTEST_PICKER_LIMIT, PAGE_SIZE } from "@/constants/pagination"`.
 
 | Export | Rôle |
 | --- | --- |
 | `PAGE_SIZE` | Lignes par page des tableaux (`pageSize` envoyé au backend, découpage client). |
+| `BACKTEST_PICKER_LIMIT` | Nombre de backtests terminés proposés par `BacktestPicker`. |
 
 Source : `src/constants/pagination.ts`.
 

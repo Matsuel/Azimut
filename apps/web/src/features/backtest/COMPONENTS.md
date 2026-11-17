@@ -171,10 +171,22 @@ _Ligne et pied du champ : `form/allocation-row.tsx` (`AllocationRow`, `Allocatio
 ### ExecutionList
 
 - **Import** : `import { ExecutionList } from "@/features/backtest/result/execution-history"`.
-- **Rôle** : lignes d'exécution, sans carte : tentative, statut, date, résumé ou cause d'échec, durée ; barre de progression pour une exécution active.
+- **Rôle** : lignes d'exécution, sans carte : tentative, statut, date, résumé ou cause d'échec, durée ; barre de progression pour une exécution active (ligne `HistoryRow`).
 - **Props** :
   - `executions` : Plus récente d'abord.
 - **Source** : `src/features/backtest/result/execution-history.tsx`.
+
+### HistoryRow
+
+- **Import** : `import { HistoryRow } from "@/features/backtest/result/history-row"`.
+- **Rôle** : ligne d'un historique, `role="listitem"` (le conteneur porte `role="list"`) : `#tentative` et badge, détail dessous, `children` sous le détail, valeur à droite. Partagée par `ExecutionList` et `ProjectionHistory`.
+- **Props** :
+  - `attempt` : numéro de tentative.
+  - `badge` : badge d'état.
+  - `detail` : texte sous le badge ; `detailClassName` : classes ajoutées (ex. `text-destructive`).
+  - `trailing` : valeur à droite (durée).
+  - `children` : contenu sous le détail (barre de progression), facultatif.
+- **Source** : `src/features/backtest/result/history-row.tsx`.
 
 ### BacktestStats
 
@@ -314,6 +326,7 @@ Source : `src/features/backtest/schema.ts`.
 | Export | Rôle |
 | --- | --- |
 | `BACKTEST_CURRENCY` | Devise d'affichage des montants (cours non convertis). |
+| `RESULT_POLL_MS` | Rafraîchissement (2 000 ms) d'un résultat publié après le backtest (risque, projection) tant qu'il est attendu. |
 | `activeStatuses` | Statuts d'une exécution qui peut encore évoluer (miroir de `ACTIVE_STATUSES` backend). |
 | `investmentModes` | Modes d'investissement du `SelectField` ; libellés `backtest.investmentMode.<mode>`. |
 | `rebalanceFrequencies` | Fréquences de rebalancement (select et backtest stocké) ; libellés `backtest.rebalanceFrequency.<fréquence>`. |
@@ -341,11 +354,13 @@ Source : `src/features/backtest/constants.ts`.
 | `getExecution` | Dernière exécution (`executions[0]`). |
 | `hasStatus` | Statut de la dernière exécution dans la liste. |
 | `isActive` | Exécution `PENDING` ou `RUNNING`. |
+| `formatSeconds(t, seconds)` | Secondes entières lisibles : « 1 min 5 s » ou « 12 s » (clés `backtest.duration.*`). |
 | `getExecutionDuration(t, e)` | Durée `finishedAt − (startedAt ?? createdAt)`, « 2 min 5 s » ou « 12 s » (minimum 1 s) ; `null` si non terminée. |
 | `fromDecimal` | `Decimal` sérialisé → `number`, `null` ou absent → `null`. |
-| `formatAllocation(f, allocations)` | Allocation lisible : « AAPL 60 % · MSFT 40 % » (`formatRate` du poids). |
+| `formatAllocation(f, allocations, separator = " · ")` | Allocation lisible : « AAPL 60 % · MSFT 40 % » (`formatRate` du poids) ; `separator` pour les sous-titres de Risque et Projection (« , »). |
 | `alignCurves` | Courbes de A et B sur l'union de leurs dates triées : séries `a` et `b` (absentes hors de leur période) et, avec `benchmarkSide`, `benchmark` = `benchmarkValue` de ce côté ; `value` choisit la série (valeur, drawdown). |
 | `formatAmount(f, v)` | Montant en `BACKTEST_CURRENCY`, au format de la langue active. |
+| `formatWholeAmount(f, v)` | Montant en `BACKTEST_CURRENCY` arrondi à l'unité (« 15 820 € »), via `formatWholePrice`. |
 | `formatRecovery(f, t, …)` | Durée `formatDuration` ; si `recoveryDays` est null : « Aucune baisse » sans baisse, « Non récupéré » si `peakDated` (`maxDrawdownPeakDate` non null ; `true` pour un benchmark), sinon `null`, affiché `<Dash />` par l'écran (résultat antérieur, que l'API renvoie aussi à null). |
 | `benchmarkLabel(t, symbol)` | Nom de la série du benchmark : « Benchmark URTH ». |
 | `BacktestTranslator` | Type du traducteur `useTranslations("backtest")`, passé aux helpers qui produisent du texte (`getExecutionDuration`, `formatRecovery`, `benchmarkLabel`). |

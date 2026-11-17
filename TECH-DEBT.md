@@ -16,6 +16,7 @@ Registre de la dette connue, à corriger avant qu'elle ne grossisse. La règle q
 | TD-25 | basse | packages/kafka | **Avertissement `TimeoutNegativeWarning` au démarrage de chaque service Kafka.** kafkajs 2.2.4 calcule un délai négatif dans sa file de requêtes (`requestQueue/index.js:317`) sous Bun ; sans effet constaté (Bun ramène le délai à 1 ms) mais bruyant. | `node_modules/kafkajs` | Suivre une version de kafkajs ou de Bun qui le corrige ; sinon filtrer cet avertissement. | S |
 | TD-31 | basse | web | **Page du lot : écarts à la maquette 32 dans des composants partagés.** Comparée le 2026-11-16 à 1440 px (sections, libellés, badges, formats conformes ; sans débordement de 375 à 1440 px). Restent : fil d'Ariane « Strategy Lab › Backtests » au lieu de « Backtests › Robustesse » (`AppHeader` affiche la section active, pas la page, idem sur le détail d'un backtest) ; en-têtes de `DataTable` en `font-medium` au lieu du style atténué de la maquette ; pas de bouton pour retirer une date (absent de la maquette). | `apps/web/src/components/app-header.tsx`, `components/data-table/data-table.tsx`, `features/backtest/form/start-dates.tsx` | Fil d'Ariane alimenté par la page (titre), variant `caption` des en-têtes de `DataTable`, faire dessiner le retrait d'une date | M |
 | TD-38 | basse | web | **Types de réponse recopiés dans le web.** `BacktestDetails`, `Backtest`, `BacktestResult` de `apps/web/src/features/backtest/types.ts` redécrivent à la main les réponses de core-backend (Decimal sérialisé en string) : un champ ajouté côté API s'oublie côté web sans erreur de compilation. | `apps/web/src/features/backtest/types.ts`, `apps/core-backend/interfaces/backtest.interface.ts` | Décrire les réponses sérialisées dans `packages/contracts` (comme `RiskView`) et les réexporter dans le web. | L |
+| TD-41 | basse | web | **Écran Projection non comparé à la maquette.** Cadres `455:12320`, `563:14423` et `563:15104` non comparés : l'app n'a pas tourné avec backend, Kafka et base pendant le développement. Les étiquettes de fin du fan chart (P90, médiane, P10) peuvent se chevaucher quand les bandes sont serrées. | `apps/web/src/features/projection/` | Lancer la stack, comparer avec le skill `verifier-rendu` (375 à 1440 px, clair et sombre), décaler les étiquettes si besoin. | S |
 
 **Hors périmètre de cette passe** : TD-03 (CI, image, gabarit d'env). **Gardée volontairement** : TD-23 (cache des cours d'un backtest) tant que la provenance (`fetchedAt`) ne peut pas être publiée exacte.
 
@@ -23,6 +24,10 @@ Registre de la dette connue, à corriger avant qu'elle ne grossisse. La règle q
 
 | ID | Fermée le | Commit |
 | --- | --- | --- |
+| TD-43 | 2026-11-16 | `dd22326` |
+| TD-42 | 2026-11-16 | `5244a98` |
+| TD-40 | 2026-11-16 | `22570f2` |
+| TD-39 | 2026-11-16 | `a4cc540` |
 | TD-01 | 2026-11-12 | `0f5d3dd` |
 | TD-04 | 2026-11-12 | `31a6edc` |
 | TD-05 | 2026-11-12 | `31a6edc` |

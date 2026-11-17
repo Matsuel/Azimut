@@ -1,8 +1,9 @@
 import { createKafkaEvent, type KafkaProducer } from "@azimut/kafka";
-import { RISK_TOPICS, type RiskCompletedPayload } from "@azimut/contracts";
+import { PROJECTION_TOPICS, RISK_TOPICS, type ProjectionCompletedPayload, type RiskCompletedPayload } from "@azimut/contracts";
 
 export interface IRiskPublisher {
     completed(payload: RiskCompletedPayload): Promise<void>;
+    projectionCompleted(payload: ProjectionCompletedPayload): Promise<void>;
 }
 
 class RiskPublisher implements IRiskPublisher {
@@ -13,6 +14,13 @@ class RiskPublisher implements IRiskPublisher {
         return this.producer.publish(RISK_TOPICS.completed, {
             key: payload.executionId,
             value: createKafkaEvent(RISK_TOPICS.completed, payload),
+        });
+    }
+
+    projectionCompleted(payload: ProjectionCompletedPayload): Promise<void> {
+        return this.producer.publish(PROJECTION_TOPICS.completed, {
+            key: payload.executionId,
+            value: createKafkaEvent(PROJECTION_TOPICS.completed, payload),
         });
     }
 }

@@ -82,3 +82,11 @@ export function riskContributions(weights: number[], cov: number[][]): number[] 
     const variance = weights.reduce((sum, weight, i) => sum + weight * marginal[i]!, 0);
     return weights.map((weight, i) => (variance === 0 ? weight : (weight * marginal[i]!) / variance));
 }
+
+/**
+ * Rendement du portefeuille chaque jour : somme des rendements des actifs pondérés par `weights` (poids constants).
+ * `returns[i][t]` = rendement de l'actif `i` le jour `t` ; retourne autant de valeurs que de jours.
+ */
+export function portfolioReturns(weights: number[], returns: number[][]): number[] {
+    return (returns[0] ?? []).map((_, t) => returns.reduce((sum, asset, i) => sum + weights[i]! * asset[t]!, 0));
+}
