@@ -63,7 +63,7 @@ Les dossiers des features 02 à 08 citent les anciens numéros ; cette table les
 
 Ordre fixé le 2026-11-03 d’après les dépendances, pas d’après les mois seuls. L’internationalisation (10) est **urgente** : elle passe avant toute nouvelle page, pour que les écrans suivants naissent traduits. Chaque feature est planifiée avec le skill `feature-roadmap` (dossier `roadmap/<NN>-<slug>/`). « Dépend de » liste les features qui doivent être **livrées** avant.
 
-Planification : **toutes les features 10 à 24 sont planifiées** (dossiers `roadmap/<NN>-<slug>/`, statut `Planifiée`). Maquettes Figma 31 à 40 : **dessinées** (aucune pour 21 à 24, infrastructure).
+Planification : **toutes les features 10 à 25 sont planifiées** (dossiers `roadmap/<NN>-<slug>/`, statut `Planifiée`). Maquettes Figma 31 à 40 : **dessinées** (aucune pour 22 à 25, infrastructure).
 
 | # | Feature | Mois | Dépend de | Pourquoi à cette place |
 | --- | --- | --- | --- | --- |
@@ -71,21 +71,24 @@ Planification : **toutes les features 10 à 24 sont planifiées** (dossiers `roa
 | 11 | Dividendes, splits et effet devise | 5 | 08 | Change tous les rendements (rendement total). Le forward des options en a besoin. |
 | 12 | Robustesse : dates de départ et métriques glissantes | 5 | 11 | Sensibilité à la date d’entrée, sur des rendements corrects. |
 | 13 | Risk Engine | 6 | 11 | Corrélations, expositions, concentration, VaR/CVaR, contraintes. Gel fonctionnel du moteur de simulation à la fin. |
-| 14 | Projection Monte Carlo | 7 | 12 | Moteur seedé réutilisé par le pricing (18). |
-| 15 | Taux et obligations | 8 | 08 | Source de taux (Yahoo, gratuit ; FRED reporté), courbe, actualisation, prix, duration. Indépendant du risque. |
-| 16 | Options vanilles : payoffs et Black-Scholes | 9 | 11, 15 | Besoin du taux (15) et des dividendes (11). |
-| 17 | Grecques, volatilité implicite et surface | 9 | 16 | Route `options/:symbol` dans `market-service` ; volatilité implicite recalculée par le moteur. |
-| 18 | Pricing Monte Carlo et option à barrière | 10 | 14, 16 | Moteur de 14, validé contre Black-Scholes (16). |
-| 19 | Produits structurés : décomposition, juste valeur, marge | 10 | 15, 17, 18 | Capital garanti, reverse convertible, autocallable. |
-| 20 | Stress de produit et term sheet | 10 | 13, 19 | Chocs sur sous-jacent, volatilité et taux ; fiche produit. |
-| 21 | Pipeline CI/CD et images | 11 | — | Voir la note ci-dessous. |
-| 22 | Kubernetes, Helm et Argo CD | 11 | 21 | Environnements `dev` / `demo`. |
-| 23 | Observabilité : OpenTelemetry, traces, runbooks | 11 | 22 | Trace d’une simulation de bout en bout. ClickHouse seulement si une requête analytique le justifie. |
-| 24 | Résilience et soutenance | 12 | 23 | Reprise du worker et des consumers, sauvegarde-restauration, pannes contrôlées, charge, audit sécurité, démo, rapport. |
+| 14 | Projection Monte Carlo | 7 | 12 | Moteur seedé réutilisé par le pricing (19). |
+| 15 | [Notifications : service dédié, page et toaster](15-notification-service/) | 7 ᶜ | 13, 14 | Remontée du COULD le 2026-11-17 (46 points). Les calculs de risque et de projection sont asynchrones : l'utilisateur doit être prévenu. |
+| 16 | Taux et obligations | 8 | 08 | Source de taux (Yahoo, gratuit ; FRED reporté), courbe, actualisation, prix, duration. Indépendant du risque. |
+| 17 | Options vanilles : payoffs et Black-Scholes | 9 | 11, 16 | Besoin du taux (16) et des dividendes (11). |
+| 18 | Grecques, volatilité implicite et surface | 9 | 17 | Route `options/:symbol` dans `market-service` ; volatilité implicite recalculée par le moteur. |
+| 19 | Pricing Monte Carlo et option à barrière | 10 | 14, 17 | Moteur de 14, validé contre Black-Scholes (17). |
+| 20 | Produits structurés : décomposition, juste valeur, marge | 10 | 16, 18, 19 | Capital garanti, reverse convertible, autocallable. |
+| 21 | Stress de produit et term sheet | 10 | 13, 20 | Chocs sur sous-jacent, volatilité et taux ; fiche produit. |
+| 22 | Pipeline CI/CD et images | 11 | — | Voir la note ci-dessous. |
+| 23 | Kubernetes, Helm et Argo CD | 11 | 22 | Environnements `dev` / `demo`. |
+| 24 | Observabilité : OpenTelemetry, traces, runbooks | 11 | 23 | Trace d’une simulation de bout en bout. ClickHouse seulement si une requête analytique le justifie. |
+| 25 | Résilience et soutenance | 12 | 24 | Reprise du worker et des consumers, sauvegarde-restauration, pannes contrôlées, charge, audit sécurité, démo, rapport. |
 
-**Extensions (COULD, hors chemin critique)** : delta-hedging (après 19), optimisation minimale Max Sharpe / min variance (après 13), objectifs financiers et taux de retrait (après 14), paper trading, notifications, profils de clients fictifs, marché simulé (bonus).
+ᶜ hors « Roadmap annuelle » : notifications remontées du COULD le 2026-11-17, avant la feature 16.
 
-**CI/CD (21)** : aucune dépendance fonctionnelle, donc libre d’être avancée. Les moteurs de pricing (16 à 20) sont les plus lourds en tests ; un pipeline qui exécute `bun test` et `tsc` à chaque PR avant la 16 les protégerait. Décision à prendre par l’utilisateur ; l’ordre ci-dessus garde le mois 11 d’origine.
+**Extensions (COULD, hors chemin critique)** : delta-hedging (après 20), optimisation minimale Max Sharpe / min variance (après 13), objectifs financiers et taux de retrait (après 14), paper trading, notifications (types Paper trading, Rapports et Optimisation, préférences, e-mail), profils de clients fictifs, marché simulé (bonus).
+
+**CI/CD (22)** : aucune dépendance fonctionnelle, donc libre d’être avancée. Les moteurs de pricing (17 à 21) sont les plus lourds en tests ; un pipeline qui exécute `bun test` et `tsc` à chaque PR avant la 17 les protégerait. Décision à prendre par l’utilisateur ; l’ordre ci-dessus garde le mois 11 d’origine.
 
 ## Journal des décisions structurantes
 
@@ -98,6 +101,7 @@ Planification : **toutes les features 10 à 24 sont planifiées** (dossiers `roa
 | 2026-10-30 | Messages Kafka compressés en GZIP (limite de 1 Mo du broker). | `e87fdcc` |
 | 2026-10-30 | Aide contextuelle ajoutée hors roadmap annuelle : chaque donnée calculée affichée porte une explication (à quoi elle sert, comment elle est calculée). | [09](09-aide-contextuelle/) |
 | 2026-11-03 | Cap « structureur » : la roadmap des mois 5 à 10 passe de l’optimisation et du reporting à la structuration (taux, obligations, options, produits structurés, term sheet). Optimisation, paper trading, notifications et profils de clients passent en COULD ; CI/CD, Kubernetes, Helm et GitOps (mois 11-12) sont conservés. | [README racine](../README.md#structuration--taux-options-et-produits-structurés) |
+| 2026-11-17 | Les notifications quittent le COULD : service dédié `notification-service` avec sa propre base (exception à « core-backend seul écrivain en base »), alimenté par `notification.requested` publié par core-backend, flux SSE ; les features 15 à 24 deviennent 16 à 25. | [15](15-notification-service/), `4373b83` |
 
 ## Conventions communes
 

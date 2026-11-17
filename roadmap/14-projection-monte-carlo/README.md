@@ -7,11 +7,11 @@
 - **Points** : 37 (MUST 31, SHOULD 6) prévus, 37 réalisés
 - **Maquettes** : `34 · Projection Monte Carlo` (mise à jour le 2026-11-16, node `455:12320`) ; états `34.1 · Projection · indisponible` (node `563:14423`) et `34.2 · Projection · données insuffisantes` (node `563:15104`)
 - **Écrans modifiés** : aucun (page `Projection` de la sidebar, le backtest se choisit avec le sélecteur de l'en-tête de la page 34)
-- **Dépend de** : 12 (robustesse). Le moteur est réutilisé en 18 pour le pricing.
+- **Dépend de** : 12 (robustesse). Le moteur est réutilisé en 19 pour le pricing.
 
 ## Objectif
 
-L'utilisateur voit la distribution des futurs possibles de son allocation, bâtie sur son propre passé. Le moteur est le même que celui qui pricera les options exotiques (18) : c'est le socle du pricing.
+L'utilisateur voit la distribution des futurs possibles de son allocation, bâtie sur son propre passé. Le moteur est le même que celui qui pricera les options exotiques (19) : c'est le socle du pricing.
 
 ## Comment
 
