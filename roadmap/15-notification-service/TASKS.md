@@ -6,19 +6,19 @@
 
 | Tâche | Titre | US | Couche | Priorité | Points | Dépend de | Commits |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T-01 | Contrat : topic, types, paramètres et DTO de notification | US-01, US-02 | contracts | MUST | 2 | — | — |
-| T-02 | core-backend : publier les notifications de backtest | US-01 | core-backend | MUST | 5 | T-01 | — |
-| T-03 | core-backend : publier projection et contrainte de risque | US-01 | core-backend | MUST | 3 | T-01 | — |
-| T-04 | Socle du service : env, health, consumer branché, script `dev` | US-01 | notification-service | MUST | 3 | T-01 | — |
-| T-05 | Base du service : schéma Prisma, migration, repository, CI | US-01, US-02 | notification-service | MUST | 5 | T-04 | — |
-| T-06 | Service et consumer : enregistrement idempotent | US-01 | notification-service | MUST | 5 | T-05 | — |
-| T-07 | Routes internes : liste, compteur, lu, tout lire | US-02, US-03 | notification-service | MUST | 3 | T-05 | — |
-| T-08 | Flux SSE par utilisateur | US-04 | notification-service | MUST | 3 | T-06, T-07 | — |
-| T-09 | Purge à 90 jours | US-02 | notification-service | MUST | 2 | T-05 | — |
-| T-10 | core-backend : relais `/api/notifications` (dont SSE) | US-02, US-03, US-04 | core-backend | MUST | 3 | T-07, T-08 | — |
-| T-11 | Page Notifications | US-02, US-03 | web | MUST | 5 | T-10 | — |
-| T-12 | Toaster et compteur de la sidebar | US-03, US-04 | web | MUST | 5 | T-10, T-11 | — |
-| T-13 | Règles, documentation et dette | US-01 | docs | MUST | 2 | T-04 | — |
+| T-01 | Contrat : topic, types, paramètres et DTO de notification | US-01, US-02 | contracts | MUST | 2 | — | `ea7e4d9` |
+| T-02 | core-backend : publier les notifications de backtest | US-01 | core-backend | MUST | 5 | T-01 | `e677be0` |
+| T-03 | core-backend : publier projection et contrainte de risque | US-01 | core-backend | MUST | 3 | T-01 | `3ad8980` |
+| T-04 | Socle du service : env, health, consumer branché, script `dev` | US-01 | notification-service | MUST | 3 | T-01 | `e657b95` |
+| T-05 | Base du service : schéma Prisma, migration, repository, CI | US-01, US-02 | notification-service | MUST | 5 | T-04 | `2b838e5` |
+| T-06 | Service et consumer : enregistrement idempotent | US-01 | notification-service | MUST | 5 | T-05 | `66bc2fd` |
+| T-07 | Routes internes : liste, compteur, lu, tout lire | US-02, US-03 | notification-service | MUST | 3 | T-05 | `12583d9` |
+| T-08 | Flux SSE par utilisateur | US-04 | notification-service | MUST | 3 | T-06, T-07 | `77f42e8` |
+| T-09 | Purge à 90 jours | US-02 | notification-service | MUST | 2 | T-05 | `38d3f70` |
+| T-10 | core-backend : relais `/api/notifications` (dont SSE) | US-02, US-03, US-04 | core-backend | MUST | 3 | T-07, T-08 | `820fe97` |
+| T-11 | Page Notifications | US-02, US-03 | web | MUST | 5 | T-10 | `6079065`, `3d5aac9` |
+| T-12 | Toaster et compteur de la sidebar | US-03, US-04 | web | MUST | 5 | T-10, T-11 | `28e610c`, `7b7644f` |
+| T-13 | Règles, documentation et dette | US-01 | docs | MUST | 2 | T-04 | `b185426` |
 
 **Total** : 46 points — MUST 46, SHOULD 0.
 
@@ -61,7 +61,7 @@ flowchart LR
 
 ### T-01 · Contrat : topic, types, paramètres et DTO de notification
 
-- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : —
+- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : `ea7e4d9`
 - **Fichiers** : `packages/contracts/src/notification.ts` (nouveau), `packages/contracts/src/index.ts`, `packages/contracts/test/notification.test.ts`
 
 Critères d’acceptation :
@@ -72,7 +72,7 @@ Critères d’acceptation :
 
 ### T-02 · core-backend : publier les notifications de backtest
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-01 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-01 · **Commits** : `e677be0`
 - **Fichiers** : `apps/core-backend/services/backtest.service.ts`, `apps/core-backend/repositories/backtest.repository.ts`, `apps/core-backend/test/backtest.service.test.ts`, `apps/core-backend/test/backtest.repository.test.ts`
 
 Critères d’acceptation :
@@ -84,7 +84,7 @@ Critères d’acceptation :
 
 ### T-03 · core-backend : publier projection et contrainte de risque
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01 · **Commits** : `3ad8980`
 - **Fichiers** : `apps/core-backend/services/projection.service.ts`, `apps/core-backend/services/risk.service.ts`, `apps/core-backend/test/projection.service.test.ts`, `apps/core-backend/test/risk.service.test.ts`
 
 Critères d’acceptation :
@@ -97,7 +97,7 @@ Critères d’acceptation :
 
 ### T-04 · Socle du service : env, health, consumer branché, script `dev`
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01 · **Commits** : `e657b95`
 - **Fichiers** : `apps/notification-service/` (`package.json`, `tsconfig.json`, `bunfig.toml`, `env.ts`, `index.ts`, `AGENTS.md`, `CLAUDE.md`, `test/setup.ts`), `package.json` racine (workspace, script `dev:notification`, ajout à `dev`)
 
 Critères d’acceptation :
@@ -109,7 +109,7 @@ Critères d’acceptation :
 
 ### T-05 · Base du service : schéma Prisma, migration, repository, CI
 
-- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-04 · **Commits** : —
+- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-04 · **Commits** : `2b838e5`
 - **Fichiers** : `apps/notification-service/prisma/schema.prisma`, migration initiale, `prisma.config.ts`, `.env.example`, `repositories/notification.repository.ts`, `test/notification.repository.test.ts`, `.github/workflows/ci.yml`
 
 Critères d’acceptation :
@@ -121,7 +121,7 @@ Critères d’acceptation :
 
 ### T-06 · Service et consumer : enregistrement idempotent
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-05 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-05 · **Commits** : `66bc2fd`
 - **Fichiers** : `apps/notification-service/consumers/notification.consumer.ts`, `services/notification.service.ts`, `constants/notification.constants.ts`, `test/notification.consumer.test.ts`, `test/notification.service.test.ts`
 
 Critères d’acceptation :
@@ -132,7 +132,7 @@ Critères d’acceptation :
 
 ### T-07 · Routes internes : liste, compteur, lu, tout lire
 
-- **US** : US-02, US-03 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-05 · **Commits** : —
+- **US** : US-02, US-03 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-05 · **Commits** : `12583d9`
 - **Fichiers** : `apps/notification-service/routes/notification/`, `controller/notification.controller.ts`, `interfaces/notification.interface.ts`, `API.md`, `test/notification.routes.test.ts`
 
 Critères d’acceptation :
@@ -143,7 +143,7 @@ Critères d’acceptation :
 
 ### T-08 · Flux SSE par utilisateur
 
-- **US** : US-04 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-06, T-07 · **Commits** : —
+- **US** : US-04 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-06, T-07 · **Commits** : `77f42e8`
 - **Fichiers** : `apps/notification-service/services/notification-stream.service.ts`, `controller/notification.controller.ts`, `routes/notification/`, `test/notification-stream.test.ts`
 
 Critères d’acceptation :
@@ -154,7 +154,7 @@ Critères d’acceptation :
 
 ### T-09 · Purge à 90 jours
 
-- **US** : US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-05 · **Commits** : —
+- **US** : US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-05 · **Commits** : `38d3f70`
 - **Fichiers** : `apps/notification-service/constants/notification.constants.ts`, `services/notification.service.ts`, `index.ts`, `test/notification.service.test.ts`
 
 Critères d’acceptation :
@@ -166,7 +166,7 @@ Critères d’acceptation :
 
 ### T-10 · core-backend : relais `/api/notifications` (dont SSE)
 
-- **US** : US-02, US-03, US-04 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-07, T-08 · **Commits** : —
+- **US** : US-02, US-03, US-04 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-07, T-08 · **Commits** : `820fe97`
 - **Fichiers** : `apps/core-backend/routes/notification/`, `apps/core-backend/utils/proxy.ts`, `apps/core-backend/env.ts`, `apps/core-backend/index.ts`, `apps/core-backend/API.md`, `apps/core-backend/test/notification.routes.test.ts`
 
 Critères d’acceptation :
@@ -179,7 +179,7 @@ Critères d’acceptation :
 
 ### T-11 · Page Notifications
 
-- **US** : US-02, US-03 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-10 · **Commits** : —
+- **US** : US-02, US-03 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-10 · **Commits** : `6079065`, `3d5aac9`
 - **Fichiers** : `apps/web/src/features/notifications/` (`api.ts`, `hook.ts`, `types.ts`, `constants.ts`, `utils.ts`, composants, `COMPONENTS.md`), `apps/web/src/app/app/notifications/page.tsx`, `apps/web/messages/fr.json`, `apps/web/messages/en.json`, `apps/web/COMPONENTS.md`, `apps/web/test/notifications.test.tsx`
 
 Critères d’acceptation :
@@ -190,7 +190,7 @@ Critères d’acceptation :
 
 ### T-12 · Toaster et compteur de la sidebar
 
-- **US** : US-03, US-04 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-10, T-11 · **Commits** : —
+- **US** : US-03, US-04 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-10, T-11 · **Commits** : `28e610c`, `7b7644f`
 - **Fichiers** : `apps/web/src/components/` (primitive Toast, si absente de shadcn/base-ui), `apps/web/src/features/notifications/` (`stream.ts`, `toaster.tsx`), `apps/web/src/components/app-sidebar.tsx`, `apps/web/src/app/app/layout.tsx`, `apps/web/test/notifications-stream.test.tsx`
 
 Critères d’acceptation :
@@ -204,7 +204,7 @@ Critères d’acceptation :
 
 ### T-13 · Règles, documentation et dette
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-04 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-04 · **Commits** : `b185426`
 - **Fichiers** : `AGENTS.md`, `CLAUDE.md`, `apps/core-backend/AGENTS.md`, `README.md`, `TECH-DEBT.md`, `roadmap/README.md`
 
 Critères d’acceptation :
