@@ -72,7 +72,7 @@ Planification : **toutes les features 10 à 25 sont planifiées** (dossiers `roa
 | 12 | Robustesse : dates de départ et métriques glissantes | 5 | 11 | Sensibilité à la date d’entrée, sur des rendements corrects. |
 | 13 | Risk Engine | 6 | 11 | Corrélations, expositions, concentration, VaR/CVaR, contraintes. Gel fonctionnel du moteur de simulation à la fin. |
 | 14 | Projection Monte Carlo | 7 | 12 | Moteur seedé réutilisé par le pricing (19). |
-| 15 | Notifications : service dédié, page et toaster | 7 ᶜ | 13, 14 | Remontée du COULD le 2026-11-17. Déjà utile : les calculs de risque et de projection sont asynchrones. |
+| 15 | [Notifications : service dédié, page et toaster](15-notification-service/) | 7 ᶜ | 13, 14 | Remontée du COULD le 2026-11-17 (44 points). Les calculs de risque et de projection sont asynchrones : l'utilisateur doit être prévenu. |
 | 16 | Taux et obligations | 8 | 08 | Source de taux (Yahoo, gratuit ; FRED reporté), courbe, actualisation, prix, duration. Indépendant du risque. |
 | 17 | Options vanilles : payoffs et Black-Scholes | 9 | 11, 16 | Besoin du taux (16) et des dividendes (11). |
 | 18 | Grecques, volatilité implicite et surface | 9 | 17 | Route `options/:symbol` dans `market-service` ; volatilité implicite recalculée par le moteur. |
@@ -84,7 +84,9 @@ Planification : **toutes les features 10 à 25 sont planifiées** (dossiers `roa
 | 24 | Observabilité : OpenTelemetry, traces, runbooks | 11 | 23 | Trace d’une simulation de bout en bout. ClickHouse seulement si une requête analytique le justifie. |
 | 25 | Résilience et soutenance | 12 | 24 | Reprise du worker et des consumers, sauvegarde-restauration, pannes contrôlées, charge, audit sécurité, démo, rapport. |
 
-**Extensions (COULD, hors chemin critique)** : delta-hedging (après 20), optimisation minimale Max Sharpe / min variance (après 13), objectifs financiers et taux de retrait (après 14), paper trading, notifications, profils de clients fictifs, marché simulé (bonus).
+ᶜ hors « Roadmap annuelle » : notifications remontées du COULD le 2026-11-17, avant la feature 16.
+
+**Extensions (COULD, hors chemin critique)** : delta-hedging (après 20), optimisation minimale Max Sharpe / min variance (après 13), objectifs financiers et taux de retrait (après 14), paper trading, notifications (types Paper trading, Rapports et Optimisation, préférences, e-mail), profils de clients fictifs, marché simulé (bonus).
 
 **CI/CD (22)** : aucune dépendance fonctionnelle, donc libre d’être avancée. Les moteurs de pricing (17 à 21) sont les plus lourds en tests ; un pipeline qui exécute `bun test` et `tsc` à chaque PR avant la 17 les protégerait. Décision à prendre par l’utilisateur ; l’ordre ci-dessus garde le mois 11 d’origine.
 
@@ -99,6 +101,7 @@ Planification : **toutes les features 10 à 25 sont planifiées** (dossiers `roa
 | 2026-10-30 | Messages Kafka compressés en GZIP (limite de 1 Mo du broker). | `e87fdcc` |
 | 2026-10-30 | Aide contextuelle ajoutée hors roadmap annuelle : chaque donnée calculée affichée porte une explication (à quoi elle sert, comment elle est calculée). | [09](09-aide-contextuelle/) |
 | 2026-11-03 | Cap « structureur » : la roadmap des mois 5 à 10 passe de l’optimisation et du reporting à la structuration (taux, obligations, options, produits structurés, term sheet). Optimisation, paper trading, notifications et profils de clients passent en COULD ; CI/CD, Kubernetes, Helm et GitOps (mois 11-12) sont conservés. | [README racine](../README.md#structuration--taux-options-et-produits-structurés) |
+| 2026-11-17 | Les notifications quittent le COULD : service dédié `notification-service` avec sa propre base (exception à « core-backend seul écrivain en base »), alimenté par `notification.requested` publié par core-backend, flux SSE ; les features 15 à 24 deviennent 16 à 25. | [15](15-notification-service/), `4373b83` |
 
 ## Conventions communes
 
