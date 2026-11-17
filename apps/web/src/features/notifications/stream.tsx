@@ -9,7 +9,7 @@ import { env } from "@/lib/env"
 import { routes } from "@/lib/routes"
 import { TOAST_DURATION_MS } from "./constants"
 import { notificationsKey, useMarkNotificationRead } from "./hook"
-import { NotificationIcon } from "./notification-icon"
+import { NotificationToast } from "./notification-toast"
 import type { NotificationView } from "./types"
 import { useNotificationText } from "./use-notification-text"
 import { notificationRoute } from "./utils"
@@ -49,19 +49,22 @@ export function useNotificationStream() {
             // Pas de toaster sur la page Notifications : la liste s'y met à jour (D15) ; `location` suit les navigations de Next
             if (window.location.pathname === routes.notifications) return
             const { title, detail } = current.text(notification)
-            toast(title, {
-                id: notification.id,
-                description: detail,
-                icon: <NotificationIcon type={notification.type} />,
-                duration: TOAST_DURATION_MS,
-                action: {
-                    label: current.t("view"),
-                    onClick: () => {
-                        current.markRead.mutate(notification.id)
-                        current.router.push(notificationRoute(notification))
-                    },
-                },
-            })
+            toast.custom(
+                (id) => (
+                    <NotificationToast
+                        type={notification.type}
+                        title={title}
+                        detail={detail}
+                        onView={() => {
+                            toast.dismiss(id)
+                            current.markRead.mutate(notification.id)
+                            current.router.push(notificationRoute(notification))
+                        }}
+                        onClose={() => toast.dismiss(id)}
+                    />
+                ),
+                { id: notification.id, duration: TOAST_DURATION_MS },
+            )
         })
         return () => source.close()
     }, [queryClient])

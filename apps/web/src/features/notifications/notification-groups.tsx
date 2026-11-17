@@ -14,7 +14,7 @@ export function NotificationGroups({ notifications, onView }: NotificationGroups
     const now = new Date()
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
             {groupByDay(notifications, now).map(({ group, items }) => (
                 <section key={group} className="flex flex-col gap-1">
                     <h3 className="text-small text-muted-foreground">{t(group)}</h3>

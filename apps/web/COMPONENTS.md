@@ -220,7 +220,7 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 - `ui/table.tsx` : `TableRow` `variant` `static` (sans survol, ligne d'état) et `plain` (sans bordure ni survol) ; `TableHead` `variant` `caption` (en-tête discret) et `row` (libellé de ligne) ; `TableCell` `variant` `strong` et `muted`. Utilisés par `DataTable` et `MetricBlock`.
 - `ui/progress.tsx` (ajouté par `shadcn add progress`) : `size` `md` (piste de 6 px) et `variant` `success`, `running` (pulsation, calcul en cours) et `chart` (couleur `chart-1`, part d'un total). Barres de poids d'`AllocationField`, d'exécution active et de contribution au risque.
 - `ui/empty.tsx` (ajouté par `shadcn add empty`) : état vide, utilisé via `EmptyCard`.
-- `ui/sonner.tsx` (`Toaster`, ajouté à la main au gabarit shadcn `sonner` car le CLI n'a pas écrit le fichier ; dépendance `sonner`, aucune primitive Toast dans base-ui/shadcn `base-nova`) : toasts empilables ; seul appelant `NotificationToaster`, qui passe `position`, `visibleToasts`, `closeButton`.
+- `ui/sonner.tsx` (`Toaster`, ajouté à la main au gabarit shadcn `sonner` car le CLI n'a pas écrit le fichier ; dépendance `sonner`, aucune primitive Toast dans base-ui/shadcn `base-nova`) : toasts empilables ; seul appelant `NotificationToaster`, qui passe `position` et `visibleToasts` ; le contenu des toasts est un `NotificationToast` rendu par `toast.custom`.
 
 - `ui/alert.tsx` (`Alert`, `AlertTitle`, `AlertDescription`, `AlertAction`) : écrit à la main dans le style `base-nova` (le CLI shadcn n'était pas joignable) ; variants `default`, `destructive`, `success`, `warning`, `info` (tokens `--destructive`, `--success`, `--warning`, `--info`).
 - `ui/alert-dialog.tsx` : `AlertDialog` et ses parties (`AlertDialogTrigger`, `Content`, `Header`, `Footer`, `Title`, `Description`, `Action`, `Cancel`), même origine ; `AlertDialogAction` prend le `variant` d'un `Button` et ferme la boîte. Utilisé via `AppAlertDialog`.
@@ -430,7 +430,7 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 ### TableCard
 
 - **Import** : `import { TableCard } from "@/components/data-table/table-card"`.
-- **Rôle** : cadre d'un tableau (bordure, marges) avec, s'il y en a, titre, description et actions au-dessus. Un tableau déjà dans un conteneur (section repliable) s'en passe.
+- **Rôle** : cadre d'un tableau (bordure, marges) avec, s'il y en a, titre, description et actions au-dessus (l'en-tête passe à la ligne quand titre et actions ne tiennent pas côte à côte). Un tableau déjà dans un conteneur (section repliable) s'en passe.
 - **Props** : `title?`, `description?`, `actions?` (`ReactNode`, ex. `FilterTabs`), `children` (le `DataTable`).
 - **Source** : `src/components/data-table/table-card.tsx`.
 

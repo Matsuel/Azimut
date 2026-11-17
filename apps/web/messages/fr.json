@@ -1295,6 +1295,7 @@
     "notifications": {
         "unread": "{count, plural, one {# non lue} other {# non lues}}",
         "markAllRead": "Tout marquer comme lu",
+        "close": "Fermer",
         "view": "Voir",
         "retention": "Conservées {days} jours",
         "loadError": "Impossible de charger les notifications.",

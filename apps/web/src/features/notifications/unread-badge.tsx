@@ -7,5 +7,9 @@ import { useUnreadCount } from "./hook"
 export function UnreadBadge() {
     const { data } = useUnreadCount()
     if (!data?.count) return null
-    return <SidebarMenuBadge className="bg-primary text-primary-foreground">{data.count}</SidebarMenuBadge>
+    return (
+        <SidebarMenuBadge className="bg-primary text-primary-foreground peer-data-active/menu-button:text-primary-foreground">
+            {data.count}
+        </SidebarMenuBadge>
+    )
 }

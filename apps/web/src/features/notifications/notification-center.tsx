@@ -54,7 +54,11 @@ export function NotificationCenter() {
                 }
             />
             <TableCard
-                title={<FilterTabs value={tab} onChange={changeTab} options={tabOptions} />}
+                title={
+                    <div className="max-w-full overflow-x-auto">
+                        <FilterTabs value={tab} onChange={changeTab} options={tabOptions} />
+                    </div>
+                }
                 actions={
                     query.data && (
                         <span className="text-small text-muted-foreground">

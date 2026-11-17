@@ -1295,6 +1295,7 @@
     "notifications": {
         "unread": "{count, plural, one {# unread} other {# unread}}",
         "markAllRead": "Mark all as read",
+        "close": "Close",
         "view": "View",
         "retention": "Kept for {days} days",
         "loadError": "Could not load notifications.",

@@ -49,9 +49,16 @@ Page Notifications (feature 15, maquette `22 · Notifications`) et toaster (`22.
 ### NotificationToaster
 
 - **Import** : `import { NotificationToaster } from "@/features/notifications/toaster"`.
-- **Rôle** : monté une fois dans `app/app/layout.tsx` : ouvre le flux SSE (`useNotificationStream`) et rend le `Toaster` (`ui/sonner`) en bas à droite, au plus `MAX_TOASTS` empilés, fermeture par la croix ou après `TOAST_DURATION_MS`. Pas de toaster sur la page Notifications (D15). « Voir » marque lue et ouvre le résultat.
+- **Rôle** : monté une fois dans `app/app/layout.tsx` : ouvre le flux SSE (`useNotificationStream`) et rend le `Toaster` (`ui/sonner`) en bas à droite, au plus `MAX_TOASTS` empilés, fermeture par la croix ou après `TOAST_DURATION_MS` ; chaque toaster est un `NotificationToast` rendu par `toast.custom`. Pas de toaster sur la page Notifications (D15). « Voir » marque lue et ouvre le résultat.
 - **Props** : aucune.
 - **Source** : `src/features/notifications/toaster.tsx`.
+
+### NotificationToast
+
+- **Import** : `import { NotificationToast } from "@/features/notifications/notification-toast"`.
+- **Rôle** : contenu d'un toaster (maquette `22.1`) : icône d'état, titre, détail, « Voir » sous le texte, croix. Rendu par `toast.custom` dans `useNotificationStream`.
+- **Props** : `type` (`NotificationType`), `title`, `detail`, `onView`, `onClose`.
+- **Source** : `src/features/notifications/notification-toast.tsx`.
 
 ### UnreadBadge
 
