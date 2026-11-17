@@ -3,6 +3,8 @@ import { BadRequestError } from "@azimut/http";
 import { API_ERROR_CODES } from "@azimut/contracts";
 import { Logger } from "@azimut/utils";
 import NotificationService from "../services/notification.service";
+import { notificationStream } from "../services/notification-stream.service";
+import { NOTIFICATION_HEARTBEAT_MS } from "../constants/notification.constants";
 import { listNotificationsQuerySchema, notificationIdSchema } from "../interfaces/notification.interface";
 
 const logger = Logger.here();
@@ -38,6 +40,29 @@ class NotificationController {
     markAllRead = async (_req: Request, res: Response) => {
         await this.notificationService.markAllRead(res.locals.userId)
         res.status(204).end()
+    }
+
+    /** Flux SSE : reste ouvert, un événement `notification` par nouvelle notification de l'utilisateur, un commentaire de battement toutes les 25 s. */
+    stream = (req: Request, res: Response) => {
+        res.set({
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache, no-transform",
+            Connection: "keep-alive",
+            // Interdit à un reverse proxy (nginx) de mettre le flux en mémoire tampon
+            "X-Accel-Buffering": "no",
+        })
+        res.flushHeaders()
+        res.write(": connected\n\n")
+
+        const unsubscribe = notificationStream.subscribe(res.locals.userId, (notification) => {
+            res.write(`event: notification\ndata: ${JSON.stringify(notification)}\n\n`)
+        })
+        const heartbeat = setInterval(() => res.write(": ping\n\n"), NOTIFICATION_HEARTBEAT_MS)
+
+        req.on("close", () => {
+            clearInterval(heartbeat)
+            unsubscribe()
+        })
     }
 }
 

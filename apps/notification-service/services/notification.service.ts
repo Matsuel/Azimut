@@ -4,16 +4,18 @@ import { Logger } from "@azimut/utils"
 import NotificationRepository, { type INotificationRepository } from "../repositories/notification.repository"
 import type { NotificationListFilters } from "../interfaces/notification.interface"
 import { NOTIFICATION_RETENTION_DAYS } from "../constants/notification.constants"
+import NotificationStreamService, { notificationStream } from "./notification-stream.service"
 import { toNotificationView } from "../utils/notification.mapper"
 
 const logger = Logger.here()
 
 class NotificationService {
     repo: INotificationRepository = new NotificationRepository()
+    stream: NotificationStreamService = notificationStream
 
     /**
      * Enregistre la notification demandée. Idempotent : une `dedupKey` déjà connue (rejeu Kafka) n'insère rien et renvoie `null`.
-     * Une base indisponible lève : kafkajs rejoue le message.
+     * La diffuse en SSE à son propriétaire. Une base indisponible lève : kafkajs rejoue le message.
      */
     async record(payload: NotificationRequestedPayload): Promise<NotificationView | null> {
         const row = await this.repo.create({
@@ -28,7 +30,10 @@ class NotificationService {
             logger.info("Notification already recorded, skipped", { dedupKey: payload.dedupKey })
             return null
         }
-        return toNotificationView(row)
+        const view = toNotificationView(row)
+        // Diffusée seulement à la création : un rejeu ne repousse rien
+        this.stream.publish(payload.userId, view)
+        return view
     }
 
     /** Liste paginée de l'utilisateur, avec les nombres des onglets (indépendants du filtre) et la durée de conservation. */

@@ -20,6 +20,11 @@ const createNotificationRoutes = (): RouteDescriptor[] => {
             handler: asyncHandler(controller.unreadCount)
         },
         {
+            method: "get",
+            path: `${prefix}/stream`,
+            handler: controller.stream
+        },
+        {
             method: "post",
             path: `${prefix}/read-all`,
             handler: asyncHandler(controller.markAllRead)

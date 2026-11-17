@@ -4,6 +4,7 @@ import type { Notification } from "../generated/prisma/client"
 import type { INotificationRepository } from "../repositories/notification.repository"
 import type { CreateNotificationDTO } from "../interfaces/notification.interface"
 import NotificationService from "../services/notification.service"
+import NotificationStreamService from "../services/notification-stream.service"
 
 const payload: NotificationRequestedPayload = {
     userId: "u1",
@@ -78,4 +79,19 @@ test("markRead : notification absente ou d'un autre utilisateur → NotFoundErro
     service.repo = { markRead: async () => false } as unknown as INotificationRepository
 
     await expect(service.markRead("n", "u1")).rejects.toThrow("Notification not found")
+})
+
+test("record : diffuse à la création seulement, pas sur un rejeu", async () => {
+    const { repo } = fakeRepo()
+    const stream = new NotificationStreamService()
+    const pushed: string[] = []
+    stream.subscribe("u1", (n) => pushed.push(n.type))
+    const service = new NotificationService()
+    service.repo = repo
+    service.stream = stream
+
+    await service.record(payload)
+    await service.record(payload)
+
+    expect(pushed).toEqual(["RISK_CONSTRAINT_VIOLATED"])
 })

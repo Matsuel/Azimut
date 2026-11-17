@@ -66,3 +66,18 @@ Catalogue des routes internes de notification-service (port 8002, base PostgreSQ
 - **Effets** : `readAt` posé sur toutes les notifications non lues de l'utilisateur.
 - **Appelant** : aucun encore (web : « Tout marquer comme lu », T-11).
 - **Source** : `controller/notification.controller.ts` (`markAllRead`), `services/notification.service.ts` (`markAllRead`), `repositories/notification.repository.ts` (`markAllRead`).
+
+### GET /api/notifications/stream
+
+- **Auth** : clé interne + `x-user-id`. Sans `x-user-id` : `401`.
+- **Entrée** : aucune.
+- **Réponse** : `200`, `Content-Type: text/event-stream`, connexion laissée ouverte (`Cache-Control: no-cache, no-transform`, `X-Accel-Buffering: no`). Premier commentaire `: connected`, puis un commentaire `: ping` toutes les 25 s (`NOTIFICATION_HEARTBEAT_MS`), puis un événement par nouvelle notification **de l'utilisateur seulement** :
+  ```text
+  event: notification
+  data: {"id":"…","type":"BACKTEST_FAILED","category":"BACKTESTS","params":{…},"createdAt":"2026-11-17T10:00:00.000Z","readAt":null}
+  ```
+  `data` = `NotificationView` en JSON. Pas de rejeu à la reconnexion (D11) : le client recharge compteur et liste. Plusieurs connexions d'un même utilisateur reçoivent toutes l'événement ; un rejeu Kafka (même `dedupKey`) ne pousse rien.
+- **Erreurs** : `401` sans clé interne ou sans `x-user-id`.
+- **Effets** : abonnement en mémoire (`NotificationStreamService`), retiré à la fermeture du client.
+- **Appelant** : aucun encore (web : `EventSource`, T-12).
+- **Source** : `controller/notification.controller.ts` (`stream`), `services/notification-stream.service.ts`, `services/notification.service.ts` (`record` diffuse).
