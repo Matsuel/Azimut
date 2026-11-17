@@ -37,11 +37,11 @@ const backtestRef = {
 // Paramètres par type : valeurs chiffrées seulement, le web rend le texte (D3)
 export const backtestCompletedParamsSchema = z.object({
     ...backtestRef,
-    // Ratio annuel (0.12 = 12 %/an) : rendement annualisé
-    cagr: z.number(),
+    // Ratio annuel (0.12 = 12 %/an) : rendement annualisé ; null sous deux points de valeur
+    cagr: z.number().nullable(),
     // Sans unité : ratio de Sharpe
     sharpe: z.number().nullable(),
-    // Ratio ≥ 0 (0.18 = 18 %) : drawdown maximal
+    // Ratio ≥ 0 (0.18 = 18 %) : drawdown maximal, en valeur absolue (le résultat le stocke négatif)
     maxDrawdown: z.number().min(0),
 });
 

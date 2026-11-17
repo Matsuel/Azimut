@@ -18,6 +18,17 @@ mock.module("../lib/kafka", () => ({
 
 const { default: BacktestService } = await import("../services/backtest.service")
 
+type Notified = Parameters<typeof BacktestService.prototype.notify>[0]
+
+// Service avec repository factice et notifications enregistrées dans `notified`
+function serviceWith(repo: IBacktestRepository) {
+    const notified: Notified[] = []
+    const service = new BacktestService()
+    service.repo = repo
+    service.notify = async (payload) => void notified.push(payload)
+    return { service, notified }
+}
+
 type Update = { id: string; from: BacktestStatus[]; data: Record<string, unknown> }
 
 // Repository en mémoire : enregistre chaque écriture ; seules les méthodes utilisées par ces tests sont renseignées
@@ -31,8 +42,12 @@ function fakeRepo(overrides: Partial<IBacktestRepository> = {}) {
         },
         failStaleExecutions: async (from: BacktestStatus[], before: Date, data: Record<string, unknown>) => {
             stale.push({ from, before, data })
-            return 2
+            return [
+                { executionId: "e1", backtest: { id: "b1", userId: "u1", name: "Un" } },
+                { executionId: "e2", backtest: { id: "b2", userId: "u2", name: "Deux" } },
+            ]
         },
+        getExecutionBacktest: async () => ({ id: "b1", userId: "u1", name: "Un" }),
         ...overrides,
     } as unknown as IBacktestRepository
     return { repo, updates, stale }
@@ -141,8 +156,7 @@ test("backtest.failed ne touche que les exécutions actives et garde errorCode",
 
 test("une exécution active trop ancienne passe FAILED avec EXECUTION_TIMEOUT", async () => {
     const { repo, stale } = fakeRepo()
-    const service = new BacktestService()
-    service.repo = repo
+    const { service, notified } = serviceWith(repo)
 
     const before = Date.now()
     const count = await service.failStaleExecutions()
@@ -152,6 +166,35 @@ test("une exécution active trop ancienne passe FAILED avec EXECUTION_TIMEOUT", 
     // Seuil = maintenant − 15 min
     expect(before - stale[0]!.before.getTime()).toBeGreaterThanOrEqual(15 * 60_000 - 1000)
     expect(stale[0]!.data).toMatchObject({ status: "FAILED", errorCode: "EXECUTION_TIMEOUT" })
+    // Une notification par exécution expirée, adressée à son propriétaire
+    expect(notified.map(({ type, userId, dedupKey }) => ({ type, userId, dedupKey }))).toEqual([
+        { type: "BACKTEST_FAILED", userId: "u1", dedupKey: "BACKTEST_FAILED:e1" },
+        { type: "BACKTEST_FAILED", userId: "u2", dedupKey: "BACKTEST_FAILED:e2" },
+    ])
+    expect(notified[0]!.params).toMatchObject({ errorCode: "EXECUTION_TIMEOUT" })
+})
+
+test("backtest.failed publie BACKTEST_FAILED seulement si la transition a modifié une ligne", async () => {
+    const { repo } = fakeRepo()
+    const { service, notified } = serviceWith(repo)
+    const event = { executionId: "e1", finishedAt: "2024-01-01T00:00:00.000Z", error: "boom", errorCode: "NO_MARKET_DATA" } as const
+
+    await service.fail(event)
+    expect(notified).toEqual([
+        {
+            userId: "u1",
+            type: "BACKTEST_FAILED",
+            dedupKey: "BACKTEST_FAILED:e1",
+            occurredAt: event.finishedAt,
+            params: { backtestId: "b1", name: "Un", errorCode: "NO_MARKET_DATA" },
+        },
+    ])
+
+    // Rejeu : la transition ne modifie rien, rien n'est publié
+    const { repo: replayRepo } = fakeRepo({ updateExecution: async () => false })
+    const replay = serviceWith(replayRepo)
+    await replay.service.fail(event)
+    expect(replay.notified).toHaveLength(0)
 })
 
 test("createBatch crée un backtest par date, trié, du même nom, lié par le même batchId, et publie un événement chacun", async () => {
@@ -354,6 +397,38 @@ test("backtest.completed : la recopie `request` destinée à risk-engine n'est p
 
     expect(completed[0]).toMatchObject({ finalValue: 1100 })
     expect(completed[0]).not.toHaveProperty("request")
+})
+
+test("backtest.completed publie BACKTEST_COMPLETED (drawdown en valeur absolue), rien sur un rejeu", async () => {
+    const event = {
+        executionId: "e1",
+        finishedAt: "2024-01-01T00:00:00.000Z",
+        request: { allocations: [], startDate: "2023-01-01T00:00:00.000Z", endDate: "2024-01-01T00:00:00.000Z" },
+        maxDrawdownDate: null,
+        maxDrawdownPeakDate: null,
+        maxDrawdownRecoveryDate: null,
+        cagr: 0.12,
+        sharpeRatio: null,
+        maxDrawdown: -0.2,
+    } as never
+    const { repo } = fakeRepo({ completeExecution: async () => true })
+    const { service, notified } = serviceWith(repo)
+
+    await service.complete(event)
+    expect(notified).toEqual([
+        {
+            userId: "u1",
+            type: "BACKTEST_COMPLETED",
+            dedupKey: "BACKTEST_COMPLETED:e1",
+            occurredAt: "2024-01-01T00:00:00.000Z",
+            params: { backtestId: "b1", name: "Un", cagr: 0.12, sharpe: null, maxDrawdown: 0.2 },
+        },
+    ])
+
+    const { repo: replayRepo } = fakeRepo({ completeExecution: async () => false })
+    const replay = serviceWith(replayRepo)
+    await replay.service.complete(event)
+    expect(replay.notified).toHaveLength(0)
 })
 
 test("hasDividendDetails : dividendes ou change à détailler, jamais sans résultat ni pour un résultat antérieur", async () => {
