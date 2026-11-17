@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
-import { useTranslations } from "next-intl"
 import { getTranslations } from "next-intl/server"
-import { PageHeader, PageLayout } from "@/components/page-layout"
+import { NotificationCenter } from "@/features/notifications/notification-center"
 
 export async function generateMetadata(): Promise<Metadata> {
     const t = await getTranslations("navigation.tabs")
@@ -9,11 +8,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function NotificationsPage() {
-    const t = useTranslations()
-
-    return (
-        <PageLayout>
-            <PageHeader title={t("navigation.tabs.notifications")} description={t("pages.notifications.description")} />
-        </PageLayout>
-    )
+    return <NotificationCenter />
 }
