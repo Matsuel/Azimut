@@ -4,6 +4,7 @@ import {
     API_ERROR_MESSAGES,
     allocationsSchema,
     backtestCompletedEventSchema,
+    notificationRequestedPayloadSchema,
     riskCompletedEventSchema,
     riskConstraintInputSchema,
 } from "../src"
@@ -38,4 +39,19 @@ test("backtest.completed exige la recopie `request` destinée à risk-engine", (
 
 test("chaque code d'erreur a son message anglais", () => {
     for (const code of Object.values(API_ERROR_CODES)) expect(API_ERROR_MESSAGES[code]).toBeTruthy()
+})
+
+const notif = { userId: "u", dedupKey: "k", occurredAt: "2024-01-01T00:00:00.000Z" }
+const ref = { backtestId: "b", name: "N" }
+
+test("notification.requested : un payload par type accepté, type inconnu ou paramètre manquant refusé", () => {
+    const valid = [
+        { type: "BACKTEST_COMPLETED", params: { ...ref, cagr: 0.1, sharpe: 1.2, maxDrawdown: 0.2 } },
+        { type: "BACKTEST_FAILED", params: { ...ref, errorCode: null } },
+        { type: "RISK_CONSTRAINT_VIOLATED", params: { ...ref, maxDrawdown: 0.3, limit: 0.15 } },
+        { type: "PROJECTION_COMPLETED", params: { ...ref, scenarios: 1000, lossProbability: 0.2 } },
+    ]
+    for (const v of valid) expect(notificationRequestedPayloadSchema.safeParse({ ...notif, ...v }).success).toBe(true)
+    expect(notificationRequestedPayloadSchema.safeParse({ ...notif, type: "OTHER", params: ref }).success).toBe(false)
+    expect(notificationRequestedPayloadSchema.safeParse({ ...notif, type: "BACKTEST_COMPLETED", params: ref }).success).toBe(false)
 })

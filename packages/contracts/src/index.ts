@@ -6,3 +6,4 @@ export * from "./projection";
 export * from "./pagination";
 export * from "./error";
 export * from "./internal";
+export * from "./notification";
