@@ -104,3 +104,41 @@ test("purgeExpired : supprime ce qui a plus de 90 jours (rétention)", async () 
     expect(await service.purgeExpired(new Date("2026-11-17T00:00:00.000Z"))).toBe(2)
     expect(cutoff).toEqual(new Date("2026-08-19T00:00:00.000Z"))
 })
+
+test("markRead : une notification de l'utilisateur est marquée lue sans erreur (idempotent)", async () => {
+    const service = new NotificationService()
+    service.repo = { markRead: async () => true } as unknown as INotificationRepository
+
+    await service.markRead("n", "u1")
+    await service.markRead("n", "u1")
+})
+
+test("countUnread et markAllRead délèguent au repository pour l'utilisateur", async () => {
+    const calls: string[] = []
+    const service = new NotificationService()
+    service.repo = {
+        countUnread: async (userId: string) => (calls.push(`count:${userId}`), 3),
+        markAllRead: async (userId: string) => void calls.push(`all:${userId}`),
+    } as unknown as INotificationRepository
+
+    expect(await service.countUnread("u1")).toBe(3)
+    await service.markAllRead("u1")
+    expect(calls).toEqual(["count:u1", "all:u1"])
+})
+
+test("startPurge : purge tout de suite, une erreur de base ne lève pas, l'arrêt coupe le minuteur", async () => {
+    let runs = 0
+    const service = new NotificationService()
+    service.repo = {
+        deleteOlderThan: async () => {
+            runs++
+            throw new Error("db down")
+        },
+    } as unknown as INotificationRepository
+
+    const stop = service.startPurge()
+    await Bun.sleep(0)
+    stop()
+
+    expect(runs).toBe(1)
+})
