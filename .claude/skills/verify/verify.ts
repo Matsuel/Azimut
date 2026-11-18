@@ -209,6 +209,29 @@ for (const { code, catalog, label } of catalogs) {
     }
 }
 
+// Code testable modifié sans test (AGENTS.md racine, « Conventions communes » : un comportement ajouté a son test dans le
+// même diff). Les tests sont nommés par sujet, pas par fichier : on juge par workspace (un fichier de `<ws>/test/` touché).
+// Bloquant dans le hook (l'agent écrit le test), avertissement en CI (un refactor pur ne change aucun test).
+const TESTABLE =
+    /^(apps\/[^/]+\/(engine|services|consumers|publishers|controller|middleware|repositories|utils)\/|packages\/[^/]+\/src\/|apps\/web\/src\/(lib|hooks|components\/(?!ui\/)|features\/))/;
+const UNTESTABLE = /(^|\/)(index|env|types|[^/]+\.d)\.tsx?$|\/(constants|interfaces)\/|\/constants\.ts$|^apps\/web\/src\/lib\/(env|auth|session)\.ts$/;
+const untested = workspaces.flatMap(({ dir }) => {
+    const sources = codeFiles.filter(
+        (file) =>
+            file.startsWith(`${dir}/`) &&
+            TESTABLE.test(file) &&
+            !UNTESTABLE.test(file) &&
+            !NEXT_FILE.test(file) &&
+            addedCode(/\S/, [file]).length > 0,
+    );
+    return sources.length > 0 && !touched(new RegExp(`^${dir}/test/`)) ? sources : [];
+});
+if (untested.length > 0) {
+    (hook ? failures : warnings).push(
+        `Code testable modifié sans aucun test touché dans son workspace (AGENTS.md, « Conventions communes ») : ajoute ou complète le test du comportement dans \`<app>/test/\`, ou justifie l'absence (refactor pur, affichage seul) :\n${untested.join("\n")}`,
+    );
+}
+
 // Taille et complexité (apps/web/AGENTS.md) : fichier ≤ 150 lignes, fonction de premier niveau ≤ 60 lignes, ≤ 8 props.
 // Heuristique sur le format Biome, fichiers modifiés seulement : une fonction va de `function X` en colonne 0 jusqu'à la
 // `}` en colonne 0 suivante ; les props se comptent sur les types `…Props` et les types écrits en ligne.
