@@ -17,6 +17,7 @@
         "NAME_REQUIRED": "The name is required.",
         "PORTFOLIO_NOT_FOUND": "Portfolio not found.",
         "BACKTEST_NOT_FOUND": "Backtest not found.",
+        "NOTIFICATION_NOT_FOUND": "Notification not found.",
         "BACKTEST_NO_RESULT": "This backtest has no completed result yet.",
         "EXECUTION_IN_PROGRESS": "An execution is already in progress for this backtest.",
         "BACKTEST_QUEUE_FAILED": "The backtest could not be queued. Run it again.",
@@ -1105,7 +1106,7 @@
             "description": "Overview of your backtests, portfolios and recent signals."
         },
         "notifications": {
-            "description": "Simulation results and signals received, read or unread."
+            "description": "Simulation results and risk signals."
         },
         "paperTrading": {
             "description": "Strategies followed from today on a virtual portfolio."
@@ -1289,6 +1290,49 @@
             },
             "total": "Total",
             "note": "Exposures by sector and region: not available in this version."
+        }
+    },
+    "notifications": {
+        "unread": "{count, plural, one {# unread} other {# unread}}",
+        "markAllRead": "Mark all as read",
+        "close": "Close",
+        "view": "View",
+        "retention": "Kept for {days} days",
+        "loadError": "Could not load notifications.",
+        "empty": "No notifications.",
+        "tabs": {
+            "all": "All · {count}",
+            "unread": "Unread · {count}",
+            "BACKTESTS": "Backtests",
+            "RISK": "Risk"
+        },
+        "groups": {
+            "today": "Today",
+            "yesterday": "Yesterday",
+            "week": "This week",
+            "older": "Older"
+        },
+        "categories": {
+            "BACKTESTS": "Backtests",
+            "RISK": "Risk"
+        },
+        "types": {
+            "BACKTEST_COMPLETED": {
+                "title": "Backtest completed",
+                "detail": "{name} · CAGR {cagr}, Sharpe {sharpe}, max drawdown {drawdown}"
+            },
+            "BACKTEST_FAILED": {
+                "title": "Backtest failed",
+                "detail": "{name} · {reason}"
+            },
+            "RISK_CONSTRAINT_VIOLATED": {
+                "title": "Constraint not met",
+                "detail": "{name} · drawdown {drawdown} for a limit of {limit}"
+            },
+            "PROJECTION_COMPLETED": {
+                "title": "Projection completed",
+                "detail": "{name} · {scenarios} paths · loss probability {lossProbability}"
+            }
         }
     }
 }

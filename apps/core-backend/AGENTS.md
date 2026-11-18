@@ -43,7 +43,7 @@ Chaque couche fait **exactement** son travail ; une ligne qui relève d'une autr
 
 ## Événements consommés : transitions gardées
 
-core-backend est **le seul service qui écrit en base** : les autres services publient, core-backend applique. Chaque transition est un `updateMany` filtré sur les statuts de départ autorisés ; 0 ligne modifiée = événement rejoué ou tardif, loggué et ignoré.
+core-backend est **le seul service qui écrit dans la base `trading`** (la base `notifications` est celle de `notification-service`) : les autres services publient, core-backend applique. Chaque transition est un `updateMany` filtré sur les statuts de départ autorisés ; 0 ligne modifiée = événement rejoué ou tardif, loggué et ignoré.
 
 | Événement | Transition `BacktestExecution` |
 | --- | --- |

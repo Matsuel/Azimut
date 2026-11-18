@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Types de notification (contrat : NOTIFICATION_TYPES)
+enum NotificationType {
+  BACKTEST_COMPLETED
+  BACKTEST_FAILED
+  RISK_CONSTRAINT_VIOLATED
+  PROJECTION_COMPLETED
+}
+
+// Catégories d'onglet (contrat : NOTIFICATION_CATEGORIES)
+enum NotificationCategory {
+  BACKTESTS
+  RISK
+}
+
+model Notification {
+  id        String               @id @default(uuid())
+  // Identifiant de l'utilisateur côté core-backend : aucune clé étrangère, la base ne connaît pas `trading`
+  userId    String
+  type      NotificationType
+  category  NotificationCategory
+  // Valeurs chiffrées du type (contrat : params de `notificationRequestedPayloadSchema`), jamais de texte rendu
+  params    Json
+  // Clé métier unique : un rejeu Kafka n'insère rien
+  dedupKey  String               @unique
+  createdAt DateTime             @default(now())
+  // null tant que non lue
+  readAt    DateTime?
+
+  @@index([userId, createdAt])
+}

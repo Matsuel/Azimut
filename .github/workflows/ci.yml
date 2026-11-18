@@ -22,7 +22,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    # PostgreSQL pour les tests de repositories de core-backend (base trading_test, voir test/setup.ts)
+    # PostgreSQL pour les tests de repositories de core-backend (base trading_test, voir test/setup.ts) et de notification-service (base notifications_test, créée par prisma migrate deploy)
     services:
       postgres:
         image: postgres:17
@@ -40,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [core-backend, market-service, backtest-engine, risk-engine, web]
+        app: [core-backend, market-service, backtest-engine, risk-engine, notification-service, web]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -51,6 +51,12 @@ jobs:
       - run: bun run db:generate
         if: matrix.app == 'core-backend'
         working-directory: apps/core-backend
+      # DATABASE_URL factice : la config Prisma l'exige, `generate` ne se connecte pas (les tests forcent notifications_test)
+      - run: bun run db:generate
+        if: matrix.app == 'notification-service'
+        working-directory: apps/notification-service
+        env:
+          DATABASE_URL: postgresql://trading:trading@localhost:5432/notifications_test
       - run: bun test
         working-directory: apps/${{ matrix.app }}
 
@@ -68,4 +74,44 @@ jobs:
       # Le client Prisma n'est pas versionné : requis par tsc de core-backend
       - run: bun run db:generate
         working-directory: apps/core-backend
+      - run: bun run db:generate
+        working-directory: apps/notification-service
+        env:
+          DATABASE_URL: postgresql://trading:trading@localhost:5432/notifications_test
       - run: bun .claude/skills/verify/verify.ts origin/develop --ci
+
+  # Parcours E2E (Playwright) sur toute la stack : PostgreSQL et Kafka jetables (apps/web/e2e/docker-compose.yml), services
+  # Bun, faux market-service (cours fixes, sans Yahoo), web buildé. Même script qu'en local : `bun run e2e`
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      # Le runner de Playwright tourne sous Node
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: bun install --frozen-lockfile
+      - name: Cache des navigateurs Playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bunx playwright install --with-deps chromium
+        working-directory: apps/web
+      - run: bun run e2e
+        env:
+          CI: "true"
+      - name: Rapport, traces et journaux des services en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+            apps/web/e2e/.logs/
+          retention-days: 7

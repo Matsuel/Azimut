@@ -2,7 +2,7 @@
 
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress"
 import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "cn"
+import { cn } from "@/lib/utils"
 
 // Ajouts du projet : épaisseur de la piste (`size`) et couleur de la barre (`variant`, `running` = calcul en cours,
 // `chart` = part d'un total en couleur de graphique)

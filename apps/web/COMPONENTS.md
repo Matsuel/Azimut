@@ -167,6 +167,17 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/market/constants.ts`](src/features/market/COMPONENTS.md#featuresmarketconstantsts) : exports `MARKET_CURRENCY`, `MIN_SEARCH_LENGTH`, `periods`
   - [`features/market/column.tsx`](src/features/market/COMPONENTS.md#featuresmarketcolumntsx) : exports `useMarketColumns()`
   - [`features/market/types.ts`](src/features/market/COMPONENTS.md#featuresmarkettypests) : exports `Period`, `MarketAsset`, `MarketDetails`, `MarketData`
+- [`features/notifications`](src/features/notifications/COMPONENTS.md)
+  - [NotificationCenter](src/features/notifications/COMPONENTS.md#notificationcenter) : écran Notifications (maquette 22) : onglets, liste par jour, « Tout marquer comme lu »
+  - [NotificationBody](src/features/notifications/COMPONENTS.md#notificationbody) : états de la carte (chargement, erreur, vide, liste)
+  - [NotificationGroups](src/features/notifications/COMPONENTS.md#notificationgroups) : sections « Aujourd'hui », « Hier », « Cette semaine »
+  - [NotificationRow](src/features/notifications/COMPONENTS.md#notificationrow) : une notification (icône, titre, détail, « Voir », pastille non lue)
+  - [NotificationIcon](src/features/notifications/COMPONENTS.md#notificationicon) : icône d'état par type
+  - [NotificationToaster](src/features/notifications/COMPONENTS.md#notificationtoaster) : flux SSE et toaster (maquette 22.1)
+  - [UnreadBadge](src/features/notifications/COMPONENTS.md#unreadbadge) : compteur de non lues de la sidebar
+  - [`features/notifications/api.ts`](src/features/notifications/COMPONENTS.md#featuresnotificationsapits) : exports `getNotifications`, `getUnreadCount`, `markNotificationRead`, `markAllNotificationsRead`
+  - [`features/notifications/hook.ts`](src/features/notifications/COMPONENTS.md#featuresnotificationshookts) : exports `notificationsKey`, `useNotifications`, `useUnreadCount`, `useMarkNotificationRead`, `useMarkAllNotificationsRead`
+  - [`features/notifications/stream.tsx`, `use-notification-text.ts`, `utils.ts`, `constants.ts`, `types.ts`](src/features/notifications/COMPONENTS.md#featuresnotificationsstreamtsx-use-notification-textts-utilsts-constantsts-typests) : flux, textes traduits, regroupement par jour, constantes, types
 - [`features/projection`](src/features/projection/COMPONENTS.md)
   - [BacktestProjection](src/features/projection/COMPONENTS.md#backtestprojection) : écran Projection (maquette 34, route `routes.backtestProjection(id)`) et ses états
   - [ComputedProjection](src/features/projection/COMPONENTS.md#computedprojection) : corps de l'écran pour une projection calculée
@@ -209,6 +220,7 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 - `ui/table.tsx` : `TableRow` `variant` `static` (sans survol, ligne d'état) et `plain` (sans bordure ni survol) ; `TableHead` `variant` `caption` (en-tête discret) et `row` (libellé de ligne) ; `TableCell` `variant` `strong` et `muted`. Utilisés par `DataTable` et `MetricBlock`.
 - `ui/progress.tsx` (ajouté par `shadcn add progress`) : `size` `md` (piste de 6 px) et `variant` `success`, `running` (pulsation, calcul en cours) et `chart` (couleur `chart-1`, part d'un total). Barres de poids d'`AllocationField`, d'exécution active et de contribution au risque.
 - `ui/empty.tsx` (ajouté par `shadcn add empty`) : état vide, utilisé via `EmptyCard`.
+- `ui/sonner.tsx` (`Toaster`, ajouté à la main au gabarit shadcn `sonner` car le CLI n'a pas écrit le fichier ; dépendance `sonner`, aucune primitive Toast dans base-ui/shadcn `base-nova`) : toasts empilables ; seul appelant `NotificationToaster`, qui passe `position` et `visibleToasts` ; le contenu des toasts est un `NotificationToast` rendu par `toast.custom`.
 
 - `ui/alert.tsx` (`Alert`, `AlertTitle`, `AlertDescription`, `AlertAction`) : écrit à la main dans le style `base-nova` (le CLI shadcn n'était pas joignable) ; variants `default`, `destructive`, `success`, `warning`, `info` (tokens `--destructive`, `--success`, `--warning`, `--info`).
 - `ui/alert-dialog.tsx` : `AlertDialog` et ses parties (`AlertDialogTrigger`, `Content`, `Header`, `Footer`, `Title`, `Description`, `Action`, `Cancel`), même origine ; `AlertDialogAction` prend le `variant` d'un `Button` et ferme la boîte. Utilisé via `AppAlertDialog`.
@@ -284,7 +296,7 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 ### SidebarNav
 
 - **Import** : `import { SidebarNav } from "@/components/sidebar-nav"`.
-- **Rôle** : une section du menu : titre, puis un `Link` par onglet (navigation client, sans rechargement). Onglet actif : `findActiveTab(usePathname())`. Sidebar repliée : icône seule, nom en infobulle.
+- **Rôle** : une section du menu : titre, puis un `Link` par onglet (navigation client, sans rechargement). Onglet actif : `findActiveTab(usePathname())`. Sidebar repliée : icône seule, nom en infobulle. Affiche le `badge` de l'onglet à droite du libellé.
 - **Props** :
 
   | Nom | Type | Requis | Défaut | Description |
@@ -418,7 +430,7 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 ### TableCard
 
 - **Import** : `import { TableCard } from "@/components/data-table/table-card"`.
-- **Rôle** : cadre d'un tableau (bordure, marges) avec, s'il y en a, titre, description et actions au-dessus. Un tableau déjà dans un conteneur (section repliable) s'en passe.
+- **Rôle** : cadre d'un tableau (bordure, marges) avec, s'il y en a, titre, description et actions au-dessus (l'en-tête passe à la ligne quand titre et actions ne tiennent pas côte à côte). Un tableau déjà dans un conteneur (section repliable) s'en passe.
 - **Props** : `title?`, `description?`, `actions?` (`ReactNode`, ex. `FilterTabs`), `children` (le `DataTable`).
 - **Source** : `src/components/data-table/table-card.tsx`.
 
@@ -1029,7 +1041,7 @@ Source : `src/constants/pagination.ts`.
 
 | Export | Rôle |
 | --- | --- |
-| `SidebarTab` | Un onglet ; `key` = clé du libellé (`navigation.tabs.<key>` dans `messages/*.json`), `url` vient de `routes`. |
+| `SidebarTab` | Un onglet ; `key` = clé du libellé (`navigation.tabs.<key>` dans `messages/*.json`), `url` vient de `routes`, `badge` (optionnel) = pastille à droite du libellé (compteur `UnreadBadge` de « Notifications »). |
 | `SidebarSection` | Une section du menu ; `key` = clé du libellé (`navigation.sections.<key>`). |
 | `sidebarSections` | Menu (maquette) : Laboratoire (Dashboard, Marché, Backtests), Analyse (Comparaison, Risque, Projection, Optimisation), Trading virtuel (Paper trading), Suivi (Rapports, Notifications), Administration (`adminOnly` : Monitoring, Utilisateurs, Données de référence). Une page ajoutée = sa route dans `routes`, son libellé dans `messages/fr.json` et `messages/en.json`, puis son onglet ici. |
 

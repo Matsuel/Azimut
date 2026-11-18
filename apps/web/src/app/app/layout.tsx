@@ -1,6 +1,7 @@
 import { AppHeader } from "@/components/app-header"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { NotificationToaster } from "@/features/notifications/toaster"
 import { hasAdminRole, requireSession } from "@/lib/session"
 
 // Pages connectées : session exigée côté serveur, sidebar selon le rôle ; SidebarInset rend le <main>
@@ -15,6 +16,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
                 <AppHeader />
                 {children}
             </SidebarInset>
+            <NotificationToaster />
         </SidebarProvider>
     )
 }

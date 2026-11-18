@@ -1,6 +1,7 @@
 import type { PaginationQuery, RollingWindow } from "@azimut/contracts"
 import { prisma } from "../prisma"
 import { Prisma, type BacktestExecution, type BacktestStatus } from "../generated/prisma/client"
+import { notifiedBacktestSelect, type NotifiedBacktest } from "../interfaces/notification.interface"
 import type { BacktestDetailsRecord, BacktestExecutionCount, BacktestListFilters, BacktestStatusCounts, BacktestWithExecutions, BatchRecords, ComparedBacktestRecord, CompleteExecutionDTO, CreateBacktestDTO } from "../interfaces/backtest.interface"
 
 export interface IBacktestRepository {
@@ -16,8 +17,12 @@ export interface IBacktestRepository {
     createExecution(backtestId: string, attempt: number): Promise<BacktestExecution>
     updateExecution(id: string, from: BacktestStatus[], data: Prisma.BacktestExecutionUpdateManyMutationInput): Promise<boolean>
     completeExecution(id: string, from: BacktestStatus[], data: CompleteExecutionDTO): Promise<boolean>
-    failStaleExecutions(from: BacktestStatus[], createdBefore: Date, data: Prisma.BacktestExecutionUpdateManyMutationInput): Promise<number>
+    failStaleExecutions(from: BacktestStatus[], createdBefore: Date, data: Prisma.BacktestExecutionUpdateManyMutationInput): Promise<StaleExecution[]>
+    getExecutionBacktest(executionId: string): Promise<NotifiedBacktest | null>
 }
+
+// Exécution passée en échec par le balayage, avec le backtest à notifier
+export type StaleExecution = { executionId: string; backtest: NotifiedBacktest }
 
 const executionSummary = {
     // Dernière exécution en premier ; attempt départage deux createdAt identiques
@@ -224,12 +229,18 @@ class BacktestRepository implements IBacktestRepository {
         return count > 0
     }
 
-    async failStaleExecutions(from: BacktestStatus[], createdBefore: Date, data: Prisma.BacktestExecutionUpdateManyMutationInput): Promise<number> {
-        const { count } = await prisma.backtestExecution.updateMany({
+    async failStaleExecutions(from: BacktestStatus[], createdBefore: Date, data: Prisma.BacktestExecutionUpdateManyMutationInput): Promise<StaleExecution[]> {
+        const stale = await prisma.backtestExecution.updateManyAndReturn({
             where: { status: { in: from }, createdAt: { lt: createdBefore } },
             data,
+            select: { id: true, backtest: { select: notifiedBacktestSelect } },
         })
-        return count
+        return stale.map(({ id, backtest }) => ({ executionId: id, backtest }))
+    }
+
+    async getExecutionBacktest(executionId: string): Promise<NotifiedBacktest | null> {
+        const execution = await prisma.backtestExecution.findUnique({ where: { id: executionId }, select: { backtest: { select: notifiedBacktestSelect } } })
+        return execution?.backtest ?? null
     }
 
     async completeExecution(id: string, from: BacktestStatus[], { finishedAt, ...result }: CompleteExecutionDTO): Promise<boolean> {

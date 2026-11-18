@@ -17,7 +17,8 @@ Ces règles sont **strictes** : un écart doit être justifié dans le résumé 
 
 | Chemin | Rôle |
 | --- | --- |
-| `apps/core-backend` | API Express 5 + Prisma + better-auth (port 8000). **Référence d'architecture backend**, seul accès à la base. |
+| `apps/core-backend` | API Express 5 + Prisma + better-auth (port 8000). **Référence d'architecture backend**, accès à la base du domaine (`trading`). |
+| `apps/notification-service` | API Express 5 + consumer Kafka (port 8002) avec **sa propre base** `notifications` (Prisma) : enregistre les notifications de `notification.requested`, les expose derrière le proxy de core-backend et les pousse en SSE. |
 | `apps/backtest-engine` | Worker Kafka sans serveur HTTP ni base : consomme `backtest.requested`, lit les cours auprès de market-service, calcule, publie le résultat. |
 | `apps/risk-engine` | Worker Kafka sans serveur HTTP ni base : consomme `backtest.completed`, lit les cours auprès de market-service, calcule le risque (corrélations, VaR/CVaR, contributions), publie `risk.completed`. |
 | `apps/market-service` | **Seul service qui appelle yahoo-finance2** (port 8001, cache mémoire) : appelé via le proxy de core-backend pour le web, directement par backtest-engine pour les cours d'un backtest. |
@@ -37,7 +38,8 @@ Chaque valeur a **un seul propriétaire**. Le propriétaire la calcule, la stock
 | --- | --- |
 | `backtest-engine/engine/` | Tout calcul de simulation : valeur, montant investi, rendement, drawdown, ordres, courbes. Pur et testé. |
 | `risk-engine/engine/` | Tout calcul de risque : corrélations, VaR/CVaR, contributions, concentration. Pur et testé. |
-| `core-backend/services/` | Règles métier : autorisation, transitions de statut, invariants (« une exécution active à la fois »), mapping entrée → DTO, publication d'événements. Seul écrivain en base. |
+| `core-backend/services/` | Règles métier : autorisation, transitions de statut, invariants (« une exécution active à la fois »), mapping entrée → DTO, publication d'événements. Seul écrivain de la base `trading` (la base `notifications` appartient à `notification-service`). |
+| `notification-service/` | Notifications : enregistrement idempotent (`dedupKey`), liste, compteur, lu / non lu, flux SSE, purge à 90 jours. Seul écrivain de la base `notifications`. |
 | `packages/contracts` | Forme et unités des données échangées entre services. |
 | `web` | **Affichage** des valeurs reçues de l'API. |
 
@@ -70,12 +72,14 @@ Chaque app qui expose quelque chose de réutilisable tient un **catalogue** : co
 
 - Enveloppe `KafkaEvent<T>` (`eventId`, `eventType`, `occurredAt`, `version`, `payload`) via `createKafkaEvent` ; topics `domaine.action` en constantes dans `packages/contracts`.
 - Kafka est **at-least-once** : tout consommateur est idempotent (transitions gardées par statut côté core-backend). Un message invalide est loggué et ignoré, jamais une cause de crash. Un handler qui lève (base indisponible…) est loggué avec `topic`, `partition` et `offset` par `KafkaConsumer`, puis l'exception repart à kafkajs, qui rejoue le message.
+- `notification.requested` : publié par core-backend après chaque transition gardée qui a modifié une ligne, consommé par `notification-service`. Il porte un type et des valeurs chiffrées, jamais de texte rendu ; `dedupKey` métier unique côté service.
 - Changer un contrat = mettre à jour producteur **et** consommateur dans le même diff, puis signaler à l'utilisateur de redémarrer les services concernés.
 - Chaque champ numérique d'un contrat documente son unité en commentaire (ratio, devise, date `YYYY-MM-DD`).
 
 ## Conventions communes
 
-- **Tests** : dossier `test/` à la racine de chaque app, fichiers `<sujet>.test.ts`, lancés par `bun test` depuis l'app. Variables d'env factices dans `test/setup.ts` (préchargé par `bunfig.toml`) : un test n'ouvre aucune connexion (base, Kafka). Un repository se teste sur la base `trading_test` (jamais `DATABASE_URL`, forcée par `test/setup.ts` ; `describeWithDb`, vidée entre les tests, tests ignorés si PostgreSQL est éteint). Un service se teste avec un faux repository assigné à `service.repo` ; une route avec `startApp` de `@azimut/http/testing` (vrai Express, service espionné par `spyOn(Service.prototype, …)` restauré en `afterAll`) ; un hook ou composant web avec `@testing-library/react` (`test/render.tsx` fournit le provider de langue). Un comportement ajouté ou une transition modifiée a son test dans le même diff.
+- **Tests** : dossier `test/` à la racine de chaque app, fichiers `<sujet>.test.ts`, lancés par `bun test` depuis l'app. Variables d'env factices dans `test/setup.ts` (préchargé par `bunfig.toml`) : un test n'ouvre aucune connexion (base, Kafka). Un repository se teste sur la base `trading_test` (jamais `DATABASE_URL`, forcée par `test/setup.ts` ; `describeWithDb`, vidée entre les tests, tests ignorés si PostgreSQL est éteint). Un service se teste avec un faux repository assigné à `service.repo` ; une route avec `startApp` de `@azimut/http/testing` (vrai Express, service espionné par `spyOn(Service.prototype, …)` restauré en `afterAll`) ; un hook ou composant web avec `@testing-library/react` (`test/render.tsx` fournit le provider de langue). Un comportement ajouté ou une transition modifiée a son test dans le même diff : écris-le **sans attendre qu'on le demande**, dans le fichier de test du sujet s'il existe (`grep` du symbole dans `test/`), sinon dans un nouveau `<sujet>.test.ts`. le hook Stop (`verify --hook`) bloque un diff qui touche du code testable sans toucher `test/` dans le même workspace ; une absence voulue (refactor pur, affichage seul) se justifie dans le résumé.
+- **Tests E2E** (Playwright) : `apps/web/e2e/*.e2e.ts`, lancés par `bun run e2e` (racine) contre une stack jetable (`apps/web/e2e/stack.ts` : PostgreSQL et Kafka de `e2e/docker-compose.yml`, services Bun, faux market-service à cours fixes, web buildé ; Docker requis) ; job `e2e` de la CI. Un parcours utilisateur ajouté ou modifié (écran, formulaire, navigation, événement Kafka visible à l'écran) étend le spec de son domaine dans le même diff ; une route ou un écran de market-service ajoute sa réponse à `e2e/fake-market.ts`. Les E2E vérifient que chaque étape arrive à l'écran, jamais les chiffres exacts (tests des engines). Trop lents pour le hook Stop : lance-les avant la PR quand un parcours change.
 
 - **Bun partout** : `bun install`, `bun run <script>`, `bun <file>`, `bun test`, `bunx`. Bun charge `.env` : pas de `dotenv`.
 - TypeScript `strict`, ESM. `import type` pour les types (`verbatimModuleSyntax`). Pas de `any` dans le nouveau code.

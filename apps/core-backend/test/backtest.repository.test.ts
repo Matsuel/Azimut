@@ -64,17 +64,24 @@ describeWithDb("BacktestRepository (base de test)", () => {
         await prisma.backtestExecution.update({ where: { id: stale.executions[0]!.id }, data: { createdAt: old, status: "RUNNING" } })
         await prisma.backtestExecution.update({ where: { id: done.executions[0]!.id }, data: { createdAt: old, status: "COMPLETED" } })
 
-        const count = await repo.failStaleExecutions(["PENDING", "RUNNING"], new Date(Date.now() - 15 * 60_000), {
+        const failed = await repo.failStaleExecutions(["PENDING", "RUNNING"], new Date(Date.now() - 15 * 60_000), {
             status: "FAILED",
             errorCode: "EXECUTION_TIMEOUT",
         })
 
-        expect(count).toBe(1)
+        expect(failed).toEqual([{ executionId: stale.executions[0]!.id, backtest: { id: stale.id, userId, name: "ancien" } }])
         const statuses = await prisma.backtestExecution.findMany({ select: { id: true, status: true } })
         const statusOf = (id: string) => statuses.find((row) => row.id === id)?.status
         expect(statusOf(stale.executions[0]!.id)).toBe("FAILED")
         expect(statusOf(fresh.executions[0]!.id)).toBe("PENDING")
         expect(statusOf(done.executions[0]!.id)).toBe("COMPLETED")
+    })
+
+    test("getExecutionBacktest renvoie le propriétaire et le nom, null pour une exécution inconnue", async () => {
+        const backtest = await repo.create(backtestFor(userId, "mon backtest"))
+
+        expect(await repo.getExecutionBacktest(backtest.executions[0]!.id)).toEqual({ id: backtest.id, userId, name: "mon backtest" })
+        expect(await repo.getExecutionBacktest("inconnue")).toBeNull()
     })
 
     test("getAllByUserId ne renvoie que les backtests de l'utilisateur, paginés, et filtre sur le statut de la dernière exécution", async () => {

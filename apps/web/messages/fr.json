@@ -17,6 +17,7 @@
         "NAME_REQUIRED": "Le nom est obligatoire.",
         "PORTFOLIO_NOT_FOUND": "Portefeuille introuvable.",
         "BACKTEST_NOT_FOUND": "Backtest introuvable.",
+        "NOTIFICATION_NOT_FOUND": "Notification introuvable.",
         "BACKTEST_NO_RESULT": "Ce backtest n’a pas encore de résultat terminé.",
         "EXECUTION_IN_PROGRESS": "Une exécution est déjà en cours pour ce backtest.",
         "BACKTEST_QUEUE_FAILED": "Le backtest n’a pas pu être mis en file d’attente. Relancez-le.",
@@ -1105,7 +1106,7 @@
             "description": "Vue d’ensemble de vos backtests, portefeuilles et signaux récents."
         },
         "notifications": {
-            "description": "Résultats de simulation et signaux reçus, lus ou non lus."
+            "description": "Résultats de simulations et signaux de risque."
         },
         "paperTrading": {
             "description": "Stratégies suivies à partir d’aujourd’hui sur un portefeuille virtuel."
@@ -1289,6 +1290,49 @@
             },
             "total": "Total",
             "note": "Expositions par secteur et par zone : non disponibles dans cette version."
+        }
+    },
+    "notifications": {
+        "unread": "{count, plural, one {# non lue} other {# non lues}}",
+        "markAllRead": "Tout marquer comme lu",
+        "close": "Fermer",
+        "view": "Voir",
+        "retention": "Conservées {days} jours",
+        "loadError": "Impossible de charger les notifications.",
+        "empty": "Aucune notification.",
+        "tabs": {
+            "all": "Toutes · {count}",
+            "unread": "Non lues · {count}",
+            "BACKTESTS": "Backtests",
+            "RISK": "Risque"
+        },
+        "groups": {
+            "today": "Aujourd’hui",
+            "yesterday": "Hier",
+            "week": "Cette semaine",
+            "older": "Plus ancien"
+        },
+        "categories": {
+            "BACKTESTS": "Backtests",
+            "RISK": "Risque"
+        },
+        "types": {
+            "BACKTEST_COMPLETED": {
+                "title": "Backtest terminé",
+                "detail": "{name} · CAGR {cagr}, Sharpe {sharpe}, max drawdown {drawdown}"
+            },
+            "BACKTEST_FAILED": {
+                "title": "Backtest en échec",
+                "detail": "{name} · {reason}"
+            },
+            "RISK_CONSTRAINT_VIOLATED": {
+                "title": "Contrainte non respectée",
+                "detail": "{name} · drawdown {drawdown} pour une limite de {limit}"
+            },
+            "PROJECTION_COMPLETED": {
+                "title": "Projection terminée",
+                "detail": "{name} · {scenarios} trajectoires · probabilité de perte {lossProbability}"
+            }
         }
     }
 }

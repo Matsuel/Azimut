@@ -15,10 +15,12 @@ import {
 } from "lucide-react"
 import type { Messages } from "next-intl"
 import type { ReactNode } from "react"
+import { UnreadBadge } from "@/features/notifications/unread-badge"
 import { routes } from "@/lib/routes"
 
 // `key` : clé du libellé dans les dictionnaires (`navigation.tabs.<key>`, `navigation.sections.<key>`)
-export type SidebarTab = { key: keyof Messages["navigation"]["tabs"]; url: string; icon: ReactNode }
+// `badge` : pastille à droite du libellé (ex. compteur de non lues)
+export type SidebarTab = { key: keyof Messages["navigation"]["tabs"]; url: string; icon: ReactNode; badge?: ReactNode }
 
 export type SidebarSection = {
     key: keyof Messages["navigation"]["sections"]
@@ -58,7 +60,7 @@ export const sidebarSections: SidebarSection[] = [
         adminOnly: false,
         tabs: [
             { key: "reports", url: routes.reports, icon: <FileText /> },
-            { key: "notifications", url: routes.notifications, icon: <Bell /> },
+            { key: "notifications", url: routes.notifications, icon: <Bell />, badge: <UnreadBadge /> },
         ],
     },
     {

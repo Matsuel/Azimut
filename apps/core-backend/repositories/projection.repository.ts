@@ -2,11 +2,13 @@ import type { Projection } from "@azimut/contracts"
 import { prisma } from "../prisma"
 import { Prisma, type BacktestStatus } from "../generated/prisma/client"
 import { ACTIVE_STATUSES } from "../constants/backtest.constants"
+import { notifiedBacktestSelect, type NotifiedBacktest } from "../interfaces/notification.interface"
 import type { ProjectionRecord } from "../interfaces/projection.interface"
 
 export interface IProjectionRepository {
     getByBacktestId(backtestId: string, statuses: BacktestStatus[]): Promise<ProjectionRecord | null>
     setProjection(executionId: string, projection: Projection | null, computedAt: Date, durationMs: number | null): Promise<boolean>
+    getExecutionBacktest(executionId: string): Promise<NotifiedBacktest | null>
 }
 
 class ProjectionRepository implements IProjectionRepository {
@@ -49,6 +51,11 @@ class ProjectionRepository implements IProjectionRepository {
             data: { projection: projection ?? Prisma.DbNull, projectionComputedAt: computedAt, projectionDurationMs: durationMs },
         })
         return count > 0
+    }
+
+    async getExecutionBacktest(executionId: string): Promise<NotifiedBacktest | null> {
+        const execution = await prisma.backtestExecution.findUnique({ where: { id: executionId }, select: { backtest: { select: notifiedBacktestSelect } } })
+        return execution?.backtest ?? null
     }
 }
 

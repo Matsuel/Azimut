@@ -32,6 +32,7 @@ export function SidebarNav({ section }: { section: SidebarSection }) {
                             {tab.icon}
                             <span>{t(`tabs.${tab.key}`)}</span>
                         </SidebarMenuButton>
+                        {tab.badge}
                     </SidebarMenuItem>
                 ))}
             </SidebarMenu>

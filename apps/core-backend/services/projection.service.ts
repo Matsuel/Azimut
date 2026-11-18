@@ -4,6 +4,7 @@ import { ForbiddenError, NotFoundError } from "@azimut/http"
 import { COMPARABLE_STATUSES } from "../constants/backtest.constants"
 import { PROJECTION_TIMEOUT_MS } from "../constants/projection.constants"
 import type { ProjectionRecord, ProjectionStatus } from "../interfaces/projection.interface"
+import { publishNotification } from "./notification.publisher"
 import ProjectionRepository, { type IProjectionRepository } from "../repositories/projection.repository"
 
 const logger = Logger.here()
@@ -12,11 +13,27 @@ class ProjectionService {
     repo: IProjectionRepository = new ProjectionRepository()
     // Horloge injectable pour tester l'expiration
     now: () => Date = () => new Date()
+    // Publication de `notification.requested` (substituable en test)
+    notify = publishNotification
 
-    /** `projection.completed` : enregistre la projection du résultat de l'exécution (`null` : historique insuffisant, moins de 2 jours communs). Rejeu ou résultat absent : ignoré. */
-    async store({ executionId, projection, durationMs }: ProjectionCompletedPayload) {
+    /**
+     * `projection.completed` : enregistre la projection du résultat de l'exécution (`null` : historique insuffisant, moins de 2 jours communs). Rejeu ou résultat absent : ignoré.
+     * Publie `PROJECTION_COMPLETED` à la première réception d'une projection non nulle (D5).
+     */
+    async store({ executionId, finishedAt, projection, durationMs }: ProjectionCompletedPayload) {
         const stored = await this.repo.setProjection(executionId, projection, new Date(), durationMs ?? null)
         logger.info(stored ? "Projection stored" : "Projection completed event ignored", { executionId })
+        const horizon = projection?.years.at(-1)
+        if (!stored || !projection || !horizon) return
+        const backtest = await this.repo.getExecutionBacktest(executionId)
+        if (!backtest) return
+        await this.notify({
+            userId: backtest.userId,
+            type: "PROJECTION_COMPLETED",
+            dedupKey: `PROJECTION_COMPLETED:${executionId}`,
+            occurredAt: finishedAt,
+            params: { backtestId: backtest.id, name: backtest.name, scenarios: projection.paths, lossProbability: horizon.lossProbability },
+        })
     }
 
     /** Projection du dernier résultat terminé d'un backtest ; état `PENDING` tant que `projection.completed` attendu n'est pas reçu, `UNAVAILABLE` pour un ancien résultat, sans résultat terminé, ou si l'attente dépasse `PROJECTION_TIMEOUT_MS`. */

@@ -32,6 +32,7 @@ function record(overrides: Partial<Omit<RiskRecord, "result">> & { result?: Part
     const { result, ...rest } = overrides
     return {
         userId: "u1",
+        name: "Mon backtest",
         maxDrawdownLimit: null,
         previousMaxDrawdownLimit: null,
         result: result === null ? null : { risk: risk as never, riskComputedAt: new Date(), maxDrawdown: decimal(-0.214), ...result },
@@ -44,6 +45,8 @@ function setup(initial: RiskRecord | null) {
     const writes: { limit: number; previous: number | null }[] = []
     const stored: { executionId: string; risk: Risk | null }[] = []
     const service = new RiskService()
+    const notified: Parameters<RiskService["notify"]>[0][] = []
+    service.notify = async (payload) => void notified.push(payload)
     service.repo = {
         getByBacktestId: async () => current,
         setMaxDrawdownLimit: async (_id: string, limit: number, previous: number | null) => {
@@ -55,7 +58,7 @@ function setup(initial: RiskRecord | null) {
             return true
         },
     } as IRiskRepository
-    return { service, writes, stored }
+    return { service, writes, stored, notified }
 }
 
 test("risque calculé : état COMPUTED avec les phrases de lecture", async () => {
@@ -109,6 +112,29 @@ test("setLimit : première limite sans « Précédente », la suivante décale l
     const second = await service.setLimit("b1", "u1", 0.25)
     expect(second.constraint).toMatchObject({ current: { limit: 0.25, status: "RESPECTED" }, previous: { limit: 0.15, status: "VIOLATED" } })
     expect(writes).toEqual([{ limit: 0.15, previous: null }, { limit: 0.25, previous: 0.15 }])
+})
+
+test("setLimit publie RISK_CONSTRAINT_VIOLATED seulement quand la limite rend la contrainte non respectée", async () => {
+    const { service, notified } = setup(record())
+
+    await service.setLimit("b1", "u1", 0.15)
+    await service.setLimit("b1", "u1", 0.25)
+
+    expect(notified).toHaveLength(1)
+    expect(notified[0]).toMatchObject({
+        userId: "u1",
+        type: "RISK_CONSTRAINT_VIOLATED",
+        dedupKey: "RISK_CONSTRAINT_VIOLATED:b1:0.15",
+        params: { backtestId: "b1", name: "Mon backtest", maxDrawdown: 0.214, limit: 0.15 },
+    })
+})
+
+test("setLimit identique à la limite actuelle, même violée : aucune notification", async () => {
+    const { service, notified } = setup(record({ maxDrawdownLimit: decimal(0.15) }))
+
+    await service.setLimit("b1", "u1", 0.15)
+
+    expect(notified).toEqual([])
 })
 
 test("setLimit avec la limite actuelle : aucune écriture, la « Précédente » est conservée", async () => {

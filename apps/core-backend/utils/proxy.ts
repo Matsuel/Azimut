@@ -9,8 +9,9 @@ const logger = Logger.here();
 
 /**
  * Relaie la requête vers un microservice. À monter avant express.json() pour garder le body intact.
+ * `stream: true` pour un flux SSE : aucun délai de réponse (le flux reste ouvert), sinon 10 s.
  */
-const proxyTo = (target: string): RequestHandler => {
+const proxyTo = (target: string, { stream = false }: { stream?: boolean } = {}): RequestHandler => {
     // Les erreurs réseau arrivent par l'événement `error`, hors chaîne Express :
     // on garde le `next` de chaque requête pour y renvoyer l'erreur.
     const nextByRequest = new WeakMap<Request, NextFunction>();
@@ -18,7 +19,7 @@ const proxyTo = (target: string): RequestHandler => {
     const proxy = createProxyMiddleware<Request, Response>({
         target,
         changeOrigin: true,
-        proxyTimeout: 10_000,
+        proxyTimeout: stream ? 0 : 10_000,
         on: {
             proxyReq: (proxyReq, req) => {
                 // Anti-spoofing : seule l'identité vérifiée par authMiddleware est transmise.

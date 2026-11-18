@@ -34,13 +34,13 @@ Toutes validées le 2026-11-17 (voir `README.md`, D1 à D16).
 **En tant qu’** utilisateur, **je veux** qu’une notification soit créée quand un backtest se termine ou échoue, qu’une projection est calculée ou qu’une contrainte de risque n’est plus respectée **afin de** ne pas surveiller les écrans pendant que le système calcule.
 
 Critères d’acceptation :
-- [ ] `core-backend` publie `notification.requested` après chaque transition qui a modifié une ligne, et jamais sur un rejeu ni sur un événement tardif ignoré (D5).
-- [ ] Une exécution expirée par le balayage `EXECUTION_TIMEOUT` produit une notification `BACKTEST_FAILED` par exécution, avec son propriétaire.
-- [ ] Le `PUT` de limite qui rend la contrainte `VIOLATED` produit `RISK_CONSTRAINT_VIOLATED` ; un `PUT` identique à la limite actuelle, ou qui la respecte, n'en produit pas.
-- [ ] Le contrat ne porte aucun texte rendu ; chaque champ numérique a son unité en commentaire (ratio, date `YYYY-MM-DD`).
-- [ ] Chaque exécution d'un lot de backtests notifie séparément (D13).
-- [ ] Un message rejoué (même `dedupKey`) ne crée ni deuxième ligne ni deuxième push ; un message invalide est loggué (`logger.warn`) et ignoré.
-- [ ] Une notification n'est visible que de son propriétaire.
+- [x] `core-backend` publie `notification.requested` après chaque transition qui a modifié une ligne, et jamais sur un rejeu ni sur un événement tardif ignoré (D5).
+- [x] Une exécution expirée par le balayage `EXECUTION_TIMEOUT` produit une notification `BACKTEST_FAILED` par exécution, avec son propriétaire.
+- [x] Le `PUT` de limite qui rend la contrainte `VIOLATED` produit `RISK_CONSTRAINT_VIOLATED` ; un `PUT` identique à la limite actuelle, ou qui la respecte, n'en produit pas.
+- [x] Le contrat ne porte aucun texte rendu ; chaque champ numérique a son unité en commentaire (ratio, date `YYYY-MM-DD`).
+- [x] Chaque exécution d'un lot de backtests notifie séparément (D13).
+- [x] Un message rejoué (même `dedupKey`) ne crée ni deuxième ligne ni deuxième push ; un message invalide est loggué (`logger.warn`) et ignoré.
+- [x] Une notification n'est visible que de son propriétaire.
 
 Tâches : T-01, T-02, T-03, T-04, T-05, T-06 (détail dans `TASKS.md`).
 
@@ -51,11 +51,11 @@ Tâches : T-01, T-02, T-03, T-04, T-05, T-06 (détail dans `TASKS.md`).
 **En tant qu’** utilisateur, **je veux** une page qui liste mes notifications, filtrables et classées par jour, **afin de** retrouver ce qui s'est passé pendant mon absence.
 
 Critères d’acceptation :
-- [ ] La page `22 · Notifications` affiche les notifications du plus récent au plus ancien, avec la pagination existante (D14), groupées « Aujourd'hui », « Hier », « Cette semaine » (regroupement d'affichage seulement), chacune avec son icône d'état, son titre et sa ligne de détail traduits (FR/EN) depuis le type et les valeurs reçues.
-- [ ] Les onglets `Toutes · n`, `Non lues · n`, `Backtests` et `Risque` filtrent par la requête (`unread`, `category`) ; les nombres des onglets (`counts`) viennent de l'API.
-- [ ] « Voir » ouvre le résultat concerné (backtest, risque ou projection) et marque la notification lue.
-- [ ] Sans notification, la page affiche un état vide ; la mention « Conservées 90 jours » est affichée et correspond à `NOTIFICATION_RETENTION_DAYS`.
-- [ ] Une notification de plus de 90 jours est supprimée par la purge périodique.
+- [x] La page `22 · Notifications` affiche les notifications du plus récent au plus ancien, avec la pagination existante (D14), groupées « Aujourd'hui », « Hier », « Cette semaine » (regroupement d'affichage seulement), chacune avec son icône d'état, son titre et sa ligne de détail traduits (FR/EN) depuis le type et les valeurs reçues.
+- [x] Les onglets `Toutes · n`, `Non lues · n`, `Backtests` et `Risque` filtrent par la requête (`unread`, `category`) ; les nombres des onglets (`counts`) viennent de l'API.
+- [x] « Voir » ouvre le résultat concerné (backtest, risque ou projection) et marque la notification lue.
+- [x] Sans notification, la page affiche un état vide ; la mention « Conservées 90 jours » est affichée et correspond à `NOTIFICATION_RETENTION_DAYS`.
+- [x] Une notification de plus de 90 jours est supprimée par la purge périodique.
 
 Tâches : T-05, T-07, T-09, T-10, T-11.
 
@@ -64,9 +64,9 @@ Tâches : T-05, T-07, T-09, T-10, T-11.
 **En tant qu’** utilisateur, **je veux** voir combien de notifications je n'ai pas lues et les marquer lues **afin de** repérer ce qui est nouveau.
 
 Critères d’acceptation :
-- [ ] Le compteur de la sidebar (route `unread-count`) et la pastille « n non lues » de l'en-tête (`counts.unread`) viennent de l'API ; le web ne compte rien.
-- [ ] « Tout marquer comme lu » met `readAt` sur toutes les notifications non lues de l'utilisateur, et le compteur tombe à 0 sans recharger la page.
-- [ ] Marquer lue une notification déjà lue ne change rien (idempotent) ; l'identifiant d'une autre personne répond `404`.
+- [x] Le compteur de la sidebar (route `unread-count`) et la pastille « n non lues » de l'en-tête (`counts.unread`) viennent de l'API ; le web ne compte rien.
+- [x] « Tout marquer comme lu » met `readAt` sur toutes les notifications non lues de l'utilisateur, et le compteur tombe à 0 sans recharger la page.
+- [x] Marquer lue une notification déjà lue ne change rien (idempotent) ; l'identifiant d'une autre personne répond `404`.
 
 Tâches : T-07, T-10, T-11, T-12.
 
@@ -77,11 +77,11 @@ Tâches : T-07, T-10, T-11, T-12.
 **En tant qu’** utilisateur, **je veux** voir un toaster quand une notification arrive, où que je sois dans l'application, **afin de** réagir sans ouvrir la page Notifications.
 
 Critères d’acceptation :
-- [ ] Le toaster `22.1` s'affiche en bas à droite à la réception, empile au plus 3 notifications (D13), se ferme seul et par sa croix, et propose « Voir » (qui marque lue, D15). Il n'apparaît pas sur la page Notifications.
-- [ ] La page Notifications se met à jour à la réception (liste, nombres des onglets), sans doublon avec la liste déjà chargée.
-- [ ] Le flux SSE ne livre que les notifications de l'utilisateur connecté et n'est pas coupé par le délai du proxy ; sans session, il répond `401`.
-- [ ] À la reconnexion du flux, le web recharge le compteur et la liste (pas de rejeu côté serveur, D11).
-- [ ] Un service arrêté ne casse pas l'application : le flux se rétablit seul (reconnexion native d'`EventSource`).
+- [x] Le toaster `22.1` s'affiche en bas à droite à la réception, empile au plus 3 notifications (D13), se ferme seul et par sa croix, et propose « Voir » (qui marque lue, D15). Il n'apparaît pas sur la page Notifications.
+- [x] La page Notifications se met à jour à la réception (liste, nombres des onglets), sans doublon avec la liste déjà chargée.
+- [x] Le flux SSE ne livre que les notifications de l'utilisateur connecté et n'est pas coupé par le délai du proxy ; sans session, il répond `401`.
+- [x] À la reconnexion du flux, le web recharge le compteur et la liste (pas de rejeu côté serveur, D11).
+- [x] Un service arrêté ne casse pas l'application : le flux se rétablit seul (reconnexion native d'`EventSource`).
 
 Tâches : T-08, T-10, T-12.
 

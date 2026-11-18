@@ -14,7 +14,7 @@ class RiskRepository implements IRiskRepository {
         const [backtest, result] = await prisma.$transaction([
             prisma.backtest.findUnique({
                 where: { id: backtestId },
-                select: { userId: true, maxDrawdownLimit: true, previousMaxDrawdownLimit: true },
+                select: { userId: true, name: true, maxDrawdownLimit: true, previousMaxDrawdownLimit: true },
             }),
             prisma.backtestResult.findFirst({
                 where: { execution: { backtestId, status: { in: statuses } } },

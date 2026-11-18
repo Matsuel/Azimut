@@ -22,6 +22,7 @@ import {
 import { ACTIVE_STATUSES, COMPARABLE_STATUSES, EXECUTION_TIMEOUT_MS } from "../constants/backtest.constants";
 import { BadRequestError, ConflictError, ForbiddenError, InternalError, NotFoundError } from "@azimut/http";
 import { producer } from "../lib/kafka";
+import { publishNotification } from "./notification.publisher";
 import BacktestRepository, { type IBacktestRepository } from "../repositories/backtest.repository";
 import type { Backtest, BacktestResult, BacktestStatus, Prisma } from "../generated/prisma/client";
 import { latestBatchStart } from "../interfaces/backtest.interface";
@@ -108,6 +109,8 @@ const summarizeBatch = (backtests: BatchBacktestRecord[], rollingSummary: BatchR
 
 class BacktestService {
     repo: IBacktestRepository = new BacktestRepository()
+    // Publication de `notification.requested` (substituable en test)
+    notify = publishNotification
 
     /**
      * Crée un backtest à partir du formulaire (allocation déjà convertie en ratios par le schéma ; `RECURRING` = versement
@@ -334,6 +337,16 @@ class BacktestService {
             ...result,
         })
         logger.info(updated ? "Backtest execution completed" : "Backtest completed event ignored", { executionId })
+        const backtest = updated ? await this.repo.getExecutionBacktest(executionId) : null
+        if (!backtest) return
+        await this.notify({
+            userId: backtest.userId,
+            type: "BACKTEST_COMPLETED",
+            dedupKey: `BACKTEST_COMPLETED:${executionId}`,
+            occurredAt: finishedAt,
+            // Le résultat stocke le drawdown négatif ; la notification porte sa valeur absolue
+            params: { backtestId: backtest.id, name: backtest.name, cagr: result.cagr, sharpe: result.sharpeRatio, maxDrawdown: Math.abs(result.maxDrawdown) },
+        })
     }
 
     /** `backtest.failed` : exécution active → `FAILED` avec sa cause. */
@@ -345,23 +358,43 @@ class BacktestService {
             errorCode,
         })
         logger.info(updated ? "Backtest execution failed" : "Backtest failed event ignored", { executionId, error })
+        const backtest = updated ? await this.repo.getExecutionBacktest(executionId) : null
+        if (!backtest) return
+        await this.notify({
+            userId: backtest.userId,
+            type: "BACKTEST_FAILED",
+            dedupKey: `BACKTEST_FAILED:${executionId}`,
+            occurredAt: finishedAt,
+            params: { backtestId: backtest.id, name: backtest.name, errorCode: errorCode ?? null },
+        })
     }
 
     /**
      * Passe en `FAILED` (`EXECUTION_TIMEOUT`) les exécutions actives créées il y a plus de `EXECUTION_TIMEOUT_MS` : sans cela
      * un engine tombé laisse le backtest bloqué et chaque relance répond `409`. Un résultat tardif est ensuite ignoré
-     * (transitions gardées par statut). Renvoie le nombre d'exécutions expirées.
+     * (transitions gardées par statut). Publie une `BACKTEST_FAILED` par exécution expirée ; renvoie leur nombre.
      */
     async failStaleExecutions(): Promise<number> {
         const now = new Date()
-        const count = await this.repo.failStaleExecutions(ACTIVE_STATUSES, new Date(now.getTime() - EXECUTION_TIMEOUT_MS), {
+        const stale = await this.repo.failStaleExecutions(ACTIVE_STATUSES, new Date(now.getTime() - EXECUTION_TIMEOUT_MS), {
             status: "FAILED",
             finishedAt: now,
             error: "Execution timed out",
             errorCode: "EXECUTION_TIMEOUT",
         })
-        if (count > 0) logger.warn("Stale executions failed", { count })
-        return count
+        if (stale.length > 0) logger.warn("Stale executions failed", { count: stale.length })
+        await Promise.all(
+            stale.map(({ executionId, backtest }) =>
+                this.notify({
+                    userId: backtest.userId,
+                    type: "BACKTEST_FAILED",
+                    dedupKey: `BACKTEST_FAILED:${executionId}`,
+                    occurredAt: now.toISOString(),
+                    params: { backtestId: backtest.id, name: backtest.name, errorCode: "EXECUTION_TIMEOUT" },
+                }),
+            ),
+        )
+        return stale.length
     }
 
     private assertOwner<T extends Pick<Backtest, "userId">>(backtest: T | null, userId: string): T {

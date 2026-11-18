@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useLocale } from "next-intl"
-import { cn } from "cn"
+import { cn } from "@/lib/utils"
 import * as RechartsPrimitive from "recharts"
 import type { TooltipValueType } from "recharts"
 

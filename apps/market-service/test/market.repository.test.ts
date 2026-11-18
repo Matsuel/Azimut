@@ -3,16 +3,17 @@ import { BadGatewayError } from "@azimut/http"
 import MarketRepository from "../repositories/market.repository"
 
 // Client yahoo-finance2 privé de la classe : simulé pour ne faire aucun appel réseau
-const yahoo = (MarketRepository as unknown as { yahooFinance: { chart: (...args: unknown[]) => Promise<unknown> } }).yahooFinance
+type Yahoo = Record<"chart" | "search" | "quote", (...args: unknown[]) => Promise<unknown>>
+const yahoo = (MarketRepository as unknown as { yahooFinance: Yahoo }).yahooFinance
 const start = new Date("2024-01-01T00:00:00Z")
 const end = new Date("2024-12-31T00:00:00Z")
 
-let chartSpy: ReturnType<typeof spyOn> | undefined
+const spies: ReturnType<typeof spyOn>[] = []
 const mockChart = (chart: unknown) => {
-    chartSpy = spyOn(yahoo, "chart").mockResolvedValue(chart)
+    spies.push(spyOn(yahoo, "chart").mockResolvedValue(chart))
 }
 
-afterEach(() => chartSpy?.mockRestore())
+afterEach(() => spies.splice(0).forEach((spy) => spy.mockRestore()))
 
 test("getDailyCloses lit le jour de cotation dans le fuseau de la place et écarte les jours sans clôture", async () => {
     mockChart({
@@ -78,4 +79,50 @@ test("getDetails sans série lève une BadGatewayError", async () => {
     mockChart(undefined)
 
     await expect(new MarketRepository().getDetails("AAPL", "1d")).rejects.toBeInstanceOf(BadGatewayError)
+})
+
+test("search ne garde que les résultats Yahoo complets, nom court sinon long sinon symbole", async () => {
+    spies.push(
+        spyOn(yahoo, "search").mockResolvedValue({
+            quotes: [
+                { isYahooFinance: true, symbol: "AAPL", shortname: "Apple", exchange: "NMS", quoteType: "EQUITY" },
+                { isYahooFinance: true, symbol: "MSFT", longname: "Microsoft Corp", exchange: "NMS", quoteType: "EQUITY" },
+                { isYahooFinance: true, symbol: "X", shortname: "Sans place", quoteType: "EQUITY" },
+                { isYahooFinance: false, symbol: "NEWS", shortname: "Article", exchange: "X", quoteType: "NEWS" },
+            ],
+        }),
+    )
+
+    const results = await new MarketRepository().search("a")
+
+    expect(results.map(({ symbol, name }) => ({ symbol, name }))).toEqual([
+        { symbol: "AAPL", name: "Apple" },
+        { symbol: "MSFT", name: "Microsoft Corp" },
+    ])
+})
+
+test("getDetails rend l'historique en ISO et omet les intervalles sans clôture", async () => {
+    mockChart({
+        quotes: [
+            { date: new Date("2024-01-02T00:00:00Z"), close: 10 },
+            { date: new Date("2024-01-03T00:00:00Z"), close: null },
+        ],
+    })
+
+    expect(await new MarketRepository().getDetails("AAPL", "1m")).toEqual([{ date: "2024-01-02T00:00:00.000Z", price: 10 }])
+})
+
+test("getAssets garde l'ordre demandé et omet un actif indisponible sans bloquer les autres", async () => {
+    spies.push(
+        spyOn(yahoo, "quote").mockImplementation(async (symbol) => {
+            if (symbol === "BAD") throw new Error("not found")
+            return { symbol, shortName: `${symbol} Inc`, regularMarketPrice: 100, regularMarketChangePercent: -1.5 }
+        }),
+    )
+    mockChart({ quotes: [{ date: new Date("2024-01-02T00:00:00Z"), close: 99 }] })
+
+    const assets = await new MarketRepository().getAssets(["MSFT", "BAD", "AAPL"])
+
+    expect(assets.map((asset) => asset.symbol)).toEqual(["MSFT", "AAPL"])
+    expect(assets[0]).toMatchObject({ name: "MSFT Inc", price: 100, change24h: -1.5, volume24h: null, history: [{ price: 99 }] })
 })

@@ -30,6 +30,7 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
 - [Conventions communes](#conventions-communes)
 - [Auth](#auth) : `ALL /api/auth/{*path}`
 - [Market (proxy)](#market-proxy) : `GET /api/market/{search,details/:id,defaults}`
+- [Notifications (proxy)](#notifications-proxy) : `GET /api/notifications`, `GET /unread-count`, `GET /stream` (SSE), `POST /read-all`, `POST /:id/read`
 - [Portfolio](#portfolio) : `POST`, `GET`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
 - [Backtest](#backtest) : `POST`, `POST /preview`, `POST /:id/executions`, `GET /stats`, `POST /batch`, `GET /batch/:batchId`, `POST /batch/:batchId/starts`, `POST /batch/:batchId/executions`, `GET /compare`, `GET /:id`, `GET`
 - [Risque](#risque) : `GET /api/risk/:backtestId`, `PUT /api/risk/:backtestId/constraint`
@@ -38,7 +39,7 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
 ## Conventions communes
 
 - **Base** : `http://localhost:8000`. Le web appelle via `apiFetch(path)` (`apps/web/src/lib/api.ts`) avec `NEXT_PUBLIC_API_URL=http://localhost:8000/api` : `apiFetch("/backtest")` → `GET /api/backtest`. Cookies envoyés (`credentials: "include"`), CORS limité à `env.WEB_URL` (défaut `http://localhost:3000`, `env.ts`).
-- **Ordre d'enregistrement** (`index.ts`) : `helmet`, `cors`, `GET /health`, limiteur `/api/auth` + `authRouter`, `marketRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
+- **Ordre d'enregistrement** (`index.ts`) : `helmet`, `cors`, `GET /health`, limiteur `/api/auth` + `authRouter`, `marketRouter` et `notificationRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
 - **Santé** : `GET /health` (sans auth) → `200 { "status": "ok" }`, `503 { "status": "unavailable" }` si la base ne répond pas.
 - **Limites de débit** (par IP, fenêtre 60 s, en-têtes `RateLimit-*`) : `POST /api/auth/*` 30 requêtes (les `GET`, dont `get-session` appelé à chaque page, ne comptent pas) ; `POST /api/backtest` et `POST /api/backtest/:id/executions` 20 requêtes (les lectures et `POST /api/backtest/preview` ne comptent pas). Au-delà : `429`. Body JSON refusé au-delà de 100 ko (`413`).
 - **Auth** : `authMiddleware` lit la session better-auth depuis les en-têtes (cookie, ou `Authorization: Bearer` via le plugin `bearer`) et pose `req.userId`. Sans session : `401 { "error": "Unauthorized", "code": "UNAUTHORIZED" }`.
@@ -48,7 +49,7 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
   | --- | --- | --- |
   | `UNAUTHORIZED` | 401 | pas de session |
   | `ACCESS_DENIED` | 403 | ressource d'un autre utilisateur |
-  | `SERVICE_UNAVAILABLE` | 502 | market-service injoignable |
+  | `SERVICE_UNAVAILABLE` | 502 | market-service ou notification-service injoignable |
   | `INTERNAL_ERROR` | 500 | exception inattendue |
   | `INVALID_QUERY` | 400 | query invalide |
   | `INVALID_BACKTEST` | 400 | body de backtest invalide |
@@ -102,6 +103,18 @@ Les routes de liste (`GET /api/portfolio`, `GET /api/backtest`) suivent le contr
 - **Effets** : aucun.
 - **Appelant** : fonctions de `apps/web/src/features/market/api.ts` (détail dans `apps/market-service/API.md`).
 - **Source** : `routes/market/market.routes.ts`, `utils/proxy.ts`, `env.ts`.
+
+## Notifications (proxy)
+
+### GET /api/notifications · GET /api/notifications/unread-count · GET /api/notifications/stream · POST /api/notifications/read-all · POST /api/notifications/:id/read
+
+- **Auth** : session requise (`authMiddleware`), flux compris : sans session, `401`.
+- **Entrée** : requête relayée telle quelle (chemin complet, query) vers `env.NOTIFICATION_SERVICE_URL` (défaut `http://localhost:8002`, `env.ts`), avec `x-user-id` remplacé par `req.userId` et `x-internal-key` ajouté (même règle que Market). Query de la liste : `category` (`BACKTESTS` | `RISK`), `unread` (`true` | `false`), `page`, `pageSize`.
+- **Réponse** : statut et corps de notification-service, inchangés. `GET /api/notifications` → `NotificationList` ; `GET /unread-count` → `{ count }` ; `POST /read-all` et `POST /:id/read` → `204`. `GET /stream` → `text/event-stream` : `: connected` à l'ouverture, `: ping` toutes les 25 s, puis `event: notification` avec une `NotificationView` en JSON ; le web écoute l'événement nommé `notification` (`addEventListener`). Pas de rejeu à la reconnexion. Détail : voir [`apps/notification-service/API.md`](../notification-service/API.md). Liste blanche : toute autre route reçoit la 404 par défaut d'Express.
+- **Erreurs** : `401` → pas de session ; `404 NOTIFICATION_NOT_FOUND` → notification inconnue ou d'un autre utilisateur ; `502 { "error": "Service unavailable" }` → service injoignable ou sans réponse sous 10 s (`proxyTimeout: 10_000`). Le flux n'a pas de délai (`proxyTo(url, { stream: true })` : `proxyTimeout: 0`) ; il n'est pas mis en mémoire tampon.
+- **Effets** : aucun côté core-backend ; `read` et `read-all` modifient la base `notifications`.
+- **Appelant** : `apps/web/src/features/notifications/api.ts` et le flux de la zone `/app`.
+- **Source** : `routes/notification/notification.routes.ts`, `utils/proxy.ts`, `env.ts`.
 
 ## Portfolio
 
