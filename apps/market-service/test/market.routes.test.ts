@@ -9,6 +9,8 @@ import { startApp } from "@azimut/http/testing"
 const closes = spyOn(MarketService.prototype, "getDailyCloses").mockResolvedValue({ AAPL: [{ date: "2024-01-02", close: 185.64 }] })
 const dividends = spyOn(MarketService.prototype, "getDividends").mockResolvedValue({ AAPL: { currency: "USD", dividends: [] } })
 const search = spyOn(MarketService.prototype, "searchMarket").mockResolvedValue([])
+const details = spyOn(MarketService.prototype, "getMarketDetails").mockResolvedValue([])
+const defaults = spyOn(MarketService.prototype, "getDefaultsMarketAssets").mockResolvedValue({ data: [], count: 0, page: 1, pageSize: 10 } as never)
 
 let app: Awaited<ReturnType<typeof startApp>>
 beforeAll(async () => {
@@ -20,6 +22,8 @@ afterAll(async () => {
     closes.mockRestore()
     dividends.mockRestore()
     search.mockRestore()
+    details.mockRestore()
+    defaults.mockRestore()
 })
 
 const withKey = { [INTERNAL_KEY_HEADER]: env.INTERNAL_API_KEY }
@@ -66,4 +70,23 @@ test("GET /api/market/search trop court : 400 INVALID_QUERY, sinon 200", async (
     expect(tooShort.status).toBe(400)
     expect(((await tooShort.json()) as { issues: unknown[] }).issues).toHaveLength(1)
     expect((await app.request("/api/market/search?query=apple", { headers: withKey })).status).toBe(200)
+})
+
+test("GET /api/market/details/:id : période inconnue 400 INVALID_QUERY, sinon 200 avec l'id et la période", async () => {
+    const invalid = await app.request("/api/market/details/AAPL?period=2y", { headers: withKey })
+    expect(invalid.status).toBe(400)
+    expect(await invalid.json()).toMatchObject({ code: "INVALID_QUERY" })
+
+    const response = await app.request("/api/market/details/AAPL?period=1y", { headers: withKey })
+    expect(response.status).toBe(200)
+    expect(details).toHaveBeenCalledWith("AAPL", "1y")
+})
+
+test("GET /api/market/defaults : pagination invalide 400, sinon 200 avec la page demandée", async () => {
+    const invalid = await app.request("/api/market/defaults?page=0", { headers: withKey })
+    expect(invalid.status).toBe(400)
+
+    const response = await app.request("/api/market/defaults?page=2&pageSize=5", { headers: withKey })
+    expect(response.status).toBe(200)
+    expect(defaults).toHaveBeenCalledWith({ page: 2, pageSize: 5 })
 })
