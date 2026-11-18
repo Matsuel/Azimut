@@ -77,7 +77,9 @@ export function ResultDetails({ backtest }: { backtest: BacktestDetails }) {
                         </DetailSection>
                     </>
                 )}
+                {/* key : defaultOpen suit la présence du résultat, Base UI interdit de le changer sur un Collapsible monté */}
                 <DetailSection
+                    key={result ? "with-result" : "without-result"}
                     title={t("history")}
                     summary={t("historyCount", { count: executions.length })}
                     defaultOpen={!result}
