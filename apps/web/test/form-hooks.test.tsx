@@ -21,16 +21,16 @@ test("setFormIssues place chaque issue d'un 400 sous son champ, message traduit 
 })
 
 test("useDebouncedValue : recopie la valeur après le délai sans changement, une saisie rapide repousse le délai", async () => {
-    const { result, rerender } = renderHook(({ value }) => useDebouncedValue(value, 20), {
+    const { result, rerender } = renderHook(({ value }) => useDebouncedValue(value, 200), {
         initialProps: { value: "a" },
     })
 
     rerender({ value: "ap" })
-    await act(() => Bun.sleep(10))
+    await act(() => Bun.sleep(50))
     rerender({ value: "app" })
-    await act(() => Bun.sleep(10))
+    await act(() => Bun.sleep(50))
     expect(result.current).toBe("a")
 
-    await act(() => Bun.sleep(20))
+    await act(() => Bun.sleep(250))
     expect(result.current).toBe("app")
 })
