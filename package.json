@@ -12,7 +12,8 @@
         "dev:backtest": "bun run --cwd apps/backtest-engine index.ts",
         "dev:risk": "bun run --cwd apps/risk-engine index.ts",
         "dev:notification": "bun run --cwd apps/notification-service index.ts",
-        "verify": "bun .claude/skills/verify/verify.ts"
+        "verify": "bun .claude/skills/verify/verify.ts",
+        "e2e": "bun run --cwd apps/web e2e"
     },
     "devDependencies": {
         "concurrently": "^10.0.7"

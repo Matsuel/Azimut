@@ -13,6 +13,12 @@
 # testing
 /coverage
 
+# E2E (Playwright) : session de test, journaux des services, rapports
+/e2e/.auth/
+/e2e/.logs/
+/test-results/
+/playwright-report/
+
 # next.js
 /.next/
 /out/
