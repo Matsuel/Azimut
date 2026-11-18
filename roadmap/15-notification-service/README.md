@@ -1,10 +1,10 @@
 # 15 · Service de notification
 
-- **Statut** : Planifiée
+- **Statut** : Livrée
 - **Roadmap** : Mois 7 — remontée du COULD « Notifications » (2026-11-17) : service dédié, page et toaster ; le reste de la spec du README racine (préférences, e-mail, paper trading, rapports) reste COULD
-- **Période** : à fixer au démarrage de la feature
-- **Branche / PR** : `feat/notification-service` — PR à ouvrir
-- **Points** : 46 (MUST 46, SHOULD 0) — prévus
+- **Période** : 2026-11-17 → 2026-11-18
+- **Branche / PR** : `feat/notification-service` — PR à ouvrir (branche poussée)
+- **Points** : 46 (MUST 46, SHOULD 0) — prévus, réalisés identiques
 - **Maquettes** : `22 · Notifications` (node `303:6483`) et `22.1 · Toaster (notification reçue sur une autre page)` (node `303:7236`), section Figma `Feature 15 · Notifications (22)` (node `578:14658`). Réduites le 2026-11-17 au périmètre de la feature (voir « Écrans modifiés »)
 - **Écrans modifiés** : aucun. Le compteur de la sidebar est déjà dessiné sur les écrans (`Notifications` + badge) ; il n'est branché qu'au codage (T-12). Les cadres 22 et 22.1 sont des écrans neufs, retouchés en place : sans « Optimisation terminée », « Versement exécuté », « Rapport T3 disponible », sans onglets « Paper trading » et « Rapports », sans bouton « Préférences » ; 4 notifications, 2 non lues
 - **Dépend de** : 13 (contrainte de risque), 14 (projection). Les 4 types de notification viennent des backtests, du risque et de la projection : aucun autre prérequis.
@@ -50,7 +50,9 @@ Le README racine (section « Notifications », COULD) prévoyait un consumer dan
 
 ## Bilan
 
-À écrire à la clôture.
+- **Livré** : les 13 tâches (46 points). Contrat `notification.requested`, publication par core-backend après chaque transition gardée, `notification-service` (base `notifications`, enregistrement idempotent par `dedupKey`, routes internes, SSE par utilisateur, purge à 90 jours), relais `/api/notifications` dans core-backend, page Notifications, toaster et compteur de la sidebar. `bun run verify` sans échec ; `bun run e2e` : 12 parcours verts, dont `notifications.e2e.ts` (2026-11-18).
+- **Écarts** : points réalisés non mesurés séparément, repris des points prévus. Trois correctifs après coup : conformité aux maquettes 22 et 22.1 (`7b7644f`), écoute avant de rejoindre le groupe Kafka (`e03628e`), tests de lecture, compteur et purge (`dfa3db4`).
+- **Dette** : TD-44, pas d'outbox pour `notification.requested` (D7). Comparaison des écrans à Figma hors maquettes 22 et 22.1 non refaite ; `prisma` et `describeWithDb` existent aussi dans core-backend (avertissements de `verify`).
 
 ## Fichiers
 
