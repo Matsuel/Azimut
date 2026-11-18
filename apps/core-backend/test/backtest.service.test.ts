@@ -1,5 +1,5 @@
 import { beforeEach, expect, mock, test } from "bun:test"
-import type { BacktestStatus } from "../generated/prisma/client"
+import { Prisma, type BacktestStatus } from "../generated/prisma/client"
 import type { IBacktestRepository } from "../repositories/backtest.repository"
 
 // Producteur Kafka factice : aucune connexion ; `published` liste les messages envoyés, `failPublish` simule un broker en panne
@@ -441,4 +441,133 @@ test("hasDividendDetails : dividendes ou change à détailler, jamais sans résu
     expect(hasDividendDetails({ returnBreakdown: { ...breakdown, fx: null }, dividendTotal: decimal(0) })).toBe(false)
     expect(hasDividendDetails({ returnBreakdown: null, dividendTotal: decimal(12.5) })).toBe(false)
     expect(hasDividendDetails(null)).toBe(false)
+})
+
+// Backtest comparé : dernière exécution COMPLETED avec ses métriques (Decimal, ratios en fraction)
+const comparedOf = (id: string, overrides: Record<string, unknown> = {}, cagr: string | null = "0.08") =>
+    ({
+        id,
+        startDate: new Date("2020-01-01"),
+        endDate: new Date("2024-12-31"),
+        feeRate: new Prisma.Decimal("0.001"),
+        benchmarkSymbol: "SPY",
+        ...overrides,
+        executions: [
+            {
+                result: {
+                    cagr: cagr === null ? null : new Prisma.Decimal(cagr),
+                    volatility: new Prisma.Decimal("0.15"),
+                    sharpeRatio: new Prisma.Decimal("0.5"),
+                    maxDrawdown: new Prisma.Decimal("-0.2"),
+                    totalReturn: new Prisma.Decimal("0.4"),
+                },
+            },
+        ],
+    }) as never
+
+test("compare : écarts A − B des métriques, null si une valeur manque, homogène si période, frais et benchmark égaux", async () => {
+    const { repo } = fakeRepo({
+        countExecutionsByIds: async () => [
+            { id: "a", _count: { executions: 1 } },
+            { id: "b", _count: { executions: 2 } },
+        ] as never,
+        getComparedByIds: async () => [comparedOf("b", {}, null), comparedOf("a")],
+    })
+    const { service } = serviceWith(repo)
+
+    const comparison = await service.compare("u1", { ids: ["a", "b"] })
+
+    expect(comparison.a.id).toBe("a")
+    expect(comparison.deltas).toMatchObject({ cagr: null, volatility: 0, totalReturn: 0 })
+    expect(comparison.homogeneous).toBe(true)
+    expect(comparison.differences).toEqual([])
+})
+
+test("compare : liste les paramètres qui diffèrent dans l'ordre période, frais, benchmark", async () => {
+    const { repo } = fakeRepo({
+        countExecutionsByIds: async () => [
+            { id: "a", _count: { executions: 1 } },
+            { id: "b", _count: { executions: 1 } },
+        ] as never,
+        getComparedByIds: async () => [
+            comparedOf("a"),
+            comparedOf("b", { endDate: new Date("2023-12-31"), feeRate: new Prisma.Decimal("0.002"), benchmarkSymbol: null }, "0.05"),
+        ],
+    })
+    const { service } = serviceWith(repo)
+
+    const comparison = await service.compare("u1", { ids: ["a", "b"] })
+
+    expect(comparison.deltas.cagr).toBeCloseTo(0.03)
+    expect(comparison.homogeneous).toBe(false)
+    expect(comparison.differences).toEqual(["period", "feeRate", "benchmarkSymbol"])
+})
+
+test("compare : backtest absent ou d'un autre utilisateur (404), sans résultat terminé (400)", async () => {
+    const counts = [{ id: "a", _count: { executions: 0 } }]
+    const { repo } = fakeRepo({ countExecutionsByIds: async () => counts as never })
+    const { service } = serviceWith(repo)
+
+    expect(await service.compare("u1", { ids: ["a", "b"] }).catch((e) => e)).toMatchObject({ code: "BACKTEST_NO_RESULT", statusCode: 400 })
+    counts[0]!._count.executions = 1
+    expect(await service.compare("u1", { ids: ["a", "b"] }).catch((e) => e)).toMatchObject({ code: "BACKTEST_NOT_FOUND", statusCode: 404 })
+})
+
+test("getStats : compteurs par statut de la dernière exécution et taux en fraction, 0 sans backtest", async () => {
+    const { repo } = fakeRepo({
+        countByLatestStatus: async () => ({
+            total: 10,
+            byStatus: [
+                { status: "PENDING", count: 1 },
+                { status: "RUNNING", count: 2 },
+                { status: "COMPLETED", count: 5 },
+                { status: "FAILED", count: 2 },
+            ],
+        }) as never,
+    })
+    const { service } = serviceWith(repo)
+
+    expect(await service.getStats("u1")).toEqual({ total: 10, active: 3, completed: 5, failed: 2, completedRate: 0.5, failedRate: 0.2 })
+
+    const empty = serviceWith(fakeRepo({ countByLatestStatus: async () => ({ total: 0, byStatus: [] }) as never }).repo).service
+    expect(await empty.getStats("u1")).toMatchObject({ total: 0, completedRate: 0, failedRate: 0 })
+})
+
+test("getAll : « avec résultat » filtre sur les exécutions COMPLETED et renvoie la pagination demandée", async () => {
+    const calls: unknown[] = []
+    const { repo } = fakeRepo({
+        getAllByUserId: async (...args: unknown[]) => {
+            calls.push(args)
+            return { data: [], count: 0 }
+        },
+    } as never)
+    const { service } = serviceWith(repo)
+
+    expect(await service.getAll("u1", { page: 2, pageSize: 5, hasResult: true } as never)).toEqual({ data: [], count: 0, page: 2, pageSize: 5 } as never)
+    expect(calls).toEqual([["u1", { page: 2, pageSize: 5 }, { status: undefined, executionStatus: ["COMPLETED"] }]])
+})
+
+test("getById : ajoute hasDividendDetails et refuse le backtest d'un autre utilisateur", async () => {
+    const details = { ...(backtestOf("u1") as object), result: null }
+    const { repo } = fakeRepo({ getDetailsById: async () => details as never })
+    const { service } = serviceWith(repo)
+
+    expect(await service.getById("b1", "u1")).toMatchObject({ id: "b1", hasDividendDetails: false })
+    expect(await service.getById("b1", "autre").catch((e) => e)).toMatchObject({ statusCode: 403 })
+})
+
+test("preview : versements et rebalancements estimés sur la période, sans écrire ni publier", () => {
+    const { repo } = fakeRepo()
+    const { service } = serviceWith(repo)
+
+    const preview = service.preview("u1", {
+        start: new Date("2024-01-01"),
+        end: new Date("2024-03-31"),
+        investmentMode: "RECURRING",
+        rebalanceFrequency: "MONTHLY",
+    } as never)
+
+    expect(preview).toMatchObject({ contributionCount: 3, rebalanceCount: 2 })
+    expect(preview.dataSource).toBeTruthy()
+    expect(published).toEqual([])
 })
