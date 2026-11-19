@@ -14,7 +14,9 @@ Catalogue des routes internes de notification-service (port 8002, base PostgreSQ
 ## Conventions communes
 
 - **Chemin** : identique de bout en bout (web → core-backend → notification-service).
-- **Auth** : `x-internal-key` (valeur `INTERNAL_API_KEY`, posée par le proxy) **et** `x-user-id` sont exigés sur toutes les routes sauf `GET /health` → sinon `401 { "error": "Unauthorized", "code": "UNAUTHORIZED" }`. `userId` vient de `x-user-id` seulement, jamais du body ni de la query. `GET /health` → `200 { "status": "ok" }`. Port : `env.PORT` (défaut 8002).
+- **Auth** : `x-internal-key` (valeur `INTERNAL_API_KEY`, posée par le proxy) **et** `x-user-id` sont exigés sur toutes les routes sauf les sondes → sinon `401 { "error": "Unauthorized", "code": "UNAUTHORIZED" }`. `userId` vient de `x-user-id` seulement, jamais du body ni de la query.
+- **Sondes** (sans clé interne ni `x-user-id`, `registerProbes` de `@azimut/http`, enregistrées avant `internalAuthMiddleware`) : `GET /liveness` → toujours `200 { "status": "ok" }` ; `GET /readiness` → `200 { "status": "ok", "checks": { "database": "ok", "kafka": "ok" } }`, ou `503 { "status": "unavailable", "checks": { … } }` dès que la base `notifications` ne répond pas (`isDbConnected` de `utils/db.ts`) ou que le consumer n'a pas rejoint son groupe (`KafkaConsumer.isReady()`, `"down"`). Lu par core-backend (page Monitoring) et Kubernetes.
+- **Port** : `env.PORT` (défaut 8002).
 - **Erreurs** : `AppError` → `{ "error": "<message anglais>", "code": "<CODE>", ...data }` avec son statut ; toute autre exception → `500 { "error": "Internal server error", "code": "INTERNAL_ERROR" }`.
 - **Types** : `NotificationView`, `NotificationList`, `NotificationCounts`, `NOTIFICATION_TYPES`, `NOTIFICATION_CATEGORIES` dans `@azimut/contracts` (`src/notification.ts`) ; entrées zod du service dans `interfaces/notification.interface.ts`. Dates ISO 8601. **Aucun texte rendu** : le web traduit `type` et `params`.
 - **Isolation** : une notification n'est visible que de son propriétaire ; l'identifiant d'une autre personne répond `404 NOTIFICATION_NOT_FOUND`.
