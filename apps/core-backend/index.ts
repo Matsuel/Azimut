@@ -1,10 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { errorMiddleware, registerProbes } from "@azimut/http";
+import { errorMiddleware, kafkaCheck, registerProbes } from "@azimut/http";
 import { authRateLimit, backtestCreateRateLimit } from './middleware/rate-limit.middleware';
 import { dbHealthCheck, isDbConnected } from './utils/db';
-import { readinessChecks } from './utils/readiness';
 import authRouter from './routes/auth';
 import portfolioRouter from './routes/portfolio';
 import marketRouter from './routes/market';
@@ -33,7 +32,7 @@ const app = express();
 app.set('trust proxy', env.TRUST_PROXY);
 
 // Sondes Kubernetes, avant helmet et les limiteurs : le consumer et le producer ne sont prêts qu'une fois connectés à Kafka
-registerProbes(app, readinessChecks(isDbConnected, [consumer, producer]));
+registerProbes(app, [{ name: 'database', check: isDbConnected }, kafkaCheck([consumer, producer])]);
 
 app.use(helmet());
 

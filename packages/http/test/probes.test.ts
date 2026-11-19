@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
 import express from "express"
 import type { Server } from "node:http"
-import { registerProbes, runReadiness, startProbeServer, type ProbeCheck } from "../src"
+import { kafkaCheck, PROBE_CHECK_TIMEOUT_MS, registerProbes, runReadiness, startProbeServer, type ProbeCheck } from "../src"
 
 test("runReadiness : tous les contrôles OK → 200 ok", async () => {
     const result = await runReadiness([
@@ -87,4 +87,24 @@ test("startProbeServer : port 0, les deux sondes répondent, 404 ailleurs", asyn
     } finally {
         await probes.close()
     }
+})
+
+test("runReadiness : un contrôle qui ne répond pas → down après PROBE_CHECK_TIMEOUT_MS, sans pendre la sonde", async () => {
+    const started = Date.now()
+    const result = await runReadiness([
+        { name: "database", check: () => new Promise<boolean>(() => {}) },
+        { name: "kafka", check: () => true },
+    ])
+    expect(result).toEqual({ httpStatus: 503, body: { status: "unavailable", checks: { database: "down", kafka: "ok" } } })
+    expect(Date.now() - started).toBeLessThan(PROBE_CHECK_TIMEOUT_MS + 500)
+})
+
+test("kafkaCheck : ok seulement si tous les clients sont prêts, état relu à chaque appel", async () => {
+    const consumer = { ready: false, isReady() { return this.ready } }
+    const producer = { isReady: () => true }
+    const check = kafkaCheck([consumer, producer])
+    expect(check.name).toBe("kafka")
+    expect(await check.check()).toBe(false)
+    consumer.ready = true
+    expect(await check.check()).toBe(true)
 })

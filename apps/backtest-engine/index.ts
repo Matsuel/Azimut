@@ -4,12 +4,11 @@ import {
     KafkaProducer,
 } from "@azimut/kafka";
 import { BACKTEST_TOPICS } from "@azimut/contracts";
-import { startProbeServer } from "@azimut/http";
+import { kafkaCheck, startProbeServer } from "@azimut/http";
 import { Logger, onShutdown } from "@azimut/utils";
 import BacktestConsumer from "./consumers/backtest.consumer";
 import BacktestPublisher from "./publishers/backtest.publisher";
 import BacktestService from "./services/backtest.service";
-import { kafkaProbeChecks } from "./probes";
 import { env } from "./env";
 
 const logger = Logger.here();
@@ -28,7 +27,7 @@ const backtestConsumer = new BacktestConsumer(
 
 async function main(): Promise<void> {
     // Les sondes écoutent avant Kafka : la liveness répond pendant l'entrée dans le groupe, qui peut durer des dizaines de secondes
-    const probes = await startProbeServer(env.HEALTH_PORT, kafkaProbeChecks(consumer, producer));
+    const probes = await startProbeServer(env.HEALTH_PORT, [kafkaCheck([consumer, producer])]);
     logger.info(`Probes are listening on port ${probes.port}`);
 
     await client.ensureTopics(Object.values(BACKTEST_TOPICS));

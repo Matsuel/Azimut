@@ -10,7 +10,6 @@ S'il manque une donnée pour calculer, ajoute-la au contrat `backtest.requested`
 
 ```
 env.ts             variables validées par zod (MARKET_SERVICE_URL, INTERNAL_API_KEY, HEALTH_PORT)
-probes.ts          kafkaProbeChecks : contrôles de /readiness (consumer et producer prêts)
 index.ts           bootstrap : instancie Kafka, câble publisher → service → consumer, abonne. Aucune logique.
 consumers/         <domaine>.consumer.ts : valide l'événement (zod), appelle le service    (≈ controller)
 services/          <domaine>.service.ts : orchestre repository + engine + publisher          (≈ service)
@@ -56,7 +55,7 @@ Kafka = at-least-once : un `backtest.requested` rejoué republie ses événement
 Serveur `node:http` (`startProbeServer` de `@azimut/http`) sur `HEALTH_PORT` (défaut **8003**), démarré **avant** la connexion à Kafka et fermé en dernier par `onShutdown` :
 
 - `GET /liveness` : toujours `200 { "status": "ok" }`, aucune dépendance contrôlée.
-- `GET /readiness` : `200` ou `503` avec `{ "status", "checks": { "kafka" } }` ; `kafka` vaut `ok` quand le consumer a rejoint son groupe **et** que le producer est connecté (`kafkaProbeChecks`, `probes.ts`).
+- `GET /readiness` : `200` ou `503` avec `{ "status", "checks": { "kafka" } }` ; `kafka` vaut `ok` quand le consumer a rejoint son groupe **et** que le producer est connecté (`kafkaCheck` de `@azimut/http`).
 
 ## Commandes
 

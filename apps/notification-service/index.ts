@@ -1,5 +1,5 @@
 import express from "express";
-import { errorMiddleware, registerProbes } from "@azimut/http";
+import { errorMiddleware, kafkaCheck, registerProbes } from "@azimut/http";
 import { KafkaClient, KafkaConsumer } from "@azimut/kafka";
 import { NOTIFICATION_TOPICS } from "@azimut/contracts";
 import { Logger, onShutdown } from "@azimut/utils";
@@ -28,7 +28,7 @@ app.use(express.json());
 // Sondes sans clé interne (lues par core-backend et Kubernetes) : prêt quand la base `notifications` répond et que le consumer a rejoint son groupe (D3, D4)
 registerProbes(app, [
     { name: "database", check: isDbConnected },
-    { name: "kafka", check: () => consumer.isReady() },
+    kafkaCheck([consumer]),
 ]);
 
 app.use(internalAuthMiddleware);

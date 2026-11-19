@@ -8,7 +8,6 @@ Risque = rendements journaliers des actifs en euros (change inclus), pondérés 
 
 ```
 env.ts             variables validées par zod (MARKET_SERVICE_URL, INTERNAL_API_KEY, HEALTH_PORT)
-probes.ts          kafkaProbeChecks : contrôles de /readiness (consumer et producer prêts)
 index.ts           bootstrap : câble publisher → service → consumer, abonne. Aucune logique.
 consumers/         risk.consumer.ts : valide backtest.completed (zod), appelle le service
 services/          risk.service.ts : charge les cours, convertit en euros, appelle les engines, publie risk.completed puis projection.completed
@@ -30,7 +29,7 @@ test/              <sujet>.test.ts
 Serveur `node:http` (`startProbeServer` de `@azimut/http`) sur `HEALTH_PORT` (défaut **8004**), démarré **avant** la connexion à Kafka et fermé en dernier par `onShutdown` :
 
 - `GET /liveness` : toujours `200 { "status": "ok" }`, aucune dépendance contrôlée.
-- `GET /readiness` : `200` ou `503` avec `{ "status", "checks": { "kafka" } }` ; `kafka` vaut `ok` quand le consumer a rejoint son groupe **et** que le producer est connecté (`kafkaProbeChecks`, `probes.ts`).
+- `GET /readiness` : `200` ou `503` avec `{ "status", "checks": { "kafka" } }` ; `kafka` vaut `ok` quand le consumer a rejoint son groupe **et** que le producer est connecté (`kafkaCheck` de `@azimut/http`).
 
 ## Commandes
 
