@@ -67,8 +67,9 @@ flowchart LR
 - **Fichiers** : `packages/contracts/src/monitoring.ts`, `packages/contracts/src/index.ts`
 
 Critères d’acceptation :
-- [ ] Schéma zod de la réponse d'une sonde : `status` (`ok` pour la liveness ; `ok` / `unavailable` pour la readiness) et `checks` optionnel (`database`, `kafka` : `"ok"` ou `"down"`).
+- [ ] Schéma zod de la réponse d'une sonde : `status` (`ok` pour la liveness ; `ok` / `unavailable` pour la readiness) et `checks` optionnel (`database`, `kafka`, `provider` : `"ok"` ou `"down"`).
 - [ ] Schéma d'une ligne de la page : `service`, `state` (`up` / `degraded` / `down`), `checks`, `latencyMs` (unité commentée : millisecondes), `checkedAt`.
+- [ ] Schéma de la réponse de la page : `services` (lignes) et `summary` (`total`, `up`, `degraded`, `down`, `downServices`) (D9).
 - [ ] Liste des services surveillés exportée une seule fois ; types dérivés de zod, jamais recopiés.
 
 ### T-02 · Helpers de sondes dans `packages/http`
@@ -110,7 +111,7 @@ Critères d’acceptation :
 
 Critères d’acceptation :
 - [ ] `GET /health` est supprimé des deux services ; `/liveness` et `/readiness` sont enregistrés avant `internalAuthMiddleware`, donc sans clé interne.
-- [ ] `market-service` : readiness sans contrôle (toujours `200` une fois démarré) ; le fournisseur Yahoo n'est jamais sondé (D3).
+- [ ] `market-service` : readiness = fournisseur Yahoo (`provider`), requête légère sur un symbole fixe, délai 1,5 s, résultat gardé 60 s dans `TtlCache` (D3, D10) ; test du contrôle (succès, échec, délai, cache).
 - [ ] `notification-service` : readiness = base `notifications` + consumer Kafka.
 - [ ] Le test d'authentification interne remplace `/health` par les deux nouvelles routes ; `API.md` et `AGENTS.md` des deux services à jour.
 
@@ -148,6 +149,7 @@ Critères d’acceptation :
 - [ ] Les URL de sonde des cinq services viennent de `env.ts` (`MARKET_SERVICE_URL`, `NOTIFICATION_SERVICE_URL` existantes ; `BACKTEST_ENGINE_HEALTH_URL`, `RISK_ENGINE_HEALTH_URL` ajoutées) ; core-backend se sonde lui-même sans appel réseau.
 - [ ] Appels en parallèle, délai de 2 s par service (constante), un service lent ne retarde pas les autres.
 - [ ] États : `200` → `up`, `503` → `degraded` avec `checks` repris de la réponse, délai dépassé ou connexion refusée → `down` ; `latencyMs` mesuré ; réponse non conforme au contrat → `down`.
+- [ ] Synthèse `summary` calculée ici (D9) : `total`, `up`, `degraded`, `down`, `downServices` (noms dans l'ordre des services surveillés).
 - [ ] Aucune dépendance à `prisma`, `req` ou `res` ; tests avec un `fetch` simulé : tous `up`, un `degraded`, un `down` par délai, un `down` par refus.
 
 ### T-09 · Route `GET /api/admin/monitoring/services`
@@ -166,8 +168,8 @@ Critères d’acceptation :
 - **Fichiers** : Figma `Trading` : écran `09 · Monitoring` (node `22:1954`), copie `09 · Monitoring · à modifier (F16)` dans la section `Feature 16 · Monitoring`
 
 Critères d’acceptation :
-- [ ] La copie ne garde que le tableau « Services » : lignes `core-backend`, `market-service`, `notification-service`, `backtest-engine`, `risk-engine` ; colonnes Service, Statut (`up` / `degraded` / `down`), Dépendances (base, Kafka), Latence, Dernière vérification.
-- [ ] États `degraded` et `down` dessinés ; état vide et chargement.
+- [ ] La copie ne garde que les quatre cartes de synthèse et le tableau « Services » : lignes `core-backend`, `market-service`, `notification-service`, `backtest-engine`, `risk-engine` ; colonnes Service, Statut (`up` / `degraded` / `down`), Dépendances (base, Kafka, Yahoo), Latence, Dernière vérification.
+- [ ] États `degraded` et `down` dessinés ; états chargement et erreur de l'appel dessinés (D11).
 - [ ] Validée par l'utilisateur avant T-11 ; l'original (section Feature 04) reste intact jusqu'au codage.
 
 ### T-11 · Page Monitoring : tableau d'état, rafraîchissement 15 s
@@ -178,7 +180,7 @@ Critères d’acceptation :
 Critères d’acceptation :
 - [ ] Écran conforme à la copie validée en T-10 ; primitives shadcn (`Table`, `Badge`, `Card`), aucun HTML brut sans raison.
 - [ ] Rafraîchissement toutes les 15 s (constante nommée), indicateur de chargement et d'erreur de l'appel lui-même.
-- [ ] Le web n'interprète pas les sondes : il affiche `state`, `checks`, `latencyMs`, `checkedAt` reçus.
+- [ ] Le web n'interprète pas les sondes : il affiche `state`, `checks`, `latencyMs`, `checkedAt` et `summary` reçus, sans compter.
 - [ ] Textes dans les dictionnaires FR et EN, locale non codée en dur ; appel via `api.ts`.
 - [ ] `COMPONENTS.md` mis à jour ; `bunx tsc --noEmit` et `bun run lint` passent.
 - [ ] Avec les cinq services lancés, les cinq lignes sont `up` ; en arrêtant Kafka, les services concernés passent `degraded`.

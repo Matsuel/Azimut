@@ -25,13 +25,15 @@
 - Colonne « Inst. » (nombre de répliques) : Kubernetes (24).
 - Déclaration des probes dans les charts Helm (24, qui consomme les routes livrées ici).
 
-## Décisions à valider
+## Décisions (validées le 2026-11-19)
 
 | # | Sujet | Proposition | Raison |
 | --- | --- | --- | --- |
 | D1 | Routes | `GET /liveness` et `GET /readiness` à la racine, sans auth, sur les cinq services ; `/health` supprimé (rupture, `e2e` et docs mis à jour) | Noms demandés ; une seule route de santé par service. |
 | D2 | Contenu | Liveness toujours `200`, sans dépendance ; readiness `200` / `503` avec `checks` | Une liveness qui dépend de la base ferait redémarrer le pod pour rien. |
-| D3 | Dépendances de la readiness | core-backend : base + Kafka ; notification-service : base + Kafka ; engines : Kafka ; market-service : aucune (Yahoo exclu) | Un fournisseur externe instable ne retire pas le service du trafic. |
+| D3 | Dépendances de la readiness | core-backend : base + Kafka ; notification-service : base + Kafka ; engines : Kafka ; market-service : fournisseur Yahoo | Savoir si Yahoo répond (modifiée le 2026-11-19). |
+| D9 | Synthèse | `summary` calculé par core-backend (compteurs, services hors ligne) | Cartes de la maquette = totaux. |
+| D10 | Contrôle de Yahoo | Requête légère, délai 1,5 s, résultat gardé 60 s | Pas d'appel au fournisseur à chaque sonde. |
 | D4 | Prêt côté Kafka | Consumer prêt après `GROUP_JOIN`, non prêt après `CRASH` / `STOP` / `DISCONNECT` | L'entrée dans le groupe peut durer des dizaines de secondes. |
 | D5 | Workers | `HEALTH_PORT` : 8003 (`backtest-engine`), 8004 (`risk-engine`), serveur `node:http` | Pas d'Express dans les workers. |
 | D6 | État affiché | `up` (`200`), `degraded` (`503`), `down` (délai de 2 s ou refus), calculé par core-backend | Le web ne calcule pas de valeur métier. |
@@ -51,6 +53,7 @@
 Critères d’acceptation :
 - [ ] Les cinq services (`core-backend`, `market-service`, `notification-service`, `backtest-engine`, `risk-engine`) répondent `200 { "status": "ok" }` sur `/liveness`, sans clé interne ni session.
 - [ ] `/readiness` répond `200` quand les dépendances de la décision D3 sont prêtes, sinon `503` avec `checks` indiquant laquelle est en panne (`"ok"` ou `"down"`).
+- [ ] Quand Yahoo ne répond pas, la readiness de `market-service` passe à `503` avec `provider: down` ; le fournisseur est interrogé au plus une fois par minute par les sondes.
 - [ ] Sans broker Kafka, la readiness de `core-backend`, `notification-service`, `backtest-engine` et `risk-engine` passe à `503` ; la liveness reste à `200`.
 - [ ] Les workers répondent sur `HEALTH_PORT` alors qu'ils n'écoutaient aucun port avant.
 - [ ] `GET /health` n'existe plus nulle part ; `API.md`, `AGENTS.md` et `apps/web/e2e/fake-market.ts` sont à jour.
@@ -69,7 +72,8 @@ Tâches : T-01, T-02, T-03, T-04, T-05, T-06 (détail dans `TASKS.md`).
 Critères d’acceptation :
 - [ ] `GET /api/admin/monitoring/services` renvoie `401` sans session, `403` pour un compte non administrateur, et pour un administrateur une ligne par service : nom, état (`up` / `degraded` / `down`), dépendances, latence en millisecondes, horodatage de la vérification.
 - [ ] Un service arrêté apparaît `down` sans bloquer la réponse au-delà de 2 s ; un service dont la base est coupée apparaît `degraded` avec `database: down`.
-- [ ] La page Monitoring (maquette `09`, réduite à son tableau « Services ») affiche ces lignes, se rafraîchit toutes les 15 s et ne calcule aucun état.
+- [ ] La réponse porte une synthèse (services disponibles sur le total, dégradés, hors ligne avec leurs noms) calculée par core-backend.
+- [ ] La page Monitoring (copie `09 · Monitoring · à modifier (F16)` : quatre cartes de synthèse et tableau « Services ») affiche ces valeurs, se rafraîchit toutes les 15 s et ne calcule aucun état.
 - [ ] Titres, libellés et états sont dans `messages/fr.json` et `messages/en.json`.
 - [ ] Un compte non administrateur ne voit ni l'entrée de sidebar ni la page (redirection existante, feature 04).
 
