@@ -20,7 +20,7 @@ routes/<domaine>/   →  controller/  →  services/  →  repositories/  →  p
 | `interfaces/` | Schémas zod d'entrée et types/DTO du domaine (`<domaine>.interface.ts`). |
 | `constants/` | Constantes métier (`<domaine>.constants.ts`) : statuts, valeurs fixes. |
 | `errors/` | Absent : les erreurs (`AppError` et sous-classes par statut) viennent de `@azimut/http`. |
-| `middleware/` | `auth`, `admin` (`requireAdmin`, monté après `authMiddleware`), `error`. |
+| `middleware/` | `auth`, `admin` (`requireAdmin`, monté après `freshAuthMiddleware` : session relue sans cache, un rôle retiré s'applique aussitôt), `error`. |
 | `utils/` | Helpers techniques (`db`, `proxyTo`). `RouteDescriptor`, `registerRoutes` et `errorMiddleware` viennent de `@azimut/http`. |
 | `lib/`, `types/` | Config better-auth, `kafkaClient`/`producer`/`consumer` (`lib/kafka.ts`), augmentations Express. |
 | `prisma/`, `generated/` | Schéma et migrations ; `generated/` ne s'édite jamais. |

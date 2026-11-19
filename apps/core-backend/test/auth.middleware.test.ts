@@ -27,6 +27,14 @@ test("une session valide pose userId et userRole et laisse passer", async () => 
     expect(calls).toEqual([undefined])
 })
 
+test("authMiddleware garde le cache de session (seules les routes admin le contournent)", async () => {
+    getSession.mockResolvedValue({ user: { id: "u1", role: "user" } } as never)
+
+    await run()
+
+    expect(getSession.mock.calls[0]?.[0]).toMatchObject({ query: undefined })
+})
+
 test("sans session : UnauthorizedError, userId non posé", async () => {
     getSession.mockResolvedValue(null as never)
 

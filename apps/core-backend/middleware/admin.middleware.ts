@@ -3,7 +3,7 @@ import { ForbiddenError, UnauthorizedError } from "@azimut/http";
 import { hasAdminRole } from "@azimut/utils";
 
 /**
- * Réserve la route aux administrateurs. Se monte après `authMiddleware`, seul lecteur de la session, qui pose `userId` et `userRole` :
+ * Réserve la route aux administrateurs. Se monte après `freshAuthMiddleware` (session relue sans cache, voir `auth.middleware.ts`), qui pose `userId` et `userRole` :
  * sans `userId` → `UnauthorizedError` (401), rôle sans `admin` → `ForbiddenError` (403).
  */
 const requireAdmin = (req: Request, _res: Response, next: NextFunction) => {

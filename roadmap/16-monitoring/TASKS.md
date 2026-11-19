@@ -158,7 +158,7 @@ Critères d’acceptation :
 - **Fichiers** : `apps/core-backend/controller/monitoring.controller.ts`, `apps/core-backend/routes/monitoring/`, `apps/core-backend/index.ts`, `apps/core-backend/API.md`
 
 Critères d’acceptation :
-- [ ] Route protégée par `authMiddleware` puis `requireAdmin` ; réponse validée par le schéma du contrat.
+- [ ] Route protégée par `freshAuthMiddleware` puis `requireAdmin` (session sans cache, TD-49) ; réponse validée par le schéma du contrat.
 - [ ] Controller sans logique métier (délègue à `monitoring.service`).
 - [ ] `API.md` : route, codes `401` / `403`, forme de la réponse.
 
