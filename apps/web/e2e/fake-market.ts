@@ -117,7 +117,9 @@ Bun.serve({
     port: PORTS.market,
     fetch(request) {
         const url = new URL(request.url)
-        if (url.pathname === "/health") return Response.json({ status: "ok" })
+        // Sondes sans clé interne, comme le vrai service : fournisseur toujours joignable (cours fixes)
+        if (url.pathname === "/liveness") return Response.json({ status: "ok" })
+        if (url.pathname === "/readiness") return Response.json({ status: "ok", checks: { provider: "ok" } })
         // Même garde que le vrai service : seuls core-backend et les engines l'appellent
         if (request.headers.get(INTERNAL_KEY_HEADER) !== INTERNAL_API_KEY) {
             return Response.json({ error: "Unauthorized", code: "UNAUTHORIZED" }, { status: 401 })

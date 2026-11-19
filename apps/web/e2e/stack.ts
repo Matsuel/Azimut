@@ -33,6 +33,8 @@ const coreEnv = {
     WEB_URL: URLS.web,
     MARKET_SERVICE_URL: URLS.market,
     NOTIFICATION_SERVICE_URL: URLS.notification,
+    BACKTEST_ENGINE_HEALTH_URL: URLS.backtestProbes,
+    RISK_ENGINE_HEALTH_URL: URLS.riskProbes,
 }
 const notificationEnv = {
     ...base,
@@ -40,7 +42,12 @@ const notificationEnv = {
     DATABASE_URL: databaseUrl("notifications_e2e"),
     PORT: String(PORTS.notification),
 }
-const engineEnv = (clientId: string) => ({ ...base, ...kafka(clientId), MARKET_SERVICE_URL: URLS.market })
+const engineEnv = (clientId: string, healthPort: number) => ({
+    ...base,
+    ...kafka(clientId),
+    MARKET_SERVICE_URL: URLS.market,
+    HEALTH_PORT: String(healthPort),
+})
 const webEnv = { ...parentEnv, NEXT_PUBLIC_API_URL: URLS.api }
 
 type Service = { name: string; cwd: string; cmd: string[]; env: Record<string, string | undefined>; ready: string }
@@ -58,14 +65,14 @@ const services: Service[] = [
         name: "backtest-engine",
         cwd: join(apps, "backtest-engine"),
         cmd: ["bun", "index.ts"],
-        env: engineEnv("backtest-engine"),
+        env: engineEnv("backtest-engine", PORTS.backtestProbes),
         ready: JOINED,
     },
     {
         name: "risk-engine",
         cwd: join(apps, "risk-engine"),
         cmd: ["bun", "index.ts"],
-        env: engineEnv("risk-engine"),
+        env: engineEnv("risk-engine", PORTS.riskProbes),
         ready: JOINED,
     },
     {
