@@ -12,8 +12,8 @@
 | T-04 | Sondes de `core-backend` (remplace `/health`) | US-01 | core-backend | MUST | 2 | T-02, T-03 | `adde7cf`, `e567556` |
 | T-05 | Sondes de `market-service` et `notification-service` | US-01 | services | MUST | 3 | T-02, T-03 | `5b76e39`, `0257c8b` |
 | T-06 | Serveur de sondes des workers `backtest-engine` et `risk-engine` | US-01 | engines | MUST | 3 | T-02, T-03 | `89d63ed`, `e567556` |
-| T-07 | Middleware `requireAdmin` | US-02 | core-backend | MUST | 2 | — | `a95957e` |
-| T-08 | `monitoring.service` : interroger les services et calculer l'état | US-02 | core-backend | MUST | 5 | T-01, T-07 | — |
+| T-07 | Middleware `requireAdmin` | US-02 | core-backend | MUST | 2 | — | `a95957e`, `226c8de`, `3f93cfd` |
+| T-08 | `monitoring.service` : interroger les services et calculer l'état | US-02 | core-backend | MUST | 5 | T-01, T-07 | `9480292` |
 | T-09 | Route `GET /api/admin/monitoring/services` | US-02 | core-backend | MUST | 2 | T-08 | — |
 | T-10 | Maquette : écran 09 réduit aux statuts | US-02 | maquette | MUST | 2 | — | `3a5b0a4`, `acfa3af` (Figma) |
 | T-11 | Page Monitoring : tableau d'état, rafraîchissement 15 s | US-02 | web | MUST | 5 | T-04, T-05, T-06, T-09, T-10 | — |
@@ -142,7 +142,7 @@ Critères d’acceptation :
 
 ### T-08 · `monitoring.service` : interroger les services et calculer l'état
 
-- **US** : US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-01, T-07 · **Commits** : —
+- **US** : US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-01, T-07 · **Commits** : `9480292`
 - **Fichiers** : `apps/core-backend/services/monitoring.service.ts`, `apps/core-backend/env.ts`, `apps/core-backend/constants/monitoring.constants.ts`, `apps/core-backend/test/`
 
 Critères d’acceptation :
