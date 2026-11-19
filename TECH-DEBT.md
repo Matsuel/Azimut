@@ -21,7 +21,6 @@ Registre de la dette connue, à corriger avant qu'elle ne grossisse. La règle q
 | TD-45 | moyenne | web | **Échec de connexion ou d'inscription : rejet non géré.** `onSubmit` de `LoginForm` et `RegisterForm` attend `mutateAsync` sans `try/catch` : des identifiants refusés laissent une promesse rejetée remonter de `handleSubmit` (erreur non gérée dans la console, et dans les tests). Le message d'erreur s'affiche probablement via `error` de la mutation (non vérifié par un test). Les formulaires de backtest, eux, attrapent l'erreur. | `apps/web/src/features/auth/login-form.tsx:28`, `register-form.tsx:26` | `try/catch` autour de `mutateAsync` comme `new-backtest-form.tsx`, puis test « identifiants refusés » dans `test/login-form.test.tsx`. | S |
 | TD-46 | basse | packages/kafka, core-backend | **Tests de `packages/kafka` rangés dans core-backend.** `KafkaConsumer` et `kafkaLogCreator` sont testés par `apps/core-backend/test/kafka.consumer.test.ts` et `kafka.logger.test.ts` : le package n'a pas sa propre couverture, et `bun test` dans `packages/kafka` ne les lance pas. `packages/utils` : `periodKey`, `businessDays` et `estimateSchedule` ne sont testés que depuis `apps/backtest-engine/test/`. Non testés hors base : `utils/db.ts` (délégués Prisma non espionnables) et la route `/api/auth/*` (câblage better-auth). | `apps/core-backend/test/kafka.*.test.ts` | Déplacer ces tests dans `packages/kafka/test/` et `packages/utils/test/` ; tester `isDbConnected` sur `trading_test`. | S |
 | TD-47 | basse | web | **Garde inatteignable dans `safeRedirect`.** `redirect.startsWith("//")` ne peut pas être vrai quand `redirect` commence par `/app` (test précédent) : code mort, révélé par un mutant qui survit. Pas de faille (le premier test refuse déjà `//hôte`). | `apps/web/src/lib/routes.ts:38` | Retirer la condition, ou la garder avec un commentaire si `prefix` peut devenir vide. | S |
-| TD-49 | basse | core-backend | **Retrait du rôle admin effectif après 5 min.** `session.cookieCache` (`maxAge` 5 min) fait lire à `authMiddleware` un rôle mis en cache : un administrateur rétrogradé garde l'accès aux routes `requireAdmin` jusqu'à expiration du cache. | `apps/core-backend/lib/auth.ts:24` | Lire la session sans cache pour les routes admin (`disableCookieCache`) ou révoquer les sessions au changement de rôle. | S |
 
 **Hors périmètre de cette passe** : TD-03 (CI, image, gabarit d'env). **Gardée volontairement** : TD-23 (cache des cours d'un backtest) tant que la provenance (`fetchedAt`) ne peut pas être publiée exacte.
 
@@ -29,6 +28,7 @@ Registre de la dette connue, à corriger avant qu'elle ne grossisse. La règle q
 
 | ID | Fermée le | Commit |
 | --- | --- | --- |
+| TD-49 | 2026-11-19 | `3f93cfd` |
 | TD-48 | 2026-11-19 | `226c8de` |
 | TD-51 | 2026-11-19 | `e567556` |
 | TD-50 | 2026-11-19 | `e567556` |
