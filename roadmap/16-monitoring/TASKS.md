@@ -6,16 +6,16 @@
 
 | Tâche | Titre | US | Couche | Priorité | Points | Dépend de | Commits |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T-01 | Contrat `monitoring.ts` | US-01 | contracts | MUST | 2 | — | — |
-| T-02 | Helpers de sondes dans `packages/http` | US-01 | http | MUST | 3 | T-01 | — |
-| T-03 | `isReady()` sur `KafkaConsumer` et `KafkaProducer` | US-01 | kafka | MUST | 3 | — | — |
-| T-04 | Sondes de `core-backend` (remplace `/health`) | US-01 | core-backend | MUST | 2 | T-02, T-03 | — |
-| T-05 | Sondes de `market-service` et `notification-service` | US-01 | services | MUST | 3 | T-02, T-03 | — |
-| T-06 | Serveur de sondes des workers `backtest-engine` et `risk-engine` | US-01 | engines | MUST | 3 | T-02, T-03 | — |
-| T-07 | Middleware `requireAdmin` | US-02 | core-backend | MUST | 2 | — | — |
+| T-01 | Contrat `monitoring.ts` | US-01 | contracts | MUST | 2 | — | `bfb311c` |
+| T-02 | Helpers de sondes dans `packages/http` | US-01 | http | MUST | 3 | T-01 | `1b320ab`, `e567556` |
+| T-03 | `isReady()` sur `KafkaConsumer` et `KafkaProducer` | US-01 | kafka | MUST | 3 | — | `2504884` |
+| T-04 | Sondes de `core-backend` (remplace `/health`) | US-01 | core-backend | MUST | 2 | T-02, T-03 | `adde7cf`, `e567556` |
+| T-05 | Sondes de `market-service` et `notification-service` | US-01 | services | MUST | 3 | T-02, T-03 | `5b76e39`, `0257c8b` |
+| T-06 | Serveur de sondes des workers `backtest-engine` et `risk-engine` | US-01 | engines | MUST | 3 | T-02, T-03 | `89d63ed`, `e567556` |
+| T-07 | Middleware `requireAdmin` | US-02 | core-backend | MUST | 2 | — | `a95957e` |
 | T-08 | `monitoring.service` : interroger les services et calculer l'état | US-02 | core-backend | MUST | 5 | T-01, T-07 | — |
 | T-09 | Route `GET /api/admin/monitoring/services` | US-02 | core-backend | MUST | 2 | T-08 | — |
-| T-10 | Maquette : écran 09 réduit aux statuts | US-02 | maquette | MUST | 2 | — | — |
+| T-10 | Maquette : écran 09 réduit aux statuts | US-02 | maquette | MUST | 2 | — | `3a5b0a4`, `acfa3af` (Figma) |
 | T-11 | Page Monitoring : tableau d'état, rafraîchissement 15 s | US-02 | web | MUST | 5 | T-04, T-05, T-06, T-09, T-10 | — |
 | T-12 | Raccorder Kubernetes, `AGENTS.md`, index et README | US-03 | documentation | MUST | 1 | T-04, T-05, T-06 | — |
 | T-13 | Test e2e de la page Monitoring | US-02 | web | SHOULD | 2 | T-11 | — |
@@ -63,7 +63,7 @@ flowchart LR
 
 ### T-01 · Contrat `monitoring.ts`
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : `bfb311c`
 - **Fichiers** : `packages/contracts/src/monitoring.ts`, `packages/contracts/src/index.ts`
 
 Critères d’acceptation :
@@ -74,7 +74,7 @@ Critères d’acceptation :
 
 ### T-02 · Helpers de sondes dans `packages/http`
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01 · **Commits** : `1b320ab`, `e567556`
 - **Fichiers** : `packages/http/src/probes.ts`, `packages/http/src/index.ts`, `packages/http/test/probes.test.ts`
 
 Critères d’acceptation :
@@ -85,7 +85,7 @@ Critères d’acceptation :
 
 ### T-03 · `isReady()` sur `KafkaConsumer` et `KafkaProducer`
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : `2504884`
 - **Fichiers** : `packages/kafka/src/kafka.consumer.ts`, `packages/kafka/src/kafka.producer.ts`, `packages/kafka/test/`
 
 Critères d’acceptation :
@@ -96,7 +96,7 @@ Critères d’acceptation :
 
 ### T-04 · Sondes de `core-backend` (remplace `/health`)
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-02, T-03 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-02, T-03 · **Commits** : `adde7cf`, `e567556`
 - **Fichiers** : `apps/core-backend/index.ts`, `apps/core-backend/utils/db.ts`, `apps/core-backend/API.md`
 
 Critères d’acceptation :
@@ -106,7 +106,7 @@ Critères d’acceptation :
 
 ### T-05 · Sondes de `market-service` et `notification-service`
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-02, T-03 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-02, T-03 · **Commits** : `5b76e39`, `0257c8b`
 - **Fichiers** : `apps/market-service/index.ts`, `apps/market-service/API.md`, `apps/market-service/AGENTS.md`, `apps/notification-service/index.ts`, `apps/notification-service/API.md`, `apps/notification-service/AGENTS.md`, `apps/notification-service/test/internal-auth.middleware.test.ts`
 
 Critères d’acceptation :
@@ -117,7 +117,7 @@ Critères d’acceptation :
 
 ### T-06 · Serveur de sondes des workers `backtest-engine` et `risk-engine`
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-02, T-03 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-02, T-03 · **Commits** : `89d63ed`, `e567556`
 - **Fichiers** : `apps/backtest-engine/index.ts`, `apps/backtest-engine/env.ts`, `apps/backtest-engine/README.md`, `apps/risk-engine/index.ts`, `apps/risk-engine/env.ts`, `apps/risk-engine/AGENTS.md`
 
 Critères d’acceptation :
@@ -132,7 +132,7 @@ Critères d’acceptation :
 
 ### T-07 · Middleware `requireAdmin`
 
-- **US** : US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : —
+- **US** : US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : `a95957e`
 - **Fichiers** : `apps/core-backend/middleware/admin.middleware.ts`, `apps/core-backend/middleware/auth.middleware.ts`, `apps/core-backend/test/`
 
 Critères d’acceptation :
@@ -164,7 +164,7 @@ Critères d’acceptation :
 
 ### T-10 · Maquette : écran 09 réduit aux statuts
 
-- **US** : US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : —
+- **US** : US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : `3a5b0a4`, `acfa3af` (Figma)
 - **Fichiers** : Figma `Trading` : écran `09 · Monitoring` (node `22:1954`), copie `09 · Monitoring · à modifier (F16)` dans la section `Feature 16 · Monitoring`
 
 Critères d’acceptation :
