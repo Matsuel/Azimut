@@ -1,9 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { errorMiddleware } from "@azimut/http";
+import { errorMiddleware, registerProbes } from "@azimut/http";
 import { authRateLimit, backtestCreateRateLimit } from './middleware/rate-limit.middleware';
 import { dbHealthCheck, isDbConnected } from './utils/db';
+import { readinessChecks } from './utils/readiness';
 import authRouter from './routes/auth';
 import portfolioRouter from './routes/portfolio';
 import marketRouter from './routes/market';
@@ -31,6 +32,9 @@ const app = express();
 
 app.set('trust proxy', env.TRUST_PROXY);
 
+// Sondes Kubernetes, avant helmet et les limiteurs : le consumer et le producer ne sont prêts qu'une fois connectés à Kafka
+registerProbes(app, readinessChecks(isDbConnected, [consumer, producer]));
+
 app.use(helmet());
 
 app.use(cors({
@@ -39,12 +43,6 @@ app.use(cors({
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
 }))
-
-// Sonde de disponibilité : 503 si la base ne répond pas
-app.get('/health', async (_req, res) => {
-    const ok = await isDbConnected();
-    res.status(ok ? 200 : 503).json({ status: ok ? 'ok' : 'unavailable' });
-});
 
 app.use('/api/auth', authRateLimit);
 app.use(authRouter);
