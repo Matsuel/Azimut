@@ -17,8 +17,8 @@
 | T-09 | Route `GET /api/admin/monitoring/services` | US-02 | core-backend | MUST | 2 | T-08 | `7550817` |
 | T-10 | Maquette : écran 09 réduit aux statuts | US-02 | maquette | MUST | 2 | — | `3a5b0a4`, `acfa3af` (Figma) |
 | T-11 | Page Monitoring : tableau d'état, rafraîchissement 15 s | US-02 | web | MUST | 5 | T-04, T-05, T-06, T-09, T-10 | — |
-| T-12 | Raccorder Kubernetes, `AGENTS.md`, index et README | US-03 | documentation | MUST | 1 | T-04, T-05, T-06 | — |
-| T-13 | Test e2e de la page Monitoring | US-02 | web | SHOULD | 2 | T-11 | — |
+| T-12 | Raccorder Kubernetes, `AGENTS.md`, index et README | US-03 | documentation | MUST | 1 | T-04, T-05, T-06 | `e29d951`, `e531c3f` |
+| T-13 | Test e2e de la page Monitoring | US-02 | web | SHOULD | 2 | T-11 | `d48c821` (stack) |
 
 **Total** : 35 points — MUST 33, SHOULD 2.
 
@@ -191,7 +191,7 @@ Critères d’acceptation :
 - **Fichiers** : `apps/web/e2e/monitoring.e2e.ts`, `apps/web/e2e/fake-market.ts`
 
 Critères d’acceptation :
-- [ ] `fake-market.ts` répond à `/readiness` et `/liveness` au lieu de `/health`.
+- [x] `fake-market.ts` répond à `/readiness` et `/liveness` au lieu de `/health` ; la stack donne leurs ports de sonde aux workers (8103, 8104) et leurs URL à core-backend.
 - [ ] Un administrateur voit le tableau ; un compte standard est redirigé et ne voit pas l'entrée de sidebar.
 
 ---
@@ -200,10 +200,10 @@ Critères d’acceptation :
 
 ### T-12 · Raccorder Kubernetes, `AGENTS.md`, index et README
 
-- **US** : US-03 · **Priorité** : MUST · **Points** : 1 · **Dépend de** : T-04, T-05, T-06 · **Commits** : —
+- **US** : US-03 · **Priorité** : MUST · **Points** : 1 · **Dépend de** : T-04, T-05, T-06 · **Commits** : `e29d951`, `e531c3f`
 - **Fichiers** : `AGENTS.md`, `roadmap/24-kubernetes-helm-argocd/{README,US,TASKS}.md`, `roadmap/README.md`, `README.md`
 
 Critères d’acceptation :
-- [ ] `AGENTS.md` racine (cycle de vie des process) cite `/liveness` et `/readiness` et non `/health`.
-- [ ] Feature 24 : « Dépend de » liste la 16 ; la tâche des charts ne garde que la configuration des probes.
-- [ ] `roadmap/README.md` : index, journal des décisions ; `README.md` racine : roadmap annuelle.
+- [x] `AGENTS.md` racine (cycle de vie des process) cite `/liveness` et `/readiness` et non `/health`.
+- [x] Feature 24 : « Dépend de » liste la 16 ; la tâche des charts ne garde que la configuration des probes.
+- [x] `roadmap/README.md` : index, journal des décisions ; `README.md` racine : roadmap annuelle.
