@@ -1,5 +1,7 @@
 # 16 · Monitoring : sondes de santé et page d'état des services — User stories
 
+> Maquettes : `09 · Monitoring · à modifier (F16)` (node `606:14644`), `· chargement (F16)` (`614:14710`), `· erreur (F16)` (`614:15017`), validées le 19/11/2026.
+>
 > Sources : demande du 2026-11-18 (page Monitoring et routes `/liveness` / `/readiness` avant Kubernetes) ; README racine, « Observabilité » (health checks `liveness` et `readiness` distincts) ; maquette `09 · Monitoring`.
 
 ## Point de départ

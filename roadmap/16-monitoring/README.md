@@ -6,7 +6,7 @@
 - **Branche / PR** : `feat/monitoring` — PR à ouvrir
 - **Points** : 35 (MUST 33, SHOULD 2) — prévus
 - **Maquettes** : `09 · Monitoring` (existante, node `22:1954`, dessinée en feature 04) ; copie réduite `09 · Monitoring · à modifier (F16)` (node `606:14644`), section `Feature 16 · Monitoring (09)` (node `606:14643`)
-- **Écrans modifiés** : `09 · Monitoring` (node `22:1954`) : quatre cartes de synthèse (disponibles, dégradés, hors ligne, intervalle) et une carte par microservice (composant `ServiceCard`, node `613:14644` : nom, statut, dépendances de `/readiness`, latence, dernière vérification) à la place du tableau ; blocs « Débit des messages », « Topics Kafka » et « Exécutions en cours » retirés — dessiné dans la copie `09 · Monitoring · à modifier (F16)` (node `606:14644`), avec `09 · Monitoring · chargement (F16)` (node `614:14710`) et `09 · Monitoring · erreur (F16)` (node `614:15017`) ; proposée le 2026-11-19, en attente de validation ; l'original est mis à jour au codage
+- **Écrans modifiés** : `09 · Monitoring` (node `22:1954`) : quatre cartes de synthèse (disponibles, dégradés, hors ligne, intervalle) et une carte par microservice (composant `ServiceCard`, node `613:14644` : nom, statut, dépendances de `/readiness`, latence, dernière vérification) à la place du tableau ; blocs « Débit des messages », « Topics Kafka » et « Exécutions en cours » retirés — dessiné dans la copie `09 · Monitoring · à modifier (F16)` (node `606:14644`), avec `09 · Monitoring · chargement (F16)` (node `614:14710`) et `09 · Monitoring · erreur (F16)` (node `614:15017`) ; validée le 19/11/2026 ; l'original est mis à jour au codage
 - **Dépend de** : 04 (rôles, garde admin) ; 15 (notification-service livré, dernier service à sonder).
 
 ## Objectif
