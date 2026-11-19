@@ -15,6 +15,7 @@ const authMiddleware = async (req: Request, res: Response, next: NextFunction) =
         if (!session?.user) return next(new UnauthorizedError())
 
         req.userId = session.user.id
+        req.userRole = session.user.role
         next()
     } catch (error) {
         logger.error('Authentication error', { error: error instanceof Error ? error.message : String(error) })
