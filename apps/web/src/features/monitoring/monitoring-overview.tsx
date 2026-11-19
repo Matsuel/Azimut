@@ -38,7 +38,7 @@ function ServiceGrid({ data }: { data: MonitoringServicesResponse | undefined })
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {data
                 ? data.services.map((status) => <ServiceCard key={status.service} status={status} now={now} />)
-                : skeletons(MONITORED_SERVICE_COUNT, "h-32 rounded-xl")}
+                : skeletons(MONITORED_SERVICE_COUNT, "h-45 rounded-xl")}
         </div>
     )
 }
@@ -76,7 +76,7 @@ export function MonitoringOverview() {
             {data ? (
                 <MonitoringStats summary={data.summary} interval={interval} />
             ) : (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{skeletons(4, "h-24 rounded-xl")}</div>
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{skeletons(4, "h-33 rounded-xl")}</div>
             )}
             <section className="flex flex-col gap-4">
                 <ServicesHeader interval={interval} down={data?.summary.down} />

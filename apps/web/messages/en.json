@@ -1103,14 +1103,14 @@
         "serviceState": {
             "title": "Service state",
             "purpose": "Tells whether a service can work and, if not, whether the service itself or one of its dependencies is failing.",
-            "computation": "core-backend calls each service’s /readiness probe with a 2 s timeout. 200 response: operational. 503 response: degraded, the service answers but a dependency (database, Kafka or Yahoo) is down. No response within the timeout, refused connection or unreadable response: offline. The summary cards count the services in each state.",
+            "computation": "core-backend calls the /readiness probe of every other service with a 2 s timeout, and runs its own checks (database, Kafka) without a network call. 200 response: operational. 503 response: degraded, the service answers but a dependency (database, Kafka or Yahoo) is down. No response within the timeout, refused connection or unreadable response: offline. The summary cards count the services in each state.",
             "unit": "State among operational, degraded and offline; numbers of services.",
             "readingTip": "A degraded service is still running: the “Down” line on its card names the dependency to fix."
         },
         "probeLatency": {
             "title": "Probe latency",
             "purpose": "Spots a slow service before it exceeds the timeout and goes offline.",
-            "computation": "Time measured by core-backend between sending the /readiness call and receiving the response, rounded to the millisecond. Missing when the service is offline.",
+            "computation": "Time measured by core-backend between sending the /readiness call and receiving the response, rounded to the millisecond; for core-backend, the duration of its own checks. Missing when the service is offline.",
             "unit": "Milliseconds."
         }
     },

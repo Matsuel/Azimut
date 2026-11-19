@@ -108,7 +108,7 @@ export const GLOSSARY = {
     priceChart: { source: `${MARKET_REPOSITORY} · getDetails` },
 
     // Monitoring (feature 16)
-    serviceState: { source: `${MONITORING_SERVICE} · MonitoringService.getServices, probe (state, summary)` },
+    serviceState: { source: `${MONITORING_SERVICE} · MonitoringService.toStatus, down (state), getServices (summary)` },
     probeLatency: { source: `${MONITORING_SERVICE} · MonitoringService.probe (latencyMs)` },
 } satisfies Record<string, GlossaryEntry>
 
