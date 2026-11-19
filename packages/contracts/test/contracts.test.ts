@@ -3,6 +3,8 @@ import {
     API_ERROR_CODES,
     API_ERROR_MESSAGES,
     allocationsSchema,
+    monitoringServicesResponseSchema,
+    readinessResponseSchema,
     backtestCompletedEventSchema,
     notificationRequestedPayloadSchema,
     riskCompletedEventSchema,
@@ -54,4 +56,18 @@ test("notification.requested : un payload par type accepté, type inconnu ou par
     for (const v of valid) expect(notificationRequestedPayloadSchema.safeParse({ ...notif, ...v }).success).toBe(true)
     expect(notificationRequestedPayloadSchema.safeParse({ ...notif, type: "OTHER", params: ref }).success).toBe(false)
     expect(notificationRequestedPayloadSchema.safeParse({ ...notif, type: "BACKTEST_COMPLETED", params: ref }).success).toBe(false)
+})
+
+test("readiness : checks partiels acceptés, valeur de dépendance inconnue refusée", () => {
+    expect(readinessResponseSchema.safeParse({ status: "ok", checks: {} }).success).toBe(true)
+    expect(readinessResponseSchema.safeParse({ status: "unavailable", checks: { database: "ok", kafka: "down" } }).success).toBe(true)
+    expect(readinessResponseSchema.safeParse({ status: "ok", checks: { provider: "slow" } }).success).toBe(false)
+    expect(readinessResponseSchema.safeParse({ status: "degraded", checks: {} }).success).toBe(false)
+})
+
+test("monitoring : ligne down sans checks ni latence, service inconnu refusé", () => {
+    const summary = { total: 1, up: 0, degraded: 0, down: 1, downServices: ["risk-engine"] }
+    const down = { service: "risk-engine", state: "down", latencyMs: null, checkedAt: "2026-11-19T10:00:00.000Z" }
+    expect(monitoringServicesResponseSchema.safeParse({ services: [down], summary }).success).toBe(true)
+    expect(monitoringServicesResponseSchema.safeParse({ services: [{ ...down, service: "gateway" }], summary }).success).toBe(false)
 })
