@@ -12,6 +12,7 @@ import notificationRouter from './routes/notification';
 import backtestRouter from './routes/backtest';
 import riskRouter from './routes/risk';
 import projectionRouter from './routes/projection';
+import monitoringRouter from './routes/monitoring';
 import { Logger, onShutdown } from '@azimut/utils';
 import { BACKTEST_TOPICS, PROJECTION_TOPICS, RISK_TOPICS } from '@azimut/contracts';
 import { consumer, kafkaClient, producer } from './lib/kafka';
@@ -59,6 +60,7 @@ app.use('/api/backtest', backtestCreateRateLimit);
 app.use(backtestRouter);
 app.use(riskRouter);
 app.use(projectionRouter);
+app.use(monitoringRouter);
 
 app.use(errorMiddleware);
 
