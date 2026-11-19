@@ -25,7 +25,7 @@ Ces règles sont **strictes** : un écart doit être justifié dans le résumé 
 | `apps/web` | Next.js 16 (App Router) + React 19 + Tailwind 4 + shadcn/base-ui. N'appelle que core-backend. |
 | `packages/contracts` | Schémas zod et topics partagés entre services. |
 | `packages/kafka` | `KafkaClient`, `KafkaProducer`, `KafkaConsumer`, `createKafkaEvent`. |
-| `packages/utils` | `Logger` partagé, `onShutdown`, `DAY_MS`, `round`, `TRADING_DAYS_PER_YEAR`, change (`fxPairSymbol`, `rateOn`), calendrier de simulation (`periodKey`, `businessDays`, `estimateSchedule`). |
+| `packages/utils` | `Logger` partagé, `onShutdown`, `DAY_MS`, `round`, `TRADING_DAYS_PER_YEAR`, change (`fxPairSymbol`, `rateOn`), calendrier de simulation (`periodKey`, `businessDays`, `estimateSchedule`), rôle administrateur (`hasAdminRole`, importé par le web via `@azimut/utils/roles`). |
 | `packages/market-client` | `MarketClient` : cours et dividendes lus auprès de market-service (clé interne, délai, seconde tentative, réponse validée par le contrat) pour backtest-engine et risk-engine. |
 | `packages/http` | Socle des services Express : `AppError` et sous-classes, `RouteDescriptor`/`registerRoutes`, `errorMiddleware`. |
 | `roadmap/` | Suivi des features : un dossier par feature (`README.md`, `US.md`, `TASKS.md`), maintenu avec le skill `feature-roadmap`. Le `README.md` d'une feature porte ses décisions (`D<n>`, écrans modifiés) : il se lit en entier avec ses cadres Figma avant d'en coder la première ligne (skill `implementer-feature`), et toute décision prise en conversation s'y écrit au moment où elle est prise. |

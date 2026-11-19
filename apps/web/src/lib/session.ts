@@ -1,4 +1,5 @@
 import "server-only"
+import { hasAdminRole } from "@azimut/utils/roles"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { cache } from "react"
@@ -24,9 +25,4 @@ export async function requireSession() {
 export async function isAdmin(): Promise<boolean> {
     const session = await getSession()
     return hasAdminRole(session?.user.role)
-}
-
-/** Vrai si `role` (liste séparée par des virgules, format better-auth admin) contient `admin`. */
-export function hasAdminRole(role?: string | null): boolean {
-    return role?.split(",").some((item) => item.trim() === "admin") ?? false
 }

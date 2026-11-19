@@ -100,7 +100,7 @@ Une ligne par entrée : le détail (import, props, exemple) est dans l'entrée l
   - [`lib/trend.ts`](#libtrendts) : exports `Trend`, `Direction`, `Tone`, `trendOf`, `directionOf`, `toneOf`, `trendStyles`
   - [`lib/utils.ts`](#libutilsts) : exports `cn`
   - [`lib/auth.ts`](#libauthts) : exports `authClient`, `signIn`, `signUp`, `signOut`, `useSession`
-  - [`lib/session.ts`](#libsessionts) : exports `getSession`, `requireSession`, `isAdmin`, `hasAdminRole`
+  - [`lib/session.ts`](#libsessionts) : exports `getSession`, `requireSession`, `isAdmin`
 - [`constants`](#constants)
   - [`constants/pagination.ts`](#constantspaginationts) : exports `PAGE_SIZE`
   - [`constants/sidebar.tsx`](#constantssidebartsx) : exports `SidebarTab`, `SidebarSection`, `sidebarSections`
@@ -289,7 +289,7 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 
 - **Exemple** (tiré de `src/app/app/layout.tsx`) :
   ```tsx
-  <AppSidebar user={session.user} isAdmin={hasAdminRole(session.user.role)} />
+  <AppSidebar user={session.user} isAdmin={hasAdminRole(session.user.role)} /> // hasAdminRole : @azimut/utils/roles
   ```
 - **Source** : `src/components/app-sidebar.tsx`.
 
@@ -1017,8 +1017,7 @@ Source : `src/lib/auth.ts`.
 | --- | --- |
 | `getSession` | Session courante lue depuis le cookie entrant. |
 | `requireSession` | Session ou redirection vers `routes.login`. |
-| `isAdmin` | La session a le rôle `admin`. |
-| `hasAdminRole` | `role` (liste séparée par des virgules) contient `admin`. |
+| `isAdmin` | La session a le rôle `admin` (`hasAdminRole` de `@azimut/utils/roles`, règle partagée avec `requireAdmin` de core-backend). |
 
 Source : `src/lib/session.ts`.
 
