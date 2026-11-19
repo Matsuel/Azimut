@@ -73,7 +73,7 @@ Critères d’acceptation :
 - [ ] `GET /api/admin/monitoring/services` renvoie `401` sans session, `403` pour un compte non administrateur, et pour un administrateur une ligne par service : nom, état (`up` / `degraded` / `down`), dépendances, latence en millisecondes, horodatage de la vérification.
 - [ ] Un service arrêté apparaît `down` sans bloquer la réponse au-delà de 2 s ; un service dont la base est coupée apparaît `degraded` avec `database: down`.
 - [ ] La réponse porte une synthèse (services disponibles sur le total, dégradés, hors ligne avec leurs noms) calculée par core-backend.
-- [ ] La page Monitoring (copie `09 · Monitoring · à modifier (F16)` : quatre cartes de synthèse et tableau « Services ») affiche ces valeurs, se rafraîchit toutes les 15 s et ne calcule aucun état.
+- [ ] La page Monitoring (copie `09 · Monitoring · à modifier (F16)` : quatre cartes de synthèse et une carte par service) affiche ces valeurs, se rafraîchit toutes les 15 s et ne calcule aucun état.
 - [ ] Titres, libellés et états sont dans `messages/fr.json` et `messages/en.json`.
 - [ ] Un compte non administrateur ne voit ni l'entrée de sidebar ni la page (redirection existante, feature 04).
 

@@ -168,8 +168,8 @@ Critères d’acceptation :
 - **Fichiers** : Figma `Trading` : écran `09 · Monitoring` (node `22:1954`), copie `09 · Monitoring · à modifier (F16)` dans la section `Feature 16 · Monitoring`
 
 Critères d’acceptation :
-- [ ] La copie ne garde que les quatre cartes de synthèse et le tableau « Services » : lignes `core-backend`, `market-service`, `notification-service`, `backtest-engine`, `risk-engine` ; colonnes Service, Statut (`up` / `degraded` / `down`), Dépendances (base, Kafka, Yahoo), Latence, Dernière vérification.
-- [ ] États `degraded` et `down` dessinés ; états chargement et erreur de l'appel dessinés (D11).
+- [x] La copie ne garde que les quatre cartes de synthèse et une carte par service (D12) : `core-backend`, `market-service`, `notification-service`, `backtest-engine`, `risk-engine` ; chaque carte : nom, statut (`up` / `degraded` / `down`), dépendances (base, Kafka, Yahoo), latence, dernière vérification.
+- [x] États `degraded` et `down` dessinés ; états chargement (`614:14710`) et erreur de l'appel (`614:15017`) dessinés (D11).
 - [ ] Validée par l'utilisateur avant T-11 ; l'original (section Feature 04) reste intact jusqu'au codage.
 
 ### T-11 · Page Monitoring : tableau d'état, rafraîchissement 15 s
@@ -178,7 +178,7 @@ Critères d’acceptation :
 - **Fichiers** : `apps/web/src/app/app/(admin)/monitoring/page.tsx`, `apps/web/src/features/monitoring/`, `apps/web/src/lib/api.ts`, `apps/web/messages/fr.json`, `apps/web/messages/en.json`, `apps/web/COMPONENTS.md`
 
 Critères d’acceptation :
-- [ ] Écran conforme à la copie validée en T-10 ; primitives shadcn (`Table`, `Badge`, `Card`), aucun HTML brut sans raison.
+- [ ] Écran conforme à la copie validée en T-10 ; primitives shadcn (`Card`, `Badge`, `Skeleton`, `Alert`), aucun HTML brut sans raison.
 - [ ] Rafraîchissement toutes les 15 s (constante nommée), indicateur de chargement et d'erreur de l'appel lui-même.
 - [ ] Le web n'interprète pas les sondes : il affiche `state`, `checks`, `latencyMs`, `checkedAt` et `summary` reçus, sans compter.
 - [ ] Textes dans les dictionnaires FR et EN, locale non codée en dur ; appel via `api.ts`.
