@@ -11,7 +11,7 @@
 
 ## Objectif
 
-L'utilisateur est prévenu quand un calcul asynchrone se termine ou échoue, ou qu'une contrainte de risque n'est plus respectée, sans rester sur la page concernée : un toaster s'affiche où qu'il soit, et la page Notifications garde l'historique (90 jours) avec le compteur de non lues dans la sidebar. Le service est un microservice à part entière, ce qui prépare la cible Kubernetes (23) sans toucher au chemin de calcul.
+L'utilisateur est prévenu quand un calcul asynchrone se termine ou échoue, ou qu'une contrainte de risque n'est plus respectée, sans rester sur la page concernée : un toaster s'affiche où qu'il soit, et la page Notifications garde l'historique (90 jours) avec le compteur de non lues dans la sidebar. Le service est un microservice à part entière, ce qui prépare la cible Kubernetes (24) sans toucher au chemin de calcul.
 
 ## Comment
 
