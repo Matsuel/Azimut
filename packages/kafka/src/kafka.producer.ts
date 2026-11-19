@@ -2,9 +2,23 @@ import { CompressionTypes, type Producer } from "kafkajs";
 import type { KafkaMessage } from "./kafka.types";
 
 export class KafkaProducer {
+    private ready = false;
+    private listening = false;
+
     constructor(private readonly producer: Producer) { }
 
+    /** Vrai entre `CONNECT` et `DISCONNECT` du producer kafkajs. Sert aux sondes `/readiness`. */
+    isReady(): boolean {
+        return this.ready;
+    }
+
     async connect(): Promise<void> {
+        // Un `connect()` rappelé (nouvelle tentative au démarrage) ne doit pas doubler les écouteurs
+        if (!this.listening) {
+            this.producer.on(this.producer.events.CONNECT, () => { this.ready = true; });
+            this.producer.on(this.producer.events.DISCONNECT, () => { this.ready = false; });
+            this.listening = true;
+        }
         await this.producer.connect();
     }
 
