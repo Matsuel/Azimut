@@ -1,6 +1,6 @@
 # backtest-engine
 
-Worker Kafka sans serveur HTTP **et sans base de données**. Consomme `backtest.requested` (publié par core-backend, contient tous les paramètres), lit les cours auprès de market-service (`GET /api/market/closes`, clé interne `INTERNAL_API_KEY`, **jamais** de fournisseur en direct), calcule, puis publie `backtest.started` puis `backtest.completed` (résultat) ou `backtest.failed` (cause). **Calqué sur `apps/core-backend`** : lis `../core-backend/AGENTS.md` et reprends ses règles de couches. Respecte `../../AGENTS.md`.
+Worker Kafka sans serveur applicatif **et sans base de données** (seul un serveur de sondes écoute, voir « Sondes »). Consomme `backtest.requested` (publié par core-backend, contient tous les paramètres), lit les cours auprès de market-service (`GET /api/market/closes`, clé interne `INTERNAL_API_KEY`, **jamais** de fournisseur en direct), calcule, puis publie `backtest.started` puis `backtest.completed` (résultat) ou `backtest.failed` (cause). **Calqué sur `apps/core-backend`** : lis `../core-backend/AGENTS.md` et reprends ses règles de couches. Respecte `../../AGENTS.md`.
 
 Les cours cotés hors euros sont convertis en euros par l'engine (`engine/backtest.fx.ts`, taux `EURxxx=X` lus comme des cours) et les dividendes réinvestis à l'ex-date (`backtest.portfolio.ts`) ; `runBacktest` reçoit ces données en entrée, jamais d'I/O.
 
@@ -9,7 +9,8 @@ S'il manque une donnée pour calculer, ajoute-la au contrat `backtest.requested`
 ## Structure (à respecter, crée un dossier seulement quand un fichier en a besoin)
 
 ```
-env.ts             variables validées par zod (MARKET_SERVICE_URL, INTERNAL_API_KEY)
+env.ts             variables validées par zod (MARKET_SERVICE_URL, INTERNAL_API_KEY, HEALTH_PORT)
+probes.ts          kafkaProbeChecks : contrôles de /readiness (consumer et producer prêts)
 index.ts           bootstrap : instancie Kafka, câble publisher → service → consumer, abonne. Aucune logique.
 consumers/         <domaine>.consumer.ts : valide l'événement (zod), appelle le service    (≈ controller)
 services/          <domaine>.service.ts : orchestre repository + engine + publisher          (≈ service)
@@ -49,6 +50,13 @@ Kafka = at-least-once : un `backtest.requested` rejoué republie ses événement
 4. Sources externes → `repositories/`, événements sortants → `publishers/`, chacun derrière une interface.
 5. `services/<domaine>.service.ts` orchestre ; `consumers/` valide et délègue ; câblage dans `index.ts`.
 6. Répercute le contrat côté core-backend (colonne, migration, `complete`) dans le même diff.
+
+## Sondes
+
+Serveur `node:http` (`startProbeServer` de `@azimut/http`) sur `HEALTH_PORT` (défaut **8003**), démarré **avant** la connexion à Kafka et fermé en dernier par `onShutdown` :
+
+- `GET /liveness` : toujours `200 { "status": "ok" }`, aucune dépendance contrôlée.
+- `GET /readiness` : `200` ou `503` avec `{ "status", "checks": { "kafka" } }` ; `kafka` vaut `ok` quand le consumer a rejoint son groupe **et** que le producer est connecté (`kafkaProbeChecks`, `probes.ts`).
 
 ## Commandes
 

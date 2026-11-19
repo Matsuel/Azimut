@@ -11,6 +11,7 @@
       "name": "backtest-engine",
       "dependencies": {
         "@azimut/contracts": "workspace:*",
+        "@azimut/http": "workspace:*",
         "@azimut/kafka": "workspace:*",
         "@azimut/market-client": "workspace:*",
         "@azimut/utils": "workspace:*",
@@ -100,6 +101,7 @@
       "name": "risk-engine",
       "dependencies": {
         "@azimut/contracts": "workspace:*",
+        "@azimut/http": "workspace:*",
         "@azimut/kafka": "workspace:*",
         "@azimut/market-client": "workspace:*",
         "@azimut/utils": "workspace:*",

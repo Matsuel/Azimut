@@ -4,10 +4,13 @@ import {
     KafkaProducer,
 } from "@azimut/kafka";
 import { BACKTEST_TOPICS } from "@azimut/contracts";
+import { startProbeServer } from "@azimut/http";
 import { Logger, onShutdown } from "@azimut/utils";
 import BacktestConsumer from "./consumers/backtest.consumer";
 import BacktestPublisher from "./publishers/backtest.publisher";
 import BacktestService from "./services/backtest.service";
+import { kafkaProbeChecks } from "./probes";
+import { env } from "./env";
 
 const logger = Logger.here();
 
@@ -24,6 +27,10 @@ const backtestConsumer = new BacktestConsumer(
 );
 
 async function main(): Promise<void> {
+    // Les sondes écoutent avant Kafka : la liveness répond pendant l'entrée dans le groupe, qui peut durer des dizaines de secondes
+    const probes = await startProbeServer(env.HEALTH_PORT, kafkaProbeChecks(consumer, producer));
+    logger.info(`Probes are listening on port ${probes.port}`);
+
     await client.ensureTopics(Object.values(BACKTEST_TOPICS));
 
     await producer.connect();
@@ -35,11 +42,14 @@ async function main(): Promise<void> {
 
     onShutdown(() => consumer.disconnect());
     onShutdown(() => producer.disconnect());
+    // Fermées en dernier : les arrêts s'enchaînent dans l'ordre d'enregistrement, le consumer n'attend pas les sondes
+    onShutdown(() => probes.close());
 
     logger.info("Backtest engine is listening to Kafka");
 }
 
+// Le serveur de sondes garde sinon le process en vie à moitié démarré, sans Kafka
 main().catch((error) => {
     logger.error("Failed to start backtest engine", error);
-    process.exitCode = 1;
+    process.exit(1);
 });
