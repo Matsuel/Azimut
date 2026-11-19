@@ -1,9 +1,10 @@
 import express from 'express';
-import { errorMiddleware } from "@azimut/http";
+import { errorMiddleware, registerProbes } from "@azimut/http";
 import internalAuthMiddleware from './middleware/internal-auth.middleware';
 import marketRouter from './routes/market';
 import { Logger, onShutdown } from '@azimut/utils';
 import { env } from './env';
+import MarketService from './services/market.service';
 
 const logger = Logger.here()
 
@@ -11,10 +12,9 @@ const app = express();
 
 app.use(express.json());
 
-// Sonde de disponibilité, sans clé : ne révèle rien
-app.get('/health', (_req, res) => {
-    res.json({ status: 'ok' });
-});
+// Sondes sans clé interne (lues par core-backend et Kubernetes) : la readiness dépend du seul fournisseur Yahoo (D3)
+const marketService = new MarketService();
+registerProbes(app, [{ name: 'provider', check: () => marketService.isProviderReachable() }]);
 
 app.use(internalAuthMiddleware);
 

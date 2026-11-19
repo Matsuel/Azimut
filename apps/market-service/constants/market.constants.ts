@@ -33,6 +33,12 @@ export const DETAILS_CACHE_TTL_MS: Record<Period, number> = {
     max: 6 * 60 * MINUTE_MS,
 };
 
+// Contrôle du fournisseur par `/readiness` (D10) : un symbole liquide toujours coté, un délai sous les 2 s de l'agrégation
+// de core-backend, et un résultat (succès ou échec) gardé une minute pour ne pas marteler Yahoo à chaque sonde
+export const PROVIDER_PROBE_SYMBOL = "SPY";
+export const PROVIDER_PROBE_TIMEOUT_MS = 1_500;
+export const PROVIDER_PROBE_CACHE_TTL_MS = MINUTE_MS;
+
 // Devises cotées en sous-unité par Yahoo (pence, agorot, cents) : devise principale et nombre de sous-unités qu'elle contient
 export const CURRENCY_SUBUNITS: Record<string, { currency: string; divisor: number }> = {
     GBp: { currency: "GBP", divisor: 100 },
