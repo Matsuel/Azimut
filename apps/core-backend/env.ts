@@ -14,6 +14,9 @@ const envSchema = z.object({
     WEB_URL: z.url().default("http://localhost:3000"),
     MARKET_SERVICE_URL: z.url().default("http://localhost:8001"),
     NOTIFICATION_SERVICE_URL: z.url().default("http://localhost:8002"),
+    // Serveurs de sondes des workers Kafka (HEALTH_PORT), interrogés par la page Monitoring
+    BACKTEST_ENGINE_HEALTH_URL: z.url().default("http://localhost:8003"),
+    RISK_ENGINE_HEALTH_URL: z.url().default("http://localhost:8004"),
 });
 
 const _env = envSchema.parse(process.env);
