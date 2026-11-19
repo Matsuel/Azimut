@@ -167,6 +167,14 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/market/constants.ts`](src/features/market/COMPONENTS.md#featuresmarketconstantsts) : exports `MARKET_CURRENCY`, `MIN_SEARCH_LENGTH`, `periods`
   - [`features/market/column.tsx`](src/features/market/COMPONENTS.md#featuresmarketcolumntsx) : exports `useMarketColumns()`
   - [`features/market/types.ts`](src/features/market/COMPONENTS.md#featuresmarkettypests) : exports `Period`, `MarketAsset`, `MarketDetails`, `MarketData`
+- [`features/monitoring`](src/features/monitoring/COMPONENTS.md)
+  - [MonitoringOverview](src/features/monitoring/COMPONENTS.md#monitoringoverview) : écran Monitoring (maquette 09 F16, route `routes.monitoring`) et ses états
+  - [MonitoringStats](src/features/monitoring/COMPONENTS.md#monitoringstats) : quatre cartes disponibles, dégradés, hors ligne, intervalle
+  - [ServiceCard](src/features/monitoring/COMPONENTS.md#servicecard) : carte d'un service (état, dépendances, latence, dernier contrôle)
+  - [`features/monitoring/api.ts`](src/features/monitoring/COMPONENTS.md#featuresmonitoringapits) : exports `getMonitoringServices`
+  - [`features/monitoring/hook.ts`](src/features/monitoring/COMPONENTS.md#featuresmonitoringhookts) : exports `useMonitoringServices`
+  - [`features/monitoring/constants.ts`](src/features/monitoring/COMPONENTS.md#featuresmonitoringconstantsts) : exports `MONITORING_REFRESH_MS`, `MONITORED_SERVICE_COUNT`, `stateBadges`, `CHECK_KEYS`
+  - [`features/monitoring/types.ts`](src/features/monitoring/COMPONENTS.md#featuresmonitoringtypests) : réexports des types de monitoring du contrat
 - [`features/notifications`](src/features/notifications/COMPONENTS.md)
   - [NotificationCenter](src/features/notifications/COMPONENTS.md#notificationcenter) : écran Notifications (maquette 22) : onglets, liste par jour, « Tout marquer comme lu »
   - [NotificationBody](src/features/notifications/COMPONENTS.md#notificationbody) : états de la carte (chargement, erreur, vide, liste)
