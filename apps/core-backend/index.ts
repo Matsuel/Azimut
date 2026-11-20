@@ -1,9 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { errorMiddleware } from "@azimut/http";
+import { errorMiddleware, registerProbes } from "@azimut/http";
 import { authRateLimit, backtestCreateRateLimit } from './middleware/rate-limit.middleware';
-import { dbHealthCheck, isDbConnected } from './utils/db';
+import { dbHealthCheck } from './utils/db';
+import { CORE_BACKEND_CHECKS } from './utils/probes';
 import authRouter from './routes/auth';
 import portfolioRouter from './routes/portfolio';
 import marketRouter from './routes/market';
@@ -11,6 +12,7 @@ import notificationRouter from './routes/notification';
 import backtestRouter from './routes/backtest';
 import riskRouter from './routes/risk';
 import projectionRouter from './routes/projection';
+import monitoringRouter from './routes/monitoring';
 import { Logger, onShutdown } from '@azimut/utils';
 import { BACKTEST_TOPICS, PROJECTION_TOPICS, RISK_TOPICS } from '@azimut/contracts';
 import { consumer, kafkaClient, producer } from './lib/kafka';
@@ -31,6 +33,9 @@ const app = express();
 
 app.set('trust proxy', env.TRUST_PROXY);
 
+// Sondes Kubernetes, avant helmet et les limiteurs
+registerProbes(app, CORE_BACKEND_CHECKS);
+
 app.use(helmet());
 
 app.use(cors({
@@ -39,12 +44,6 @@ app.use(cors({
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
 }))
-
-// Sonde de disponibilité : 503 si la base ne répond pas
-app.get('/health', async (_req, res) => {
-    const ok = await isDbConnected();
-    res.status(ok ? 200 : 503).json({ status: ok ? 'ok' : 'unavailable' });
-});
 
 app.use('/api/auth', authRateLimit);
 app.use(authRouter);
@@ -61,6 +60,7 @@ app.use('/api/backtest', backtestCreateRateLimit);
 app.use(backtestRouter);
 app.use(riskRouter);
 app.use(projectionRouter);
+app.use(monitoringRouter);
 
 app.use(errorMiddleware);
 

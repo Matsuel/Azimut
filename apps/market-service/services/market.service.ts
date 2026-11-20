@@ -1,7 +1,18 @@
 import type { DailyCloses, Dividends, MarketAsset, Paginated, PaginationQuery, Period } from "@azimut/contracts";
 import MarketRepository, { type IMarketRepository } from "../repositories/market.repository";
-import { ASSETS_CACHE_TTL_MS, DEFAULT_TICKERS, DETAILS_CACHE_TTL_MS, SEARCH_CACHE_TTL_MS } from "../constants/market.constants";
+import {
+    ASSETS_CACHE_TTL_MS,
+    DEFAULT_TICKERS,
+    DETAILS_CACHE_TTL_MS,
+    PROVIDER_PROBE_CACHE_TTL_MS,
+    PROVIDER_PROBE_SYMBOL,
+    PROVIDER_PROBE_TIMEOUT_MS,
+    SEARCH_CACHE_TTL_MS,
+} from "../constants/market.constants";
 import { TtlCache } from "../utils/cache";
+import { Logger } from "@azimut/utils";
+
+const logger = Logger.here();
 
 
 class MarketService {
@@ -40,6 +51,32 @@ class MarketService {
     // Jamais mis en cache : les dividendes entrent dans l'empreinte de reproductibilité d'un backtest, comme les cours
     async getDividends(symbols: string[], start: Date, end: Date): Promise<Dividends> {
         return this.repo.getDividends(symbols, start, end)
+    }
+
+    /**
+     * Contrôle `provider` de `/readiness` (D10) : `true` si Yahoo répond sur `PROVIDER_PROBE_SYMBOL` en moins de
+     * `PROVIDER_PROBE_TIMEOUT_MS`. Ne lève jamais : un échec ou un délai dépassé rend `false`, gardé en cache comme un succès
+     * pendant `PROVIDER_PROBE_CACHE_TTL_MS` (le cache n'oublie que les promesses rejetées).
+     */
+    async isProviderReachable(): Promise<boolean> {
+        return this.cache.getOrLoad("probe:provider", PROVIDER_PROBE_CACHE_TTL_MS, () => this.probeProvider())
+    }
+
+    private async probeProvider(): Promise<boolean> {
+        let timer: ReturnType<typeof setTimeout> | undefined
+        const timeout = new Promise<false>((resolve) => {
+            timer = setTimeout(() => resolve(false), PROVIDER_PROBE_TIMEOUT_MS)
+        })
+        try {
+            const reachable = await Promise.race([this.repo.ping(PROVIDER_PROBE_SYMBOL).then(() => true as const), timeout])
+            if (!reachable) logger.warn("Provider probe timed out", { timeoutMs: PROVIDER_PROBE_TIMEOUT_MS })
+            return reachable
+        } catch (error) {
+            logger.error("Provider probe failed", { error: error instanceof Error ? error.message : String(error) })
+            return false
+        } finally {
+            clearTimeout(timer)
+        }
     }
 }
 

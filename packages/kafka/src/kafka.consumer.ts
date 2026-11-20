@@ -9,7 +9,19 @@ export type MessageHandler<T> = (
 ) => Promise<void>;
 
 export class KafkaConsumer {
+    private ready = false;
+    private listening = false;
+
     constructor(private readonly consumer: Consumer) { }
+
+    /**
+     * Vrai une fois le groupe rejoint (`GROUP_JOIN`), faux avant et après `CRASH`, `STOP` ou `DISCONNECT`.
+     * La jointure peut prendre des dizaines de secondes après un redémarrage : connecté ne veut pas dire prêt.
+     * Sert aux sondes `/readiness`.
+     */
+    isReady(): boolean {
+        return this.ready;
+    }
 
     async subscribe(
         topic: string,
@@ -54,6 +66,15 @@ export class KafkaConsumer {
     }
 
     async connect(): Promise<void> {
+        // Un `connect()` rappelé (nouvelle tentative au démarrage) ne doit pas doubler les écouteurs
+        if (!this.listening) {
+            const { GROUP_JOIN, CRASH, STOP, DISCONNECT } = this.consumer.events;
+            this.consumer.on(GROUP_JOIN, () => { this.ready = true; });
+            for (const event of [CRASH, STOP, DISCONNECT] as const) {
+                this.consumer.on(event, () => { this.ready = false; });
+            }
+            this.listening = true;
+        }
         await this.consumer.connect();
     }
 

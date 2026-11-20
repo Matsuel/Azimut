@@ -11,6 +11,7 @@
       "name": "backtest-engine",
       "dependencies": {
         "@azimut/contracts": "workspace:*",
+        "@azimut/http": "workspace:*",
         "@azimut/kafka": "workspace:*",
         "@azimut/market-client": "workspace:*",
         "@azimut/utils": "workspace:*",
@@ -100,6 +101,7 @@
       "name": "risk-engine",
       "dependencies": {
         "@azimut/contracts": "workspace:*",
+        "@azimut/http": "workspace:*",
         "@azimut/kafka": "workspace:*",
         "@azimut/market-client": "workspace:*",
         "@azimut/utils": "workspace:*",
@@ -118,6 +120,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@azimut/contracts": "workspace:*",
+        "@azimut/utils": "workspace:*",
         "@base-ui/react": "^1.9.0",
         "@hookform/resolvers": "^7.0.6",
         "@tanstack/react-query": "^5.107.1",

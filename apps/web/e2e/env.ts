@@ -1,4 +1,4 @@
-// Ports et secrets de la stack E2E : distincts de ceux du dev (3000, 8000-8002, 5432, 9094) pour tourner à côté de lui.
+// Ports et secrets de la stack E2E : distincts de ceux du dev (3000, 8000-8004, 5432, 9094) pour tourner à côté de lui.
 // Valeurs factices, propres aux tests : la base et Kafka sont jetables (docker-compose.yml de ce dossier).
 
 /** Environnement du process parent (PATH, HOME) transmis aux services lancés par `stack.ts`. */
@@ -12,6 +12,9 @@ export const PORTS = {
     core: 8100,
     market: 8101,
     notification: 8102,
+    // Sondes `/liveness` et `/readiness` des workers (`HEALTH_PORT`)
+    backtestProbes: 8103,
+    riskProbes: 8104,
     postgres: 15432,
     kafka: 19094,
 } as const
@@ -23,6 +26,8 @@ export const URLS = {
     api: `http://localhost:${PORTS.core}/api`,
     market: `http://localhost:${PORTS.market}`,
     notification: `http://localhost:${PORTS.notification}`,
+    backtestProbes: `http://localhost:${PORTS.backtestProbes}`,
+    riskProbes: `http://localhost:${PORTS.riskProbes}`,
 } as const
 
 export const INTERNAL_API_KEY = "e2e-internal-key-0123456789"

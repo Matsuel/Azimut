@@ -72,3 +72,44 @@ test("une liste par défaut incomplète (actif indisponible) n'est pas gardée e
 
     expect(calls).toBe(2)
 })
+
+// Service dont le fournisseur répond selon `ping` ; compte les appels
+function probedService(ping: () => Promise<void>) {
+    const calls = { ping: 0 }
+    const service = new MarketService()
+    service.repo = { ping: () => (calls.ping++, ping()) } as unknown as IMarketRepository
+    return { service, calls }
+}
+
+test("readiness : le fournisseur répond → true", async () => {
+    const { service } = probedService(async () => {})
+    expect(await service.isProviderReachable()).toBe(true)
+})
+
+test("readiness : le fournisseur lève → false, sans propager l'erreur", async () => {
+    const { service } = probedService(async () => {
+        throw new Error("Yahoo down")
+    })
+    expect(await service.isProviderReachable()).toBe(false)
+})
+
+test("readiness : délai de 1,5 s dépassé → false", async () => {
+    const { service } = probedService(() => new Promise<void>(() => {}))
+    expect(await service.isProviderReachable()).toBe(false)
+})
+
+test("readiness : un succès est gardé, le fournisseur n'est interrogé qu'une fois", async () => {
+    const { service, calls } = probedService(async () => {})
+    await service.isProviderReachable()
+    expect(await service.isProviderReachable()).toBe(true)
+    expect(calls.ping).toBe(1)
+})
+
+test("readiness : un échec est gardé aussi, Yahoo en panne n'est pas martelé", async () => {
+    const { service, calls } = probedService(async () => {
+        throw new Error("Yahoo down")
+    })
+    await service.isProviderReachable()
+    expect(await service.isProviderReachable()).toBe(false)
+    expect(calls.ping).toBe(1)
+})

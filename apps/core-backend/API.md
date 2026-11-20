@@ -35,14 +35,17 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
 - [Backtest](#backtest) : `POST`, `POST /preview`, `POST /:id/executions`, `GET /stats`, `POST /batch`, `GET /batch/:batchId`, `POST /batch/:batchId/starts`, `POST /batch/:batchId/executions`, `GET /compare`, `GET /:id`, `GET`
 - [Risque](#risque) : `GET /api/risk/:backtestId`, `PUT /api/risk/:backtestId/constraint`
 - [Projection](#projection) : `GET /api/projection/:backtestId`
+- [Monitoring (admin)](#monitoring-admin) : `GET /api/admin/monitoring/services`
 
 ## Conventions communes
 
 - **Base** : `http://localhost:8000`. Le web appelle via `apiFetch(path)` (`apps/web/src/lib/api.ts`) avec `NEXT_PUBLIC_API_URL=http://localhost:8000/api` : `apiFetch("/backtest")` → `GET /api/backtest`. Cookies envoyés (`credentials: "include"`), CORS limité à `env.WEB_URL` (défaut `http://localhost:3000`, `env.ts`).
-- **Ordre d'enregistrement** (`index.ts`) : `helmet`, `cors`, `GET /health`, limiteur `/api/auth` + `authRouter`, `marketRouter` et `notificationRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
-- **Santé** : `GET /health` (sans auth) → `200 { "status": "ok" }`, `503 { "status": "unavailable" }` si la base ne répond pas.
+- **Ordre d'enregistrement** (`index.ts`) : `GET /liveness` et `GET /readiness` (`registerProbes`), `helmet`, `cors`, limiteur `/api/auth` + `authRouter`, `marketRouter` et `notificationRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, `monitoringRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
+- **Santé** (sans auth, hors `/api`, `registerProbes` et `kafkaCheck` de `@azimut/http`) :
+  - `GET /liveness` → toujours `200 { "status": "ok" }`, sans toucher aucune dépendance.
+  - `GET /readiness` → `200 { "status": "ok", "checks": { "database": "ok", "kafka": "ok" } }` ; `503 { "status": "unavailable", "checks": { … } }` dès qu'un contrôle vaut `"down"`. `database` : la base `trading` répond (`isDbConnected`) ; `kafka` : le consumer (groupe rejoint) et le producer (connecté) sont prêts (`isReady()`). Forme : `readinessResponseSchema` de `@azimut/contracts`.
 - **Limites de débit** (par IP, fenêtre 60 s, en-têtes `RateLimit-*`) : `POST /api/auth/*` 30 requêtes (les `GET`, dont `get-session` appelé à chaque page, ne comptent pas) ; `POST /api/backtest` et `POST /api/backtest/:id/executions` 20 requêtes (les lectures et `POST /api/backtest/preview` ne comptent pas). Au-delà : `429`. Body JSON refusé au-delà de 100 ko (`413`).
-- **Auth** : `authMiddleware` lit la session better-auth depuis les en-têtes (cookie, ou `Authorization: Bearer` via le plugin `bearer`) et pose `req.userId`. Sans session : `401 { "error": "Unauthorized", "code": "UNAUTHORIZED" }`.
+- **Auth** : `authMiddleware` lit la session better-auth depuis les en-têtes (cookie, ou `Authorization: Bearer` via le plugin `bearer`) et pose `req.userId` et `req.userRole`. `freshAuthMiddleware` fait de même sans le cache de session de 5 min (routes admin, devant `requireAdmin` : rôle sans `admin` → `403`). Sans session : `401 { "error": "Unauthorized", "code": "UNAUTHORIZED" }`.
 - **Erreurs** : toute `AppError` est rendue par `error.middleware` en `{ "error": "<message anglais>", "code": "<CODE>", ...data }` avec son statut. Toute autre exception : `500 { "error": "Internal server error", "code": "INTERNAL_ERROR" }`. Le backend ne connaît pas la langue : `error` sert aux logs, le web traduit `code` (`errors.<code>` des dictionnaires, repli `errors.generic`). Les exemples ci-dessous omettent `code` ; il vaut :
 
   | Code | Statut | Cas |
@@ -410,3 +413,20 @@ Calculée par `risk-engine` après le risque de chaque backtest (`projection.com
 - **Effets** : aucun.
 - **Appelant** : `getProjection` (`features/projection/api.ts`), page Projection.
 - **Source** : `routes/projection/projection.routes.ts`, `controller/projection.controller.ts`, `services/projection.service.ts`, `repositories/projection.repository.ts`.
+
+## Monitoring (admin)
+
+État des cinq services lu sur leurs sondes `/readiness` (feature 16). Les dépendances viennent des `checks` renvoyés par chaque service ; core-backend calcule l'état et la synthèse, le web les affiche.
+
+### GET /api/admin/monitoring/services
+
+- **Auth** : session administrateur, relue sans cache (`freshAuthMiddleware` puis `requireAdmin`).
+- **Entrée** : aucune.
+- **Réponse** : `200`, `MonitoringServicesResponse` (`packages/contracts/src/monitoring.ts`). `services` : une ligne par service dans l'ordre de `MONITORED_SERVICES`, `state` = `up` (sonde `200`), `degraded` (`503`, `checks` de la réponse), `down` (délai de 2 s `MONITORING_PROBE_TIMEOUT_MS` dépassé, connexion refusée ou réponse hors contrat : sans `checks`, `latencyMs: null`) ; `latencyMs` en millisecondes ; `checkedAt` ISO 8601. core-backend se sonde sans appel réseau. `summary` : nombres de services par état et `downServices` (noms, même ordre).
+  ```json
+  { "services": [{ "service": "core-backend", "state": "up", "checks": { "database": "ok", "kafka": "ok" }, "latencyMs": 3, "checkedAt": "2026-11-19T10:00:00.000Z" }, { "service": "risk-engine", "state": "down", "latencyMs": null, "checkedAt": "2026-11-19T10:00:02.000Z" }], "summary": { "total": 5, "up": 3, "degraded": 1, "down": 1, "downServices": ["risk-engine"] } }
+  ```
+- **Erreurs** : `401` sans session ; `403 { "error": "Access denied" }` sans rôle administrateur.
+- **Effets** : aucun (lecture des sondes, en parallèle).
+- **Appelant** : `features/monitoring/api.ts`, page Monitoring (admin).
+- **Source** : `routes/monitoring/monitoring.routes.ts`, `controller/monitoring.controller.ts`, `services/monitoring.service.ts`.

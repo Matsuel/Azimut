@@ -7,3 +7,4 @@ export * from "./pagination";
 export * from "./error";
 export * from "./internal";
 export * from "./notification";
+export * from "./monitoring";

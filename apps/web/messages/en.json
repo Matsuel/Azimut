@@ -1099,6 +1099,19 @@
             "computation": "Share of the paths whose value is strictly below the starting capital at that horizon.",
             "unit": "Ratio shown as a percentage.",
             "readingTip": "Computed on historical scenarios, not a promise: the future can fall outside this range."
+        },
+        "serviceState": {
+            "title": "Service state",
+            "purpose": "Tells whether a service can work and, if not, whether the service itself or one of its dependencies is failing.",
+            "computation": "core-backend calls the /readiness probe of every other service with a 2 s timeout, and runs its own checks (database, Kafka) without a network call. 200 response: operational. 503 response: degraded, the service answers but a dependency (database, Kafka or Yahoo) is down. No response within the timeout, refused connection or unreadable response: offline. The summary cards count the services in each state.",
+            "unit": "State among operational, degraded and offline; numbers of services.",
+            "readingTip": "A degraded service is still running: the “Down” line on its card names the dependency to fix."
+        },
+        "probeLatency": {
+            "title": "Probe latency",
+            "purpose": "Spots a slow service before it exceeds the timeout and goes offline.",
+            "computation": "Time measured by core-backend between sending the /readiness call and receiving the response, rounded to the millisecond; for core-backend, the duration of its own checks. Missing when the service is offline.",
+            "unit": "Milliseconds."
         }
     },
     "pages": {
@@ -1194,7 +1207,7 @@
             "description": "Management reports generated from your simulations."
         },
         "monitoring": {
-            "description": "Microservice status, Kafka lag and running executions."
+            "description": "Service status: liveness, readiness and dependencies"
         },
         "users": {
             "description": "Manage accounts, roles and access to the platform."
@@ -1333,6 +1346,48 @@
                 "title": "Projection completed",
                 "detail": "{name} · {scenarios} paths · loss probability {lossProbability}"
             }
+        }
+    },
+    "monitoring": {
+        "stats": {
+            "available": "Available services",
+            "availableValue": "{up} / {total}",
+            "availableCaption": "readiness green",
+            "degraded": "Degraded",
+            "degradedCaption": "dependency down",
+            "down": "Offline",
+            "interval": "Interval",
+            "intervalCaption": "automatic refresh"
+        },
+        "services": {
+            "title": "Services",
+            "subtitle": "/readiness probes · every {interval}",
+            "downBadge": "{count, plural, one {# service offline} other {# services offline}}"
+        },
+        "states": {
+            "up": "Operational",
+            "degraded": "Degraded",
+            "down": "Offline"
+        },
+        "checks": {
+            "database": "Database",
+            "kafka": "Kafka",
+            "provider": "Yahoo"
+        },
+        "dependency": {
+            "ok": "OK",
+            "down": "Down"
+        },
+        "card": {
+            "probe": "/readiness probe",
+            "noResponse": "No response",
+            "latency": "Latency",
+            "milliseconds": "{ms, number} ms",
+            "checked": "Checked {ago}"
+        },
+        "error": {
+            "title": "Service status unavailable",
+            "description": "core-backend did not respond. Retrying automatically in {interval}."
         }
     }
 }

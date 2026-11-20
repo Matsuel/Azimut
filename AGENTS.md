@@ -19,15 +19,15 @@ Ces règles sont **strictes** : un écart doit être justifié dans le résumé 
 | --- | --- |
 | `apps/core-backend` | API Express 5 + Prisma + better-auth (port 8000). **Référence d'architecture backend**, accès à la base du domaine (`trading`). |
 | `apps/notification-service` | API Express 5 + consumer Kafka (port 8002) avec **sa propre base** `notifications` (Prisma) : enregistre les notifications de `notification.requested`, les expose derrière le proxy de core-backend et les pousse en SSE. |
-| `apps/backtest-engine` | Worker Kafka sans serveur HTTP ni base : consomme `backtest.requested`, lit les cours auprès de market-service, calcule, publie le résultat. |
-| `apps/risk-engine` | Worker Kafka sans serveur HTTP ni base : consomme `backtest.completed`, lit les cours auprès de market-service, calcule le risque (corrélations, VaR/CVaR, contributions), publie `risk.completed`. |
+| `apps/backtest-engine` | Worker Kafka sans base, sans API (seules ses sondes écoutent, port 8003) : consomme `backtest.requested`, lit les cours auprès de market-service, calcule, publie le résultat. |
+| `apps/risk-engine` | Worker Kafka sans base, sans API (seules ses sondes écoutent, port 8004) : consomme `backtest.completed`, lit les cours auprès de market-service, calcule le risque (corrélations, VaR/CVaR, contributions), publie `risk.completed`. |
 | `apps/market-service` | **Seul service qui appelle yahoo-finance2** (port 8001, cache mémoire) : appelé via le proxy de core-backend pour le web, directement par backtest-engine pour les cours d'un backtest. |
 | `apps/web` | Next.js 16 (App Router) + React 19 + Tailwind 4 + shadcn/base-ui. N'appelle que core-backend. |
 | `packages/contracts` | Schémas zod et topics partagés entre services. |
 | `packages/kafka` | `KafkaClient`, `KafkaProducer`, `KafkaConsumer`, `createKafkaEvent`. |
-| `packages/utils` | `Logger` partagé, `onShutdown`, `DAY_MS`, `round`, `TRADING_DAYS_PER_YEAR`, change (`fxPairSymbol`, `rateOn`), calendrier de simulation (`periodKey`, `businessDays`, `estimateSchedule`). |
+| `packages/utils` | `Logger` partagé, `onShutdown`, `DAY_MS`, `round`, `TRADING_DAYS_PER_YEAR`, change (`fxPairSymbol`, `rateOn`), calendrier de simulation (`periodKey`, `businessDays`, `estimateSchedule`), rôle administrateur (`hasAdminRole`, importé par le web via `@azimut/utils/roles`). |
 | `packages/market-client` | `MarketClient` : cours et dividendes lus auprès de market-service (clé interne, délai, seconde tentative, réponse validée par le contrat) pour backtest-engine et risk-engine. |
-| `packages/http` | Socle des services Express : `AppError` et sous-classes, `RouteDescriptor`/`registerRoutes`, `errorMiddleware`. |
+| `packages/http` | Socle des services Express : `AppError` et sous-classes, `RouteDescriptor`/`registerRoutes`, `errorMiddleware`, sondes (`registerProbes`, `startProbeServer`, `kafkaCheck`). |
 | `roadmap/` | Suivi des features : un dossier par feature (`README.md`, `US.md`, `TASKS.md`), maintenu avec le skill `feature-roadmap`. Le `README.md` d'une feature porte ses décisions (`D<n>`, écrans modifiés) : il se lit en entier avec ses cadres Figma avant d'en coder la première ligne (skill `implementer-feature`), et toute décision prise en conversation s'y écrit au moment où elle est prise. |
 
 ## Responsabilités : qui calcule quoi
@@ -90,7 +90,7 @@ Chaque app qui expose quelque chose de réutilisable tient un **catalogue** : co
 - Validation des entrées, messages et env avec `zod`.
 - **Base de données : Prisma Client uniquement** (`findMany`, `count`, `groupBy`, `$transaction`…), jamais de SQL écrit à la main (`$queryRaw`, `$executeRaw`, `Prisma.sql` et leurs variantes `Unsafe`). Une requête que l'API Prisma ne sait pas exprimer se règle par le modèle (relation ou champ dénormalisé, maintenu dans le repository), pas par du SQL. Seule exception : le SQL des fichiers de migration (`prisma/migrations/`), y compris un backfill de données.
 - Ne commit jamais de `.env` ni de secret. `process.env` ne se lit que dans `env.ts` de l'app ; exception : les packages sans app hôte (`packages/utils` : `LOG_LEVEL`, `NODE_ENV` ; `packages/kafka` : `KAFKA_*`).
-- **Cycle de vie** : chaque process lit son port dans `env.ts`, démarre dans un `main().catch(…)` qui met `process.exitCode = 1` (`process.exit(1)` si le serveur écoute déjà : sinon il garde le process en vie à moitié démarré), et enregistre ses fermetures avec `onShutdown` de `@azimut/utils` (`SIGTERM`/`SIGINT`). Un service HTTP expose `GET /health`.
+- **Cycle de vie** : chaque process lit son port dans `env.ts`, démarre dans un `main().catch(…)` qui met `process.exitCode = 1` (`process.exit(1)` si le serveur écoute déjà : sinon il garde le process en vie à moitié démarré), et enregistre ses fermetures avec `onShutdown` de `@azimut/utils` (`SIGTERM`/`SIGINT`). Chaque service expose `GET /liveness` (toujours `200`, aucune dépendance) et `GET /readiness` (`200` ou `503` avec `checks`, dépendances déclarées par le service lui-même) via `registerProbes` ou, pour un worker Kafka, `startProbeServer` sur `HEALTH_PORT` (`@azimut/http`) : lues par la page Monitoring et par les probes Kubernetes.
 
 ## Commandes
 

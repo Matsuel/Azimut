@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
-import { CompressionTypes, type Producer } from "kafkajs"
+import { CompressionTypes, type Consumer, type Producer } from "kafkajs"
 
 // Config lue à l'import : variables factices posées avant
 process.env.KAFKA_BROKERS = "broker-a:9092, broker-b:9092"
 process.env.KAFKA_CLIENT_ID = "kafka-test"
-const { createKafkaEvent, kafkaConfig, KafkaClient, KafkaProducer } = await import("../src")
+const { createKafkaEvent, kafkaConfig, KafkaClient, KafkaConsumer, KafkaProducer } = await import("../src")
 
 test("createKafkaEvent : enveloppe complète, version 1, identifiant unique", () => {
     const first = createKafkaEvent("risk.completed", { executionId: "e1" })
@@ -51,4 +51,66 @@ test("KafkaClient.ensureTopics : crée seulement les topics absents et se décon
     await expect(client.ensureTopics(["c"])).rejects.toThrow("broker down")
 
     expect(calls).toEqual(["connect", "disconnect", "connect", "create:b", "disconnect", "connect", "create:c", "disconnect"])
+})
+
+// Client kafkajs factice : `on` mémorise les écouteurs par événement, `emit` les déclenche
+function fakeKafkaClient(events: Record<string, string>) {
+    const listeners = new Map<string, (() => void)[]>()
+    let connects = 0
+    const client = {
+        events,
+        on: (event: string, listener: () => void) => {
+            listeners.set(event, [...(listeners.get(event) ?? []), listener])
+            return () => {}
+        },
+        connect: async () => void connects++,
+    }
+    const emit = (event: string) => listeners.get(event)?.forEach((listener) => listener())
+    return { client, emit, listenerCount: () => [...listeners.values()].flat().length, connects: () => connects }
+}
+
+const consumerEvents = { GROUP_JOIN: "consumer.group_join", CRASH: "consumer.crash", STOP: "consumer.stop", DISCONNECT: "consumer.disconnect" }
+
+test("KafkaConsumer.isReady : faux au départ, vrai après la jointure du groupe, faux après crash, stop ou déconnexion", async () => {
+    const { client, emit } = fakeKafkaClient(consumerEvents)
+    const consumer = new KafkaConsumer(client as unknown as Consumer)
+
+    expect(consumer.isReady()).toBe(false)
+    await consumer.connect()
+    expect(consumer.isReady()).toBe(false)
+
+    for (const event of [consumerEvents.CRASH, consumerEvents.STOP, consumerEvents.DISCONNECT]) {
+        emit(consumerEvents.GROUP_JOIN)
+        expect(consumer.isReady()).toBe(true)
+        emit(event)
+        expect(consumer.isReady()).toBe(false)
+    }
+})
+
+test("KafkaConsumer.connect rappelé : écouteurs posés une seule fois", async () => {
+    const { client, listenerCount, connects } = fakeKafkaClient(consumerEvents)
+    const consumer = new KafkaConsumer(client as unknown as Consumer)
+
+    await consumer.connect()
+    await consumer.connect()
+
+    expect(listenerCount()).toBe(4)
+    expect(connects()).toBe(2)
+})
+
+test("KafkaProducer.isReady : faux au départ, vrai après connexion, faux après déconnexion, écouteurs posés une seule fois", async () => {
+    const events = { CONNECT: "producer.connect", DISCONNECT: "producer.disconnect" }
+    const { client, emit, listenerCount } = fakeKafkaClient(events)
+    const producer = new KafkaProducer(client as unknown as Producer)
+
+    expect(producer.isReady()).toBe(false)
+    await producer.connect()
+    await producer.connect()
+    expect(listenerCount()).toBe(2)
+    expect(producer.isReady()).toBe(false)
+
+    emit(events.CONNECT)
+    expect(producer.isReady()).toBe(true)
+    emit(events.DISCONNECT)
+    expect(producer.isReady()).toBe(false)
 })

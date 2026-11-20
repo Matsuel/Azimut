@@ -17,13 +17,22 @@ const run = async () => {
     return { req, calls }
 }
 
-test("une session valide pose userId et laisse passer", async () => {
-    getSession.mockResolvedValue({ user: { id: "u1" } } as never)
+test("une session valide pose userId et userRole et laisse passer", async () => {
+    getSession.mockResolvedValue({ user: { id: "u1", role: "admin" } } as never)
 
     const { req, calls } = await run()
 
     expect(req.userId).toBe("u1")
+    expect(req.userRole).toBe("admin")
     expect(calls).toEqual([undefined])
+})
+
+test("authMiddleware garde le cache de session (seules les routes admin le contournent)", async () => {
+    getSession.mockResolvedValue({ user: { id: "u1", role: "user" } } as never)
+
+    await run()
+
+    expect(getSession.mock.calls[0]?.[0]).toMatchObject({ query: undefined })
 })
 
 test("sans session : UnauthorizedError, userId non posé", async () => {

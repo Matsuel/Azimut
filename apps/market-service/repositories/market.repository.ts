@@ -14,6 +14,7 @@ export interface IMarketRepository {
     getAssets(symbols: string[]): Promise<MarketAsset[]>;
     getDailyCloses(symbols: string[], start: Date, end: Date): Promise<DailyCloses>;
     getDividends(symbols: string[], start: Date, end: Date): Promise<Dividends>;
+    ping(symbol: string): Promise<void>;
 }
 
 class MarketRepository implements IMarketRepository {
@@ -145,6 +146,11 @@ class MarketRepository implements IMarketRepository {
         )
 
         return Object.fromEntries(series)
+    }
+
+    /** Requête légère (cotation d'un symbole) qui lève l'erreur du fournisseur s'il ne répond pas. Sert à `/readiness`. */
+    async ping(symbol: string): Promise<void> {
+        await MarketRepository.yahooFinance.quote(symbol)
     }
 
     // Série journalière avec le formateur de jour de cotation et la devise principale de la place : clôtures et ex-dates se lisent pareil

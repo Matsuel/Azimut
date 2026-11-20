@@ -100,7 +100,7 @@ Une ligne par entrée : le détail (import, props, exemple) est dans l'entrée l
   - [`lib/trend.ts`](#libtrendts) : exports `Trend`, `Direction`, `Tone`, `trendOf`, `directionOf`, `toneOf`, `trendStyles`
   - [`lib/utils.ts`](#libutilsts) : exports `cn`
   - [`lib/auth.ts`](#libauthts) : exports `authClient`, `signIn`, `signUp`, `signOut`, `useSession`
-  - [`lib/session.ts`](#libsessionts) : exports `getSession`, `requireSession`, `isAdmin`, `hasAdminRole`
+  - [`lib/session.ts`](#libsessionts) : exports `getSession`, `requireSession`, `isAdmin`
 - [`constants`](#constants)
   - [`constants/pagination.ts`](#constantspaginationts) : exports `PAGE_SIZE`
   - [`constants/sidebar.tsx`](#constantssidebartsx) : exports `SidebarTab`, `SidebarSection`, `sidebarSections`
@@ -167,6 +167,14 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/market/constants.ts`](src/features/market/COMPONENTS.md#featuresmarketconstantsts) : exports `MARKET_CURRENCY`, `MIN_SEARCH_LENGTH`, `periods`
   - [`features/market/column.tsx`](src/features/market/COMPONENTS.md#featuresmarketcolumntsx) : exports `useMarketColumns()`
   - [`features/market/types.ts`](src/features/market/COMPONENTS.md#featuresmarkettypests) : exports `Period`, `MarketAsset`, `MarketDetails`, `MarketData`
+- [`features/monitoring`](src/features/monitoring/COMPONENTS.md)
+  - [MonitoringOverview](src/features/monitoring/COMPONENTS.md#monitoringoverview) : écran Monitoring (maquette 09 F16, route `routes.monitoring`) et ses états
+  - [MonitoringStats](src/features/monitoring/COMPONENTS.md#monitoringstats) : quatre cartes disponibles, dégradés, hors ligne, intervalle
+  - [ServiceCard](src/features/monitoring/COMPONENTS.md#servicecard) : carte d'un service (état, dépendances, latence, dernier contrôle)
+  - [`features/monitoring/api.ts`](src/features/monitoring/COMPONENTS.md#featuresmonitoringapits) : exports `getMonitoringServices`
+  - [`features/monitoring/hook.ts`](src/features/monitoring/COMPONENTS.md#featuresmonitoringhookts) : exports `useMonitoringServices`
+  - [`features/monitoring/constants.ts`](src/features/monitoring/COMPONENTS.md#featuresmonitoringconstantsts) : exports `MONITORING_REFRESH_MS`, `MONITORED_SERVICE_COUNT`, `stateBadges`, `CHECK_KEYS`
+  - [`features/monitoring/types.ts`](src/features/monitoring/COMPONENTS.md#featuresmonitoringtypests) : réexports des types de monitoring du contrat
 - [`features/notifications`](src/features/notifications/COMPONENTS.md)
   - [NotificationCenter](src/features/notifications/COMPONENTS.md#notificationcenter) : écran Notifications (maquette 22) : onglets, liste par jour, « Tout marquer comme lu »
   - [NotificationBody](src/features/notifications/COMPONENTS.md#notificationbody) : états de la carte (chargement, erreur, vide, liste)
@@ -289,7 +297,7 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 
 - **Exemple** (tiré de `src/app/app/layout.tsx`) :
   ```tsx
-  <AppSidebar user={session.user} isAdmin={hasAdminRole(session.user.role)} />
+  <AppSidebar user={session.user} isAdmin={hasAdminRole(session.user.role)} /> // hasAdminRole : @azimut/utils/roles
   ```
 - **Source** : `src/components/app-sidebar.tsx`.
 
@@ -1017,8 +1025,7 @@ Source : `src/lib/auth.ts`.
 | --- | --- |
 | `getSession` | Session courante lue depuis le cookie entrant. |
 | `requireSession` | Session ou redirection vers `routes.login`. |
-| `isAdmin` | La session a le rôle `admin`. |
-| `hasAdminRole` | `role` (liste séparée par des virgules) contient `admin`. |
+| `isAdmin` | La session a le rôle `admin` (`hasAdminRole` de `@azimut/utils/roles`, règle partagée avec `requireAdmin` de core-backend). |
 
 Source : `src/lib/session.ts`.
 

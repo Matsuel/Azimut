@@ -1099,6 +1099,19 @@
             "computation": "Part des trajectoires dont la valeur est strictement inférieure au capital de départ à cet horizon.",
             "unit": "Ratio affiché en pourcentage.",
             "readingTip": "Calculée sur des scénarios historiques, pas une promesse : le futur peut sortir de cette fourchette."
+        },
+        "serviceState": {
+            "title": "État d’un service",
+            "purpose": "Dire si un service peut travailler, et sinon si c’est lui ou l’une de ses dépendances qui fait défaut.",
+            "computation": "core-backend appelle la sonde /readiness de chaque autre service, avec un délai de 2 s, et lance ses propres contrôles (base, Kafka) sans appel réseau. Réponse 200 : opérationnel. Réponse 503 : dégradé, le service répond mais une dépendance (base, Kafka ou Yahoo) est en panne. Pas de réponse dans le délai, connexion refusée ou réponse illisible : hors ligne. Les cartes de synthèse comptent les services de chaque état.",
+            "unit": "État parmi opérationnel, dégradé et hors ligne ; nombres de services.",
+            "readingTip": "Un service dégradé tourne encore : la ligne « En panne » de sa carte indique la dépendance à réparer."
+        },
+        "probeLatency": {
+            "title": "Latence de la sonde",
+            "purpose": "Repérer un service qui répond lentement avant qu’il ne dépasse le délai et passe hors ligne.",
+            "computation": "Durée mesurée par core-backend entre l’envoi de l’appel à /readiness et la réception de la réponse, arrondie à la milliseconde ; pour core-backend, durée de ses propres contrôles. Absente quand le service est hors ligne.",
+            "unit": "Millisecondes."
         }
     },
     "pages": {
@@ -1194,7 +1207,7 @@
             "description": "Rapports de gestion générés à partir de vos simulations."
         },
         "monitoring": {
-            "description": "État des microservices, lag Kafka et exécutions en cours."
+            "description": "État des services : vivacité, disponibilité et dépendances"
         },
         "users": {
             "description": "Gérez les comptes, les rôles et les accès à la plateforme."
@@ -1333,6 +1346,48 @@
                 "title": "Projection terminée",
                 "detail": "{name} · {scenarios} trajectoires · probabilité de perte {lossProbability}"
             }
+        }
+    },
+    "monitoring": {
+        "stats": {
+            "available": "Services disponibles",
+            "availableValue": "{up} / {total}",
+            "availableCaption": "readiness au vert",
+            "degraded": "Dégradés",
+            "degradedCaption": "dépendance en panne",
+            "down": "Hors ligne",
+            "interval": "Intervalle",
+            "intervalCaption": "rafraîchissement automatique"
+        },
+        "services": {
+            "title": "Services",
+            "subtitle": "Sondes /readiness · toutes les {interval}",
+            "downBadge": "{count, plural, one {# service hors ligne} other {# services hors ligne}}"
+        },
+        "states": {
+            "up": "Opérationnel",
+            "degraded": "Dégradé",
+            "down": "Hors ligne"
+        },
+        "checks": {
+            "database": "Base",
+            "kafka": "Kafka",
+            "provider": "Yahoo"
+        },
+        "dependency": {
+            "ok": "OK",
+            "down": "En panne"
+        },
+        "card": {
+            "probe": "Sonde /readiness",
+            "noResponse": "Sans réponse",
+            "latency": "Latence",
+            "milliseconds": "{ms, number} ms",
+            "checked": "Vérifié {ago}"
+        },
+        "error": {
+            "title": "État des services indisponible",
+            "description": "core-backend n’a pas répondu. Nouvel essai automatique dans {interval}."
         }
     }
 }

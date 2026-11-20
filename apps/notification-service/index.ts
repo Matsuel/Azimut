@@ -1,5 +1,5 @@
 import express from "express";
-import { errorMiddleware } from "@azimut/http";
+import { errorMiddleware, kafkaCheck, registerProbes } from "@azimut/http";
 import { KafkaClient, KafkaConsumer } from "@azimut/kafka";
 import { NOTIFICATION_TOPICS } from "@azimut/contracts";
 import { Logger, onShutdown } from "@azimut/utils";
@@ -9,6 +9,7 @@ import NotificationConsumer from "./consumers/notification.consumer";
 import NotificationService from "./services/notification.service";
 import internalAuthMiddleware from "./middleware/internal-auth.middleware";
 import notificationRouter from "./routes/notification";
+import { isDbConnected } from "./utils/db";
 
 const logger = Logger.here();
 
@@ -24,10 +25,11 @@ const app = express();
 
 app.use(express.json());
 
-// Sonde de disponibilité, sans clé : ne révèle rien
-app.get("/health", (_req, res) => {
-    res.json({ status: "ok" });
-});
+// Sondes sans clé interne (lues par core-backend et Kubernetes) : prêt quand la base `notifications` répond et que le consumer a rejoint son groupe (D3, D4)
+registerProbes(app, [
+    { name: "database", check: isDbConnected },
+    kafkaCheck([consumer]),
+]);
 
 app.use(internalAuthMiddleware);
 
