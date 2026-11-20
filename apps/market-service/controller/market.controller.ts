@@ -56,6 +56,12 @@ class MarketController {
         res.json(await this.marketService.getDividends(symbols, start, end))
     }
 
+    getRateCurve = async(req: Request, res: Response) => {
+        logger.info(`Handling rate curve request ${req.method} ${req.originalUrl}`)
+
+        res.json(await this.marketService.getRateCurve())
+    }
+
     getDefaultsAssets = async(req: Request, res: Response) => {
         logger.info(`Handling defaults market request ${req.method} ${req.originalUrl}`)
 

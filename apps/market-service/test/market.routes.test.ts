@@ -8,6 +8,7 @@ import { startApp } from "@azimut/http/testing"
 
 const closes = spyOn(MarketService.prototype, "getDailyCloses").mockResolvedValue({ AAPL: [{ date: "2024-01-02", close: 185.64 }] })
 const dividends = spyOn(MarketService.prototype, "getDividends").mockResolvedValue({ AAPL: { currency: "USD", dividends: [] } })
+const rates = spyOn(MarketService.prototype, "getRateCurve").mockResolvedValue({ currency: "USD", points: [{ symbol: "^TNX", maturityYears: 10, rate: 0.0421, date: "2026-10-28" }] })
 const search = spyOn(MarketService.prototype, "searchMarket").mockResolvedValue([])
 const details = spyOn(MarketService.prototype, "getMarketDetails").mockResolvedValue([])
 const defaults = spyOn(MarketService.prototype, "getDefaultsMarketAssets").mockResolvedValue({ data: [], count: 0, page: 1, pageSize: 10 } as never)
@@ -21,6 +22,7 @@ afterAll(async () => {
     await app.close()
     closes.mockRestore()
     dividends.mockRestore()
+    rates.mockRestore()
     search.mockRestore()
     details.mockRestore()
     defaults.mockRestore()
@@ -89,4 +91,11 @@ test("GET /api/market/defaults : pagination invalide 400, sinon 200 avec la page
     const response = await app.request("/api/market/defaults?page=2&pageSize=5", { headers: withKey })
     expect(response.status).toBe(200)
     expect(defaults).toHaveBeenCalledWith({ page: 2, pageSize: 5 })
+})
+
+test("GET /api/market/rates : 200 avec la courbe", async () => {
+    const response = await app.request("/api/market/rates", { headers: withKey })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ currency: "USD", points: [{ symbol: "^TNX", maturityYears: 10, rate: 0.0421, date: "2026-10-28" }] })
 })
