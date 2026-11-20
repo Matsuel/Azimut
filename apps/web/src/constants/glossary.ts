@@ -15,6 +15,7 @@ const MARKET_REPOSITORY = "apps/market-service/repositories/market.repository.ts
 const RISK_ENGINE = "apps/risk-engine/engine/risk.engine.ts"
 const RISK_UTILS = "apps/risk-engine/engine/risk.utils.ts"
 const PROJECTION_ENGINE = "apps/risk-engine/engine/projection.engine.ts"
+const BONDS = "apps/backtest-engine/engine/bonds.ts"
 const MONITORING_SERVICE = "apps/core-backend/services/monitoring.service.ts"
 
 /**
@@ -33,6 +34,12 @@ export const GLOSSARY = {
     // Projection Monte Carlo (feature 14)
     projectionPercentile: { source: `${PROJECTION_ENGINE} · computeProjection (points, years)` },
     projectionLossProbability: { source: `${PROJECTION_ENGINE} · computeProjection (years.lossProbability)` },
+    // Taux et obligations (feature 17)
+    bondPrice: { source: `${BONDS} · priceBond (price)` },
+    macaulayDuration: { source: `${BONDS} · priceBond (macaulayDuration)` },
+    modifiedDuration: { source: `${BONDS} · priceBond (modifiedDuration, priceChangeOnRatePlusOnePoint)` },
+    discountFactor: { source: `${BONDS} · priceBond (flows.discountFactor)` },
+    interpolatedRate: { source: `${BONDS} · interpolateRate (rate)` },
     // Résultat d'un backtest
     finalValue: { source: `${ENGINE} · simulate (finalValue)` },
     profit: { source: `${ENGINE} · simulate (profit)` },

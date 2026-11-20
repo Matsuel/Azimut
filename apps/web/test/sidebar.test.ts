@@ -3,10 +3,11 @@ import { sidebarSections } from "../src/constants/sidebar"
 import { findActiveTab } from "../src/lib/navigation"
 import { routes } from "../src/lib/routes"
 
-test("le menu a cinq sections, l'administration étant la seule réservée aux admins", () => {
+test("le menu a six sections, l'administration étant la seule réservée aux admins", () => {
     expect(sidebarSections.map((s) => s.key)).toEqual([
         "laboratory",
         "analysis",
+        "derivatives",
         "virtualTrading",
         "followUp",
         "administration",
@@ -22,5 +23,6 @@ test("chaque onglet n'apparaît qu'une fois dans le menu", () => {
 test("findActiveTab rattache une page à sa section", () => {
     expect(findActiveTab(routes.market)?.section).toBe("laboratory")
     expect(findActiveTab(routes.risk)?.section).toBe("analysis")
+    expect(findActiveTab(routes.rates)?.section).toBe("derivatives")
     expect(findActiveTab(routes.notifications)?.section).toBe("followUp")
 })

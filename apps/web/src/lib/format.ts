@@ -26,6 +26,10 @@ function numberFormatters(number: NumberFormat) {
         formatPercent: number({ style: "percent", maximumFractionDigits: 2 }),
         /** Taux en fraction affiché sans signe, 1 décimale (0,1324 → `13,2 %` ; −0,014 → `−1,4 %`). */
         formatPercent1: number({ style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+        /** Taux en fraction affiché sans signe, 2 décimales fixes (0,0421 → `4,21 %` ; 0,04 → `4,00 %`). */
+        formatPercent2: number({ style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        /** Facteur d'actualisation (ratio sans unité), 4 décimales (`0,8626`). */
+        formatFactor: number({ minimumFractionDigits: 4, maximumFractionDigits: 4 }),
         /** Nombre sans unité, 1 décimale au plus (`3,6` actifs effectifs). */
         formatDecimal1: number({ maximumFractionDigits: 1 }),
         /** Corrélation de −1 à 1, sans unité, 2 décimales (`0,71`, `−0,18`). */

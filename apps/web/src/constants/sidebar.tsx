@@ -8,6 +8,7 @@ import {
     FlaskConical,
     GitCompareArrows,
     LayoutDashboard,
+    Percent,
     ShieldAlert,
     Sparkles,
     TrendingUp,
@@ -28,8 +29,8 @@ export type SidebarSection = {
     tabs: SidebarTab[]
 }
 
-// Sections du menu (maquette Figma) : laboratoire, analyse, trading virtuel, suivi, administration.
-// Les sections « Dérivés » (taux, options, structuration) et l'onglet « Alertes » arrivent avec leurs features.
+// Sections du menu (maquette Figma) : laboratoire, analyse, dérivés, trading virtuel, suivi, administration.
+// Les onglets « Options » et « Structuration » de « Dérivés » et l'onglet « Alertes » arrivent avec leurs features.
 export const sidebarSections: SidebarSection[] = [
     {
         key: "laboratory",
@@ -49,6 +50,11 @@ export const sidebarSections: SidebarSection[] = [
             { key: "projection", url: routes.projection, icon: <Sparkles /> },
             { key: "optimization", url: routes.optimization, icon: <BrainCircuit /> },
         ],
+    },
+    {
+        key: "derivatives",
+        adminOnly: false,
+        tabs: [{ key: "rates", url: routes.rates, icon: <Percent /> }],
     },
     {
         key: "virtualTrading",
