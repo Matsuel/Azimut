@@ -14,7 +14,17 @@ import { type StatusFilter, statusFilters } from "./constants"
 import { useBacktestStats, useBacktests } from "./hook"
 import { BacktestStats } from "./stats"
 
-export function BacktestList() {
+/**
+ * Liste des backtests (stats, filtres, tableau paginé). `rowHref` donne la page ouverte au clic sur une ligne
+ * (détail du backtest par défaut) ; `withStats={false}` masque les cartes de stats (écrans Risque et Projection).
+ */
+export function BacktestList({
+    rowHref = routes.backtest,
+    withStats = true,
+}: {
+    rowHref?: (backtestId: string) => string
+    withStats?: boolean
+}) {
     const t = useTranslations("backtest")
     const router = useRouter()
     const columns = useBacktestColumns()
@@ -35,7 +45,7 @@ export function BacktestList() {
 
     return (
         <>
-            <BacktestStats stats={stats.data} />
+            {withStats && <BacktestStats stats={stats.data} />}
 
             <TableCard
                 title={t("list.tableTitle")}
@@ -46,7 +56,7 @@ export function BacktestList() {
                     query={{ ...query, data: query.data?.data }}
                     columns={columns}
                     rowKey={(b) => b.id}
-                    onRowClick={(b) => router.push(routes.backtest(b.id))}
+                    onRowClick={(b) => router.push(rowHref(b.id))}
                     emptyMessage={t("list.empty")}
                     pagination={{ page, pageSize: PAGE_SIZE, count: query.data?.count ?? 0, onPageChange: setPage }}
                 />

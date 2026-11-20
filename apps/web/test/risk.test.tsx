@@ -1,4 +1,5 @@
-import { afterEach, expect, test } from "bun:test"
+import { afterEach, expect, mock, spyOn, test } from "bun:test"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { NextIntlClientProvider } from "next-intl"
 import type { ReactNode } from "react"
@@ -11,6 +12,10 @@ import { RiskContributions } from "../src/features/risk/risk-contributions"
 import { RiskStats } from "../src/features/risk/risk-stats"
 import type { Risk, RiskReading, RiskView } from "../src/features/risk/types"
 import { awaitResultPollMs } from "../src/features/risk/utils"
+
+const push = mock<(href: string) => void>()
+mock.module("next/navigation", () => ({ useRouter: () => ({ replace: () => {}, push }) }))
+const { BacktestRisk } = await import("../src/features/risk/backtest-risk")
 
 afterEach(cleanup)
 
@@ -122,4 +127,27 @@ test("awaitResultPollMs : attend le risque pendant une exécution ou juste aprè
     expect(awaitResultPollMs(view.state, execution("COMPLETED", new Date().toISOString()))).toBe(2000)
     expect(awaitResultPollMs(view.state, execution("COMPLETED", "2024-01-01T00:00:00.000Z"))).toBe(false)
     expect(awaitResultPollMs("COMPUTED", execution("RUNNING", null))).toBe(false)
+})
+
+test("sans backtest choisi, le tableau des backtests s'affiche et un clic ouvre la page Risque", async () => {
+    const listed = {
+        id: "b7",
+        name: "Portefeuille A",
+        investmentMode: "LUMP_SUM",
+        startDate: "2016-01-01",
+        endDate: "2026-06-30",
+        allocations: [{ symbol: "AAPL", weight: "0.3" }],
+        executions: [],
+    }
+    const fetchMock = spyOn(globalThis, "fetch").mockImplementation((async () =>
+        Response.json({ data: [listed], count: 1 })) as unknown as typeof fetch)
+    inFrench(
+        <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+            <BacktestRisk backtestId="" />
+        </QueryClientProvider>,
+    )
+
+    fireEvent.click(await screen.findByText("Portefeuille A"))
+    expect(push).toHaveBeenCalledWith("/app/risk?backtest=b7")
+    fetchMock.mockRestore()
 })

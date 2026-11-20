@@ -9,8 +9,9 @@ import type { Projection, ProjectionView } from "../src/features/projection/type
 
 const getProjection = mock<(id: string) => Promise<ProjectionView>>()
 mock.module("../src/features/projection/api", () => ({ getProjection }))
-mock.module("next/navigation", () => ({ useRouter: () => ({ replace: () => {} }) }))
-// Le picker et le backtest passent par fetch : réponse vide, le backtest vient du cache
+const push = mock<(href: string) => void>()
+mock.module("next/navigation", () => ({ useRouter: () => ({ replace: () => {}, push }) }))
+// La liste et le backtest passent par fetch : réponse vide, le backtest vient du cache
 const fetchMock = spyOn(globalThis, "fetch")
 
 const { BacktestProjection } = await import("../src/features/projection/backtest-projection")
@@ -22,6 +23,7 @@ const { projectionPollMs } = await import("../src/features/projection/utils")
 afterEach(cleanup)
 beforeEach(() => {
     getProjection.mockReset()
+    push.mockReset()
     fetchMock.mockReset()
     fetchMock.mockImplementation((async (url: URL | RequestInfo) =>
         Response.json(String(url).endsWith("/backtest/b1") ? backtest : { data: [] })) as typeof fetch)
@@ -268,4 +270,14 @@ test("PENDING : deux relectures identiques ne redessinent pas l'écran, le passa
     await client.refetchQueries({ queryKey: ["projection"] })
     await screen.findByText("Paramètres de la projection")
     expect(commits).toBeGreaterThan(settled)
+})
+
+test("sans backtest choisi, le tableau des backtests s'affiche et un clic ouvre la projection", async () => {
+    const listed = { ...backtest, id: "b7", investmentMode: "LUMP_SUM", executions: [] }
+    fetchMock.mockImplementation((async () => Response.json({ data: [listed], count: 1 })) as unknown as typeof fetch)
+    inFrench(<BacktestProjection backtestId="" />)
+
+    fireEvent.click(await screen.findByText("Portefeuille A"))
+    expect(push).toHaveBeenCalledWith("/app/projection?backtest=b7")
+    expect(getProjection).not.toHaveBeenCalled()
 })

@@ -1,15 +1,13 @@
 "use client"
 
 import { type UseQueryResult, useQueryClient } from "@tanstack/react-query"
-import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import type { ReactNode } from "react"
-import { BacktestPicker } from "@/components/backtest-picker"
 import { PageHeader } from "@/components/page-layout"
 import { LoadingState } from "@/components/query-status"
 import { StateCard } from "@/components/state-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { BacktestList } from "@/features/backtest/backtest-list"
 import { useBacktest, useRerunBacktest } from "@/features/backtest/hook"
 import type { BacktestDetails, BacktestExecution } from "@/features/backtest/types"
 import { formatAllocation, getExecution, isActive } from "@/features/backtest/utils"
@@ -36,25 +34,23 @@ const describe = (f: Formatters, t: RiskTranslator, b: BacktestDetails) =>
 /**
  * Page Risque d'un backtest (maquette 33, états du cadre `33 · Risque · états`) : backtest choisi dans l'URL
  * (`?backtest=<id>`), cartes de risque, matrice, contributions, contrainte de drawdown et expositions telles que reçues
- * de `GET /api/risk/:backtestId`. `backtestId` vide : état « choisir un backtest ».
+ * de `GET /api/risk/:backtestId`. `backtestId` vide : tableau des backtests, un clic ouvre la page du backtest.
  */
 export function BacktestRisk({ backtestId }: { backtestId: string }) {
     const t = useTranslations("risk")
-    const router = useRouter()
-    const picker = <BacktestPicker onSelect={(id) => router.replace(routes.backtestRisk(id), { scroll: false })} />
 
     if (!backtestId) {
         return (
             <>
-                <PageHeader title={t("titleEmpty")} actions={picker} />
-                <StateCard message={t("states.empty")} />
+                <PageHeader title={t("titleEmpty")} description={t("states.empty")} />
+                <BacktestList rowHref={routes.backtestRisk} withStats={false} />
             </>
         )
     }
-    return <RiskContent backtestId={backtestId} picker={picker} />
+    return <RiskContent backtestId={backtestId} />
 }
 
-function RiskContent({ backtestId, picker }: { backtestId: string; picker: ReactNode }) {
+function RiskContent({ backtestId }: { backtestId: string }) {
     const f = useFormatters()
     const t = useTranslations("risk")
     const backtest = useBacktest(backtestId)
@@ -68,7 +64,6 @@ function RiskContent({ backtestId, picker }: { backtestId: string; picker: React
                 title={backtest.data ? t("title", { name: backtest.data.name }) : t("titleEmpty")}
                 badge={view?.state === "COMPUTED" && <Badge variant="success">{t("computed")}</Badge>}
                 description={backtest.data && describe(f, t, backtest.data)}
-                actions={picker}
             />
             <RiskBody backtestId={backtestId} queries={[backtest, risk]} view={view} execution={execution} />
         </>

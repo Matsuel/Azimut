@@ -5,7 +5,7 @@ Page Risque d'un backtest (feature 13, maquette `33 · Risque`, états du cadre 
 ### BacktestRisk
 
 - **Import** : `import { BacktestRisk } from "@/features/risk/backtest-risk"`.
-- **Rôle** : écran de la route `routes.backtestRisk(id)` (`/app/risk?backtest=<id>`) : en-tête « Risque · <nom> » avec badge `Calculé` (risque présent), allocation, période et `BacktestPicker` ; puis un seul état : erreur (« Réessayer »), chargement, données insuffisantes, sans risque (« Relancer le backtest », désactivé pendant une exécution), ou `RiskStats`, `CorrelationMatrix`, `RiskContributions`, `DrawdownConstraint` et `AssetExposures`. Instancie `useBacktest`, `useRisk` (rafraîchi par `awaitResultPollMs` de `features/backtest`), `useRerunBacktest` et `useSetRiskLimit`.
+- **Rôle** : écran de la route `routes.backtestRisk(id)` (`/app/risk?backtest=<id>`) : en-tête « Risque · <nom> » avec badge `Calculé` (risque présent), allocation, période ; sans `?backtest`, `BacktestList` (sans stats) dont un clic ouvre la page du backtest ; puis un seul état : erreur (« Réessayer »), chargement, données insuffisantes, sans risque (« Relancer le backtest », désactivé pendant une exécution), ou `RiskStats`, `CorrelationMatrix`, `RiskContributions`, `DrawdownConstraint` et `AssetExposures`. Instancie `useBacktest`, `useRisk` (rafraîchi par `awaitResultPollMs` de `features/backtest`), `useRerunBacktest` et `useSetRiskLimit`.
 - **Props** :
   - `backtestId` : id du backtest de l'URL ; `""` affiche l'état « Choisissez un backtest terminé ».
 - **Source** : `src/features/risk/backtest-risk.tsx`.

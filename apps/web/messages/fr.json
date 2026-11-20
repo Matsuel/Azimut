@@ -127,10 +127,6 @@
         }
     },
     "components": {
-        "backtestPicker": {
-            "choose": "Choisir un backtest",
-            "empty": "Aucun backtest terminé."
-        },
         "symbolSearch": {
             "tooShort": "Saisis au moins {count} caractères.",
             "failed": "La recherche a échoué",

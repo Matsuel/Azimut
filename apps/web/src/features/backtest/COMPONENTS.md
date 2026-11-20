@@ -6,8 +6,10 @@
 ### BacktestList
 
 - **Import** : `import { BacktestList } from "@/features/backtest/backtest-list"`.
-- **Rôle** : écran liste : `BacktestStats` (`useBacktestStats`) puis `DataTable` des backtests paginée côté serveur (`useBacktests`, `PAGE_SIZE` par page) et filtrable par statut (filtre envoyé au backend ; changer de filtre revient à la page 1) ; clic → détail. Page et filtre vivent dans l'état du composant.
-- **Props** : aucune.
+- **Rôle** : écran liste : `BacktestStats` (`useBacktestStats`) puis `DataTable` des backtests paginée côté serveur (`useBacktests`, `PAGE_SIZE` par page) et filtrable par statut (filtre envoyé au backend ; changer de filtre revient à la page 1) ; clic → `rowHref(id)` (détail par défaut). Page et filtre vivent dans l'état du composant.
+- **Props** :
+  - `rowHref?` : `(backtestId: string) => string`, page ouverte au clic sur une ligne (défaut `routes.backtest`). Risque et Projection passent `routes.backtestRisk` / `routes.backtestProjection`.
+  - `withStats?` : `false` masque `BacktestStats` (défaut `true`).
 - **Source** : `src/features/backtest/backtest-list.tsx`.
 
 ### BacktestDetail

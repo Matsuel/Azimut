@@ -48,9 +48,12 @@ jobs:
           bun-version: 1.4.2
       - run: bun install --frozen-lockfile
       # Le client Prisma n'est pas versionné
+      # DATABASE_URL factice : la config Prisma l'exige, `generate` ne se connecte pas
       - run: bun run db:generate
         if: matrix.app == 'core-backend'
         working-directory: apps/core-backend
+        env:
+          DATABASE_URL: postgresql://trading:trading@localhost:5432/trading_test
       # DATABASE_URL factice : la config Prisma l'exige, `generate` ne se connecte pas (les tests forcent notifications_test)
       - run: bun run db:generate
         if: matrix.app == 'notification-service'
@@ -74,6 +77,8 @@ jobs:
       # Le client Prisma n'est pas versionné : requis par tsc de core-backend
       - run: bun run db:generate
         working-directory: apps/core-backend
+        env:
+          DATABASE_URL: postgresql://trading:trading@localhost:5432/trading_test
       - run: bun run db:generate
         working-directory: apps/notification-service
         env:

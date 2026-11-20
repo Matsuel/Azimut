@@ -127,10 +127,6 @@
         }
     },
     "components": {
-        "backtestPicker": {
-            "choose": "Choose a backtest",
-            "empty": "No completed backtest."
-        },
         "symbolSearch": {
             "tooShort": "Enter at least {count} characters.",
             "failed": "The search failed",

@@ -1,12 +1,10 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { type ReactNode, useState } from "react"
-import { BacktestPicker } from "@/components/backtest-picker"
+import { useState } from "react"
 import { PageHeader } from "@/components/page-layout"
-import { StateCard } from "@/components/state-card"
 import { Badge } from "@/components/ui/badge"
+import { BacktestList } from "@/features/backtest/backtest-list"
 import { useBacktest } from "@/features/backtest/hook"
 import { StatusBadge } from "@/features/backtest/status-badge"
 import { formatAllocation, getExecution } from "@/features/backtest/utils"
@@ -19,28 +17,24 @@ import { ProjectionHistory } from "./projection-history"
 
 /**
  * Page Projection d'un backtest (maquette 34 et ses états) : backtest choisi dans l'URL (`?backtest=<id>`), cartes,
- * éventail, paramètres et percentiles tels que reçus de `GET /api/projection/:backtestId`. `backtestId` vide : état
- * « choisir un backtest ».
+ * éventail, paramètres et percentiles tels que reçus de `GET /api/projection/:backtestId`. `backtestId` vide : tableau
+ * des backtests, un clic ouvre la page du backtest.
  */
 export function BacktestProjection({ backtestId }: { backtestId: string }) {
     const t = useTranslations("pages.projection")
-    const router = useRouter()
-    const picker = (
-        <BacktestPicker onSelect={(id) => router.replace(routes.backtestProjection(id), { scroll: false })} />
-    )
 
     if (!backtestId) {
         return (
             <>
-                <PageHeader title={t("titleEmpty")} actions={picker} />
-                <StateCard message={t("states.empty")} />
+                <PageHeader title={t("titleEmpty")} description={t("states.empty")} />
+                <BacktestList rowHref={routes.backtestProjection} withStats={false} />
             </>
         )
     }
-    return <ProjectionContent backtestId={backtestId} picker={picker} />
+    return <ProjectionContent backtestId={backtestId} />
 }
 
-function ProjectionContent({ backtestId, picker }: { backtestId: string; picker: ReactNode }) {
+function ProjectionContent({ backtestId }: { backtestId: string }) {
     const f = useFormatters()
     const t = useTranslations("pages.projection")
     const [horizon, setHorizon] = useState<number>(DEFAULT_PROJECTION_HORIZON)
@@ -72,7 +66,6 @@ function ProjectionContent({ backtestId, picker }: { backtestId: string; picker:
                 title={backtest.data ? t("title", { name: backtest.data.name }) : t("titleEmpty")}
                 badge={badge}
                 description={subtitle || undefined}
-                actions={picker}
             />
             <ProjectionBody
                 backtestId={backtestId}
