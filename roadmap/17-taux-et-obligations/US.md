@@ -42,8 +42,8 @@
 **En tant que** utilisateur, **je veux** voir les taux à différentes maturités **afin de** comprendre qu'un taux dépend de la durée du prêt..
 
 Critères d’acceptation :
-- [ ] La courbe affiche au moins 4 points US, avec leur date.
-- [ ] La mention « taux US seulement, pas de courbe euro » apparaît.
+- [x] La courbe affiche au moins 4 points US, avec leur date.
+- [x] La mention « taux US seulement, pas de courbe euro » apparaît.
 
 Tâches : T-01, T-02, T-04, T-07 (détail dans `TASKS.md`).
 
@@ -54,8 +54,8 @@ Tâches : T-01, T-02, T-04, T-07 (détail dans `TASKS.md`).
 **En tant que** utilisateur, **je veux** calculer le prix d'une obligation à partir de la courbe **afin de** voir qu'un flux futur vaut moins aujourd'hui..
 
 Critères d’acceptation :
-- [ ] Je saisis un flux et une maturité ; le prix actualisé et la duration sont affichés.
-- [ ] Un test de référence (zéro-coupon à 3 % sur 5 ans = 86,26) passe.
+- [x] Je saisis un flux et une maturité ; le prix actualisé et la duration sont affichés.
+- [x] Un test de référence (zéro-coupon à 3 % sur 5 ans = 86,26) passe.
 
 Tâches : T-01, T-03, T-05, T-06, T-07, T-08 (détail dans `TASKS.md`).
 
@@ -76,7 +76,7 @@ Tâches : T-01, T-03, T-05, T-06, T-07, T-08 (détail dans `TASKS.md`).
 **En tant que** utilisateur, **je veux** voir la méthode d'actualisation et la source du taux **afin de** lire le résultat sans ambiguïté..
 
 Critères d’acceptation :
-- [ ] La source, la date et la méthode (composé annuel, interpolation linéaire) sont affichées.
+- [x] La source, la date et la méthode (composé annuel, interpolation linéaire) sont affichées.
 
 Tâches : T-07 (détail dans `TASKS.md`).
 
