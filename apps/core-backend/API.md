@@ -436,7 +436,7 @@ Calcul de prix demandé à backtest-engine par `pricing.requested`, résultat re
 
 - **Auth** : session requise ; la demande doit appartenir à l'utilisateur.
 - **Entrée** : params `id` (string, cuid).
-- **Réponse** : `200`, `PricingView`. `status` : `PENDING` (calcul en cours), `COMPLETED` (`result` : `PricingResult`, `bond` = taux utilisé `rate` et sa source, `curveDate`, `price` en EUR, `macaulayDuration` et `modifiedDuration` en années, `priceChangeOnRatePlusOnePoint` ratio, `flows` : `year`, `date`, `cashFlow` et `presentValue` en EUR, `discountFactor`), `FAILED` (`error` : cause, par exemple maturité hors de la courbe).
+- **Réponse** : `200`, `PricingView`. `status` : `PENDING` (calcul en cours), `COMPLETED` (`result` : `PricingResult`, `bond` = taux utilisé `rate` et sa source, `curveDate`, `price` et `totalCashFlow` (flux non actualisés) en EUR, `macaulayDuration` et `modifiedDuration` en années, `priceChangeOnRatePlusOnePoint` ratio, `flows` : `year`, `date`, `cashFlow` et `presentValue` en EUR, `discountFactor`), `FAILED` (`error` : cause, par exemple maturité hors de la courbe).
 - **Erreurs** : `401` ; `403 { "error": "Access denied" }` ; `404 { "code": "PRICING_NOT_FOUND" }`.
 - **Effets** : aucun. Les transitions `PENDING` → `COMPLETED` / `FAILED` viennent de `pricing.completed` / `pricing.failed` (gardées par statut, un rejeu est ignoré).
 - **Appelant** : `getPricing` (`features/pricing/api.ts`), hook `usePricing()`.

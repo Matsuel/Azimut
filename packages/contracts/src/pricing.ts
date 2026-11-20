@@ -90,6 +90,8 @@ export const bondResultSchema = z.object({
     curveDate: z.iso.date().nullable(),
     // EUR : somme des valeurs actuelles des flux
     price: z.number(),
+    // EUR : somme des flux non actualisés (coupons et nominal)
+    totalCashFlow: z.number(),
     // Années : duration de Macaulay, moyenne des échéances pondérée par leur valeur actuelle
     macaulayDuration: z.number(),
     // Années : durée de Macaulay / (1 + taux)

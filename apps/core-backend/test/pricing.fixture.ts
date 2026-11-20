@@ -12,6 +12,7 @@ export const pricingResult: PricingResult = {
         discountSource: "FLAT",
         curveDate: null,
         price: 86.26,
+        totalCashFlow: 100,
         macaulayDuration: 5,
         modifiedDuration: 4.8544,
         priceChangeOnRatePlusOnePoint: -0.048544,

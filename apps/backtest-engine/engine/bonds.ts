@@ -42,6 +42,7 @@ export function priceBond(bond: BondInput, curve: RateCurvePoint[] | null): Bond
     const curveDate = discount.source === "CURVE" ? curve!.map((point) => point.date).sort().at(-1)! : null;
 
     let price = 0;
+    let totalCashFlow = 0;
     let weightedYears = 0;
     const flows: BondFlow[] = [];
     for (let year = 1; year <= maturityYears; year++) {
@@ -49,6 +50,7 @@ export function priceBond(bond: BondInput, curve: RateCurvePoint[] | null): Bond
         const discountFactor = 1 / (1 + rate) ** year;
         const presentValue = cashFlow * discountFactor;
         price += presentValue;
+        totalCashFlow += cashFlow;
         weightedYears += year * presentValue;
         flows.push({
             year,
@@ -67,6 +69,7 @@ export function priceBond(bond: BondInput, curve: RateCurvePoint[] | null): Bond
         discountSource: discount.source,
         curveDate,
         price: round(price, 2),
+        totalCashFlow: round(totalCashFlow, 2),
         macaulayDuration: round(macaulayDuration, 4),
         modifiedDuration: round(modifiedDuration, 4),
         priceChangeOnRatePlusOnePoint: round(-modifiedDuration * RATE_SHOCK, 6),

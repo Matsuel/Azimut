@@ -29,6 +29,7 @@ test("les flux portent coupon, nominal à la dernière échéance, facteur et é
     ])
     // Obligation au pair : coupon = taux → prix = nominal
     expect(result.price).toBe(100)
+    expect(result.totalCashFlow).toBe(110)
 })
 
 test("duration de Macaulay d'une obligation à coupons : moyenne des échéances pondérée par la valeur actuelle", () => {
