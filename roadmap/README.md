@@ -49,7 +49,7 @@ Les dossiers des features 02 à 08 citent les anciens numéros ; cette table les
 | 13 | [Risk Engine](13-risk-engine/) | 6 | 2026-11-14 → 2026-11-15 | — | Livrée | 50 |
 | 14 | [Projection Monte Carlo](14-projection-monte-carlo/) | 7 | 2026-11-16 → 2026-11-16 | — | Livrée | 37 |
 | 15 | [Notifications : service dédié, page et toaster](15-notification-service/) | 7 ᶜ | 2026-11-17 → 2026-11-18 | — | Livrée | 46 |
-| 16 | [Monitoring : sondes de santé et page d'état des services](16-monitoring/) | 8 ᵈ | 2026-11-19 → | — | En cours | 35 |
+| 16 | [Monitoring : sondes de santé et page d'état des services](16-monitoring/) | 8 ᵈ | 2026-11-19 → 2026-11-20 | — | Livrée | 35 |
 
 ᵃ estimés a posteriori d’après les diffs.
 ᵇ hors « Roadmap annuelle » : demande du 2026-10-30, après le lot 3 de la feature 08.

@@ -1,10 +1,10 @@
 # 16 · Monitoring : sondes de santé et page d'état des services
 
-- **Statut** : En cours
+- **Statut** : Livrée
 - **Roadmap** : Hors « Roadmap annuelle » — demande du 2026-11-18 : la page Monitoring (squelette vide depuis la feature 04) passe avant les taux et obligations, et les sondes `/liveness` et `/readiness` sont posées avant Kubernetes (24).
-- **Période** : depuis le 2026-11-19
-- **Branche / PR** : `feat/monitoring` — PR à ouvrir
-- **Points** : 35 (MUST 33, SHOULD 2) — prévus
+- **Période** : 2026-11-19 → 2026-11-20
+- **Branche / PR** : `feat/monitoring` — PR vers `develop` ouverte
+- **Points** : 35 (MUST 33, SHOULD 2) — prévus, réalisés identiques
 - **Maquettes** : `09 · Monitoring` (existante, node `22:1954`, dessinée en feature 04) ; copie réduite `09 · Monitoring · à modifier (F16)` (node `606:14644`), section `Feature 16 · Monitoring (09)` (node `606:14643`)
 - **Écrans modifiés** : `09 · Monitoring` (node `22:1954`) : quatre cartes de synthèse (disponibles, dégradés, hors ligne, intervalle) et une carte par microservice (composant `ServiceCard`, node `613:14644` : nom, statut, dépendances de `/readiness`, latence, dernière vérification) à la place du tableau ; blocs « Débit des messages », « Topics Kafka » et « Exécutions en cours » retirés — dessiné dans la copie `09 · Monitoring · à modifier (F16)` (node `606:14644`), avec `09 · Monitoring · chargement (F16)` (node `614:14710`) et `09 · Monitoring · erreur (F16)` (node `614:15017`) ; validée le 19/11/2026 ; l'original est mis à jour au codage
 - **Dépend de** : 04 (rôles, garde admin) ; 15 (notification-service livré, dernier service à sonder).
@@ -39,11 +39,13 @@ Un administrateur voit en un coup d'œil quels services répondent et pourquoi l
 
 ## Écarts au plan
 
-Aucun : feature planifiée, rien de livré. L'écran « Trace d'une exécution » (section Figma `Mois 11 · Observabilité`) a été supprimé le 2026-11-18 : la page Monitoring est la seule maquette de suivi, et plus aucun écran n'a besoin du bloc « Exécutions en cours ».
+Le tableau « Services » prévu à l'origine est devenu une grille de cartes (D12), et la synthèse est calculée par core-backend (D9), toutes deux décidées en cours de feature. Les features 16 à 25 ont été renumérotées 17 à 26 (D8). L'écran « Trace d'une exécution » (section Figma `Mois 11 · Observabilité`) a été supprimé le 2026-11-18 : la page Monitoring est la seule maquette de suivi, et plus aucun écran n'a besoin du bloc « Exécutions en cours ».
 
 ## Bilan
 
-À écrire à la clôture de la feature.
+- **Livré** : les 13 tâches (35 points). Contrat `monitoring.ts`, helpers de sondes (`packages/http`), `isReady()` sur les clients Kafka, `/liveness` et `/readiness` sur les cinq services (serveur `node:http` sur `HEALTH_PORT` pour les deux workers), `requireAdmin`, `monitoring.service` et `GET /api/admin/monitoring/services`, page Monitoring (synthèse et une carte par service, rafraîchie toutes les 15 s), `/health` supprimé. `bun run verify` : voir la PR ; `bun run e2e` : `monitoring.e2e.ts` vert (administrateur voit synthèse et cartes, compte standard redirigé), 2026-11-20.
+- **Écarts** : cartes de service (D12) au lieu du tableau ; numérotation 16 à 26 (D8) ; points réalisés non mesurés séparément. Dette fermée au passage : TD-48 (`hasAdminRole` partagé dans `packages/utils`), TD-49 (`requireAdmin` relu sans cache de session), TD-50 et TD-51 (`kafkaCheck` partagé dans `packages/http`).
+- **Dette** : TD-52, `isDbConnected` écrit dans core-backend et notification-service. Arrêt de Kafka non rejoué à la main sur la page (couvert par les tests du service).
 
 ## Fichiers
 

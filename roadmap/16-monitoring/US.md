@@ -53,13 +53,13 @@
 **En tant que** développeur, **je veux** que chaque service expose `GET /liveness` et `GET /readiness` **afin que** Kubernetes et la page Monitoring lisent le même état.
 
 Critères d’acceptation :
-- [ ] Les cinq services (`core-backend`, `market-service`, `notification-service`, `backtest-engine`, `risk-engine`) répondent `200 { "status": "ok" }` sur `/liveness`, sans clé interne ni session.
-- [ ] `/readiness` répond `200` quand les dépendances de la décision D3 sont prêtes, sinon `503` avec `checks` indiquant laquelle est en panne (`"ok"` ou `"down"`).
-- [ ] Quand Yahoo ne répond pas, la readiness de `market-service` passe à `503` avec `provider: down` ; le fournisseur est interrogé au plus une fois par minute par les sondes.
-- [ ] Sans broker Kafka, la readiness de `core-backend`, `notification-service`, `backtest-engine` et `risk-engine` passe à `503` ; la liveness reste à `200`.
-- [ ] Les workers répondent sur `HEALTH_PORT` alors qu'ils n'écoutaient aucun port avant.
-- [ ] `GET /health` n'existe plus nulle part ; `API.md`, `AGENTS.md` et `apps/web/e2e/fake-market.ts` sont à jour.
-- [ ] Le contrat (`monitoring.ts`) documente les états et la forme de `checks`.
+- [x] Les cinq services (`core-backend`, `market-service`, `notification-service`, `backtest-engine`, `risk-engine`) répondent `200 { "status": "ok" }` sur `/liveness`, sans clé interne ni session.
+- [x] `/readiness` répond `200` quand les dépendances de la décision D3 sont prêtes, sinon `503` avec `checks` indiquant laquelle est en panne (`"ok"` ou `"down"`).
+- [x] Quand Yahoo ne répond pas, la readiness de `market-service` passe à `503` avec `provider: down` ; le fournisseur est interrogé au plus une fois par minute par les sondes.
+- [x] Sans broker Kafka, la readiness de `core-backend`, `notification-service`, `backtest-engine` et `risk-engine` passe à `503` ; la liveness reste à `200`.
+- [x] Les workers répondent sur `HEALTH_PORT` alors qu'ils n'écoutaient aucun port avant.
+- [x] `GET /health` n'existe plus nulle part ; `API.md`, `AGENTS.md` et `apps/web/e2e/fake-market.ts` sont à jour.
+- [x] Le contrat (`monitoring.ts`) documente les états et la forme de `checks`.
 
 Tâches : T-01, T-02, T-03, T-04, T-05, T-06 (détail dans `TASKS.md`).
 
@@ -72,12 +72,12 @@ Tâches : T-01, T-02, T-03, T-04, T-05, T-06 (détail dans `TASKS.md`).
 **En tant qu’** administrateur, **je veux** une page Monitoring qui liste l'état de chaque service et de ses dépendances **afin de** savoir tout de suite quel service est en panne.
 
 Critères d’acceptation :
-- [ ] `GET /api/admin/monitoring/services` renvoie `401` sans session, `403` pour un compte non administrateur, et pour un administrateur une ligne par service : nom, état (`up` / `degraded` / `down`), dépendances, latence en millisecondes, horodatage de la vérification.
-- [ ] Un service arrêté apparaît `down` sans bloquer la réponse au-delà de 2 s ; un service dont la base est coupée apparaît `degraded` avec `database: down`.
-- [ ] La réponse porte une synthèse (services disponibles sur le total, dégradés, hors ligne avec leurs noms) calculée par core-backend.
-- [ ] La page Monitoring (copie `09 · Monitoring · à modifier (F16)` : quatre cartes de synthèse et une carte par service) affiche ces valeurs, se rafraîchit toutes les 15 s et ne calcule aucun état.
-- [ ] Titres, libellés et états sont dans `messages/fr.json` et `messages/en.json`.
-- [ ] Un compte non administrateur ne voit ni l'entrée de sidebar ni la page (redirection existante, feature 04).
+- [x] `GET /api/admin/monitoring/services` renvoie `401` sans session, `403` pour un compte non administrateur, et pour un administrateur une ligne par service : nom, état (`up` / `degraded` / `down`), dépendances, latence en millisecondes, horodatage de la vérification.
+- [x] Un service arrêté apparaît `down` sans bloquer la réponse au-delà de 2 s ; un service dont la base est coupée apparaît `degraded` avec `database: down`.
+- [x] La réponse porte une synthèse (services disponibles sur le total, dégradés, hors ligne avec leurs noms) calculée par core-backend.
+- [x] La page Monitoring (copie `09 · Monitoring · à modifier (F16)` : quatre cartes de synthèse et une carte par service) affiche ces valeurs, se rafraîchit toutes les 15 s et ne calcule aucun état.
+- [x] Titres, libellés et états sont dans `messages/fr.json` et `messages/en.json`.
+- [x] Un compte non administrateur ne voit ni l'entrée de sidebar ni la page (redirection existante, feature 04).
 
 Tâches : T-07, T-08, T-09, T-10, T-11, T-13 (détail dans `TASKS.md`).
 
@@ -90,8 +90,8 @@ Tâches : T-07, T-08, T-09, T-10, T-11, T-13 (détail dans `TASKS.md`).
 **En tant que** développeur, **je veux** que la feature Kubernetes référence les routes livrées ici **afin de** ne pas redéfinir deux fois les probes.
 
 Critères d’acceptation :
-- [ ] La feature 24 liste la 16 dans « Dépend de » et ne planifie plus que la configuration des probes dans les charts (`/liveness`, `/readiness`, port du service).
-- [ ] Le `roadmap/README.md` (index, journal des décisions) et le `README.md` racine citent la feature 16 et la nouvelle numérotation.
+- [x] La feature 24 liste la 16 dans « Dépend de » et ne planifie plus que la configuration des probes dans les charts (`/liveness`, `/readiness`, port du service).
+- [x] Le `roadmap/README.md` (index, journal des décisions) et le `README.md` racine citent la feature 16 et la nouvelle numérotation.
 
 Tâches : T-12 (détail dans `TASKS.md`).
 
