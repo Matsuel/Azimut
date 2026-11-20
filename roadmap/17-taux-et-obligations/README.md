@@ -29,6 +29,7 @@ Taux US lus dans `market-service` (4 points, pas de clé). Interpolation et actu
 | D6 | **Source des taux** : D1 confirmée (Yahoo, gratuit, sans clé) | Seule contrainte : gratuit. L'index parlait de FRED : corrigé. | Décision du 2026-11-14 |
 | D7 | **Duration** : Macaulay (années) et modifiée (sensibilité du prix à +1 % de taux) | Le couple pédagogique complet. | Décision du 2026-11-14 |
 | D8 | **Obligation saisie** : nominal, coupon annuel, maturité, taux ; zéro-coupon = coupon à 0 | Pas de fréquence de coupon en MVP : moins de cas, limite affichée. | Décision du 2026-11-14 |
+| D9 | **Date de valeur** : date de départ des flux, sert seulement à afficher les échéances ; le prix n'en dépend pas | Maquette 35 : champ « Date de valeur ». Le prix actualisé ne dépend que des années écoulées. | Décision du 2026-11-20 (conversation) |
 
 ## Écarts au plan
 
