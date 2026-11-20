@@ -9,7 +9,7 @@ const createMarketRoutes = (): RouteDescriptor[] => {
 
     // Liste blanche : seules les routes lues par le web sont relayées. `closes` (cours d'un backtest, jusqu'à 50 symboles,
     // sans cache) reste réservée à backtest-engine, qui appelle market-service directement.
-    return ["search", "details/:id", "defaults"].map((path): RouteDescriptor => ({
+    return ["search", "details/:id", "defaults", "rates"].map((path): RouteDescriptor => ({
         method: "get",
         path: `${prefix}/${path}`,
         middlewares: [authMiddleware],
