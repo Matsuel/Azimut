@@ -1,11 +1,13 @@
 import {
     dailyClosesSchema,
     dividendsSchema,
+    rateCurveSchema,
     INTERNAL_KEY_HEADER,
     PRICE_DATA_SOURCE,
     type DailyCloses,
     type DataSource,
     type Dividends,
+    type RateCurve,
 } from "@azimut/contracts";
 
 // Délai maximal d'une réponse de market-service : le fournisseur peut mettre du temps sur une longue période ou plusieurs symboles
@@ -34,6 +36,15 @@ async function readMarket({ baseUrl, apiKey }: MarketServiceConfig, path: string
         end: end.toISOString(),
     }).toString();
 
+    return fetchMarket(url, apiKey)
+}
+
+/**
+ * Corps JSON de `url` avec la clé interne. Un appel, puis un seul nouvel essai si market-service est injoignable, dépasse
+ * le délai ou répond 502/503/504. Lève une erreur si la réponse est hors 2xx ; le code stable de market-service
+ * (`INVALID_QUERY`, `INTERNAL_ERROR`…) figure dans le message.
+ */
+async function fetchMarket(url: URL, apiKey: string): Promise<unknown> {
     const call = () =>
         fetch(url, {
             headers: { [INTERNAL_KEY_HEADER]: apiKey },
@@ -58,8 +69,13 @@ export interface IMarketClient {
     getDividends(symbols: string[], start: Date, end: Date): Promise<Dividends>;
 }
 
+// Lecture de la courbe des taux par le pricing de backtest-engine ; séparée de IMarketClient pour que risk-engine n'ait pas à la fournir
+export interface IRateCurveClient {
+    getRateCurve(): Promise<RateCurve>;
+}
+
 /** Client de market-service des engines (backtest-engine, risk-engine) : réponses validées par les schémas du contrat. */
-export class MarketClient implements IMarketClient {
+export class MarketClient implements IMarketClient, IRateCurveClient {
     readonly source = PRICE_DATA_SOURCE;
 
     constructor(private readonly config: MarketServiceConfig) { }
@@ -79,5 +95,13 @@ export class MarketClient implements IMarketClient {
      */
     async getDividends(symbols: string[], start: Date, end: Date): Promise<Dividends> {
         return dividendsSchema.parse(await readMarket(this.config, "/api/market/dividends", symbols, start, end));
+    }
+
+    /**
+     * Courbe des taux US (`GET /api/market/rates`) : un point par maturité, taux en ratio annuel. Mêmes erreurs que
+     * `getDailyCloses`.
+     */
+    async getRateCurve(): Promise<RateCurve> {
+        return rateCurveSchema.parse(await fetchMarket(new URL("/api/market/rates", this.config.baseUrl), this.config.apiKey))
     }
 }
