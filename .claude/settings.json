@@ -11,5 +11,38 @@
                 ]
             }
         ]
+    },
+    "permissions": {
+        "allow": [
+            "Bash(git status:*)",
+            "Bash(git diff:*)",
+            "Bash(git log:*)",
+            "Bash(git branch:*)",
+            "Bash(gh pr view:*)",
+            "Bash(gh pr list:*)",
+            "Bash(gh pr checks:*)",
+            "Bash(gh run list:*)",
+            "Bash(gh run view:*)",
+            "Bash(docker ps:*)",
+            "Bash(docker logs:*)",
+            "Bash(kubectl get:*)",
+            "Bash(kubectl describe:*)",
+            "Bash(kubectl logs:*)",
+            "Bash(argocd app get:*)",
+            "Bash(argocd app list:*)",
+            "Bash(rg:*)",
+            "Bash(ls:*)"
+        ],
+        "deny": [
+            "Read(./node_modules/**)",
+            "Read(./**/node_modules/**)",
+            "Read(./**/.next/**)",
+            "Read(./**/dist/**)",
+            "Read(./**/build/**)",
+            "Read(./**/coverage/**)",
+            "Read(./graphify-out/**)",
+            "Read(./bun.lock)",
+            "Read(./**/*.min.*)"
+        ]
     }
 }

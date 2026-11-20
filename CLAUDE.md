@@ -16,3 +16,11 @@ Pour toute revue (`/code-review`, relecture d'une PR vers `develop`), les règle
 10. **Engine** : I/O, horloge ou aléa hors paramètre dans `engine/` ; arrondi appliqué à un cumul (apps/backtest-engine/AGENTS.md).
 11. **Résultats stockés** : champ ajouté non nullable et sans `@default` côté Prisma, ou obligatoire côté web (AGENTS.md racine, « Conventions communes »).
 12. **Périmètre** : refactor, renommage, nouvelle dépendance ou code mort hors de la demande (AGENTS.md racine, « Règle d'or »).
+
+# Outils
+
+- Dépôt GitHub : `gh` (pas de MCP GitHub). Recherche de code : `rg`.
+- Gestionnaire de paquets : `bun` uniquement (`bun.lock`).
+- Scripts : `bun run dev`, `bun run verify`, `bun run e2e` (racine) ; `bun test` dans l'app.
+- `docker`, `kubectl`, `argocd` : lecture seule (`ps`, `logs`, `get`, `describe`).
+- MCP actifs : Figma (maquettes), Claude Docs, caveman.
