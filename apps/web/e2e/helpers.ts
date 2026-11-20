@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process"
+import { join } from "node:path"
 import { type APIRequestContext, expect, type Page } from "@playwright/test"
 import { URLS } from "./env"
 
@@ -13,6 +15,39 @@ export async function signUp(request: APIRequestContext) {
     const user = { name: "Ada E2E", email, password: "e2e-password-123" }
     const response = await request.post(`${URLS.api}/auth/sign-up/email`, {
         data: user,
+        headers: { Origin: URLS.web },
+    })
+    expect(response.ok(), await response.text()).toBe(true)
+    return user
+}
+
+/**
+ * Compte administrateur : inscrit, promu directement en base (aucune route ne donne le rôle), puis reconnecté pour que le
+ * cookie de session porte le rôle `admin`. La base est celle de la stack E2E, atteinte par `psql` dans son conteneur.
+ */
+export async function signUpAdmin(request: APIRequestContext) {
+    const user = await signUp(request)
+    execFileSync(
+        "docker",
+        [
+            "compose",
+            "-f",
+            join(__dirname, "docker-compose.yml"),
+            "exec",
+            "-T",
+            "postgres",
+            "psql",
+            "-U",
+            "trading",
+            "-d",
+            "trading_e2e",
+            "-c",
+            `UPDATE "user" SET role = 'admin' WHERE email = '${user.email}'`,
+        ],
+        { stdio: "pipe" },
+    )
+    const response = await request.post(`${URLS.api}/auth/sign-in/email`, {
+        data: { email: user.email, password: user.password },
         headers: { Origin: URLS.web },
     })
     expect(response.ok(), await response.text()).toBe(true)
