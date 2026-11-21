@@ -9,6 +9,7 @@ import {
     marketAssetSchema,
     marketDataSchema,
     marketDetailsSchema,
+    rateCurveSchema,
 } from "@azimut/contracts"
 import { INTERNAL_API_KEY, PORTS } from "./env"
 
@@ -90,6 +91,16 @@ function route(url: URL): unknown {
         // Cotation en euros : aucun taux de change demandé par l'engine
         const { symbols } = readRange(params)
         return dividendsSchema.parse(Object.fromEntries(symbols.map((s) => [s, { currency: "EUR", dividends: [] }])))
+    }
+    if (path === "/rates") {
+        // Taux fixes (ratio annuel), jour de cotation fixe : même courbe à chaque exécution
+        const points = [
+            ["^IRX", 0.25, 0.0432],
+            ["^FVX", 5, 0.0398],
+            ["^TNX", 10, 0.0421],
+            ["^TYX", 30, 0.0456],
+        ].map(([symbol, maturityYears, rate]) => ({ symbol, maturityYears, rate, date: "2026-10-28" }))
+        return rateCurveSchema.parse({ currency: "USD", points })
     }
     if (path === "/search") {
         const query = (params.get("query") ?? "").toLowerCase()

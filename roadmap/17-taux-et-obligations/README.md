@@ -39,7 +39,7 @@ Le contrat porte `totalCashFlow` (somme des flux non actualisés, ligne « Total
 
 - **Livré** : les 8 tâches (27 points). Contrat `pricing.ts` (courbe, saisie d'obligation, résultat, événements), `GET /api/market/rates` (Yahoo `^IRX`, `^FVX`, `^TNX`, `^TYX`, ratio arrondi à 6 décimales, cache 30 min), `engine/bonds.ts` (interpolation linéaire, prix, durations Macaulay et modifiée, flux), pipeline `pricing.*` (modèle `PricingRequest`, routes `POST` et `GET /api/pricing`, consumer core-backend, worker backtest-engine), page `/app/rates` (maquette 35, validée le 20/11/2026), glossaire, catalogues.
 - **Écarts** : voir « Écarts au plan » ; D9 ajoutée (date de valeur). Maquette 35 plus riche que `TASKS.md` (tableau des flux, date de valeur, réinitialiser) : suivie.
-- **Dette** : TD-53 (demande `PENDING` sans expiration ni limiteur), TD-54 (écran non mesuré contre la maquette 35 : pas de navigateur piloté). Services à redémarrer : core-backend (migration `PricingRequest` appliquée), market-service, backtest-engine.
+- **Dette** : TD-53 fermée le 2026-11-21 (expiration d'une demande `PENDING` après 2 min, limiteur de `POST /api/pricing`) ; TD-54 ouverte (écran non mesuré contre la maquette 35 : pas de navigateur piloté ; spec E2E `rates.e2e.ts` écrit, non exécuté). Services à redémarrer : core-backend (migration `PricingRequest` appliquée), market-service, backtest-engine.
 
 ## Fichiers
 
