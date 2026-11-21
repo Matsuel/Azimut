@@ -29,6 +29,7 @@ export const routes = {
     users: `${prefix}/users`,
     referenceData: `${prefix}/reference-data`,
     settings: `${prefix}/settings`,
+    section: (key: string) => `${prefix}/sections/${key}`,
 } as const
 
 /**

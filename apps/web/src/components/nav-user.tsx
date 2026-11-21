@@ -1,7 +1,7 @@
 "use client"
 
 import type { User } from "better-auth"
-import { BadgeCheckIcon, ChevronsUpDownIcon, LogOutIcon } from "lucide-react"
+import { ChevronsUpDownIcon, LogOutIcon } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -16,6 +16,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
+import { userTabs } from "@/constants/sidebar"
 import { signOut } from "@/lib/auth"
 import { routes } from "@/lib/routes"
 
@@ -67,10 +68,12 @@ export function NavUser({ user }: { user: User }) {
                             </DropdownMenuLabel>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem render={<Link href={routes.settings} />}>
-                            <BadgeCheckIcon />
-                            {t("account")}
-                        </DropdownMenuItem>
+                        {userTabs.map((tab) => (
+                            <DropdownMenuItem key={tab.url} render={<Link href={tab.url} />}>
+                                {tab.icon}
+                                {t(`tabs.${tab.key}`)}
+                            </DropdownMenuItem>
+                        ))}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={logout}>
                             <LogOutIcon />

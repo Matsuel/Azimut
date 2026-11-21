@@ -31,8 +31,12 @@ export function AppHeader() {
             {tab && (
                 <Breadcrumb>
                     <BreadcrumbList>
-                        <BreadcrumbItem className="hidden md:block">{t(`sections.${tab.section}`)}</BreadcrumbItem>
-                        <BreadcrumbSeparator className="hidden md:block" />
+                        {tab.section && (
+                            <>
+                                <BreadcrumbItem className="hidden md:block">{t(`sections.${tab.section}`)}</BreadcrumbItem>
+                                <BreadcrumbSeparator className="hidden md:block" />
+                            </>
+                        )}
                         <BreadcrumbItem>
                             {pathname === tab.url ? (
                                 <BreadcrumbPage>{t(`tabs.${tab.key}`)}</BreadcrumbPage>

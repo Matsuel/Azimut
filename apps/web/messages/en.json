@@ -64,9 +64,9 @@
             "reports": "Reports",
             "monitoring": "Monitoring",
             "users": "Users",
-            "referenceData": "Reference data"
+            "referenceData": "Reference data",
+            "account": "Account"
         },
-        "account": "Account",
         "logout": "Log out"
     },
     "theme": {
