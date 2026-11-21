@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
 import type { Request, Response } from "express"
-import { AUTH_RATE_LIMIT } from "../constants/http.constants"
-import { authRateLimit } from "../middleware/rate-limit.middleware"
+import { AUTH_RATE_LIMIT, PRICING_CREATE_RATE_LIMIT } from "../constants/http.constants"
+import { authRateLimit, pricingCreateRateLimit } from "../middleware/rate-limit.middleware"
 
 // Appelle le limiteur `count` fois depuis la même IP ; renvoie le statut du dernier appel (200 si `next` a été appelé)
-async function hit(method: string, count: number) {
+async function hit(method: string, count: number, limiter: typeof authRateLimit = authRateLimit) {
     let status = 200
     for (let i = 0; i < count; i++) {
         const req = { method, ip: "203.0.113.7", app: { get: () => false }, headers: {} } as unknown as Request
@@ -22,7 +22,7 @@ async function hit(method: string, count: number) {
         await new Promise<void>((resolve) => {
             const done = () => resolve()
             ;(res as { send: () => void }).send = done
-            authRateLimit(req, res, done)
+            limiter(req, res, done)
         })
     }
     return status
@@ -35,4 +35,10 @@ test("les GET de /api/auth (get-session) ne sont jamais limités", async () => {
 test("les POST de /api/auth sont limités au-delà de AUTH_RATE_LIMIT", async () => {
     expect(await hit("POST", AUTH_RATE_LIMIT)).toBe(200)
     expect(await hit("POST", 1)).toBe(429)
+})
+
+test("pricing : les GET (lecture chaque seconde) ne sont jamais limités, les POST le sont au-delà de PRICING_CREATE_RATE_LIMIT", async () => {
+    expect(await hit("GET", PRICING_CREATE_RATE_LIMIT * 3, pricingCreateRateLimit)).toBe(200)
+    expect(await hit("POST", PRICING_CREATE_RATE_LIMIT, pricingCreateRateLimit)).toBe(200)
+    expect(await hit("POST", 1, pricingCreateRateLimit)).toBe(429)
 })

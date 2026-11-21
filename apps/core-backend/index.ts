@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { errorMiddleware, registerProbes } from "@azimut/http";
-import { authRateLimit, backtestCreateRateLimit } from './middleware/rate-limit.middleware';
+import { authRateLimit, backtestCreateRateLimit, pricingCreateRateLimit } from './middleware/rate-limit.middleware';
 import { dbHealthCheck } from './utils/db';
 import { CORE_BACKEND_CHECKS } from './utils/probes';
 import authRouter from './routes/auth';
@@ -12,14 +12,16 @@ import notificationRouter from './routes/notification';
 import backtestRouter from './routes/backtest';
 import riskRouter from './routes/risk';
 import projectionRouter from './routes/projection';
+import pricingRouter from './routes/pricing';
 import monitoringRouter from './routes/monitoring';
 import { Logger, onShutdown } from '@azimut/utils';
-import { BACKTEST_TOPICS, PROJECTION_TOPICS, RISK_TOPICS } from '@azimut/contracts';
+import { BACKTEST_TOPICS, PRICING_TOPICS, PROJECTION_TOPICS, RISK_TOPICS } from '@azimut/contracts';
 import { consumer, kafkaClient, producer } from './lib/kafka';
 import type { MessageHandler } from '@azimut/kafka';
 import BacktestConsumer from './consumers/backtest.consumer';
 import RiskConsumer from './consumers/risk.consumer';
 import ProjectionConsumer from './consumers/projection.consumer';
+import PricingConsumer from './consumers/pricing.consumer';
 import BacktestService from './services/backtest.service';
 import { STALE_SWEEP_INTERVAL_MS } from './constants/backtest.constants';
 import { JSON_BODY_LIMIT } from './constants/http.constants';
@@ -60,6 +62,8 @@ app.use('/api/backtest', backtestCreateRateLimit);
 app.use(backtestRouter);
 app.use(riskRouter);
 app.use(projectionRouter);
+app.use('/api/pricing', pricingCreateRateLimit);
+app.use(pricingRouter);
 app.use(monitoringRouter);
 
 app.use(errorMiddleware);
@@ -72,7 +76,7 @@ async function main(): Promise<void> {
     const server = app.listen(env.PORT, () => logger.info(`Server is running on port ${env.PORT}`));
     onShutdown(() => new Promise<void>((resolve) => server.close(() => resolve())));
 
-    await kafkaClient.ensureTopics([...Object.values(BACKTEST_TOPICS), ...Object.values(RISK_TOPICS), ...Object.values(PROJECTION_TOPICS)]);
+    await kafkaClient.ensureTopics([...Object.values(BACKTEST_TOPICS), ...Object.values(RISK_TOPICS), ...Object.values(PROJECTION_TOPICS), ...Object.values(PRICING_TOPICS)]);
     await producer.connect();
     await consumer.connect();
     await consumer.subscribe(BACKTEST_TOPICS.started);
@@ -80,13 +84,18 @@ async function main(): Promise<void> {
     await consumer.subscribe(BACKTEST_TOPICS.failed);
     await consumer.subscribe(RISK_TOPICS.completed);
     await consumer.subscribe(PROJECTION_TOPICS.completed);
+    await consumer.subscribe(PRICING_TOPICS.completed);
+    await consumer.subscribe(PRICING_TOPICS.failed);
     const backtestConsumer = new BacktestConsumer();
     const riskConsumer = new RiskConsumer();
     const projectionConsumer = new ProjectionConsumer();
+    const pricingConsumer = new PricingConsumer();
     // Un seul consumer Kafka : le topic route le message vers le consommateur du domaine
     const consumers: Record<string, { handle: MessageHandler<unknown> }> = {
         [RISK_TOPICS.completed]: riskConsumer,
         [PROJECTION_TOPICS.completed]: projectionConsumer,
+        [PRICING_TOPICS.completed]: pricingConsumer,
+        [PRICING_TOPICS.failed]: pricingConsumer,
     };
     await consumer.consume((message, context) => (consumers[context.topic] ?? backtestConsumer).handle(message, context));
     onShutdown(() => consumer.disconnect());

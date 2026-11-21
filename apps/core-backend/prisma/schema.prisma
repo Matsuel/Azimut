@@ -16,6 +16,16 @@ enum BacktestStatus {
   CANCELLED
 }
 
+enum PricingKind {
+  BOND
+}
+
+enum PricingStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
 enum InvestmentMode {
   LUMP_SUM
   RECURRING
@@ -58,6 +68,7 @@ model User {
   sessions   Session[]
   portfolios Portfolio[]
   backtests  Backtest[]
+  pricings   PricingRequest[]
 
   @@map("user")
 }
@@ -288,4 +299,24 @@ model BacktestResult {
   createdAt               DateTime       @default(now())
 
   execution BacktestExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+}
+
+// Demande de pricing (obligation, puis options) : calculée par backtest-engine via `pricing.requested` / `pricing.completed`
+model PricingRequest {
+  id         String        @id @default(cuid())
+  userId     String
+  kind       PricingKind
+  status     PricingStatus @default(PENDING)
+  // PricingInput (contrat) saisi par l'utilisateur
+  input      Json
+  // PricingResult (contrat) ; null tant que la demande n'est pas COMPLETED
+  result     Json?
+  // Cause de l'échec ; null sauf FAILED
+  error      String?
+  createdAt  DateTime      @default(now())
+  finishedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

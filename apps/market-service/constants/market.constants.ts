@@ -33,6 +33,17 @@ export const DETAILS_CACHE_TTL_MS: Record<Period, number> = {
     max: 6 * 60 * MINUTE_MS,
 };
 
+// Courbe des taux US : un indice Yahoo par maturité fixe (années). Yahoo les cote en pourcentage (4.21 = 4,21 %)
+export const RATE_CURVE_SYMBOLS = [
+    { symbol: "^IRX", maturityYears: 0.25 },
+    { symbol: "^FVX", maturityYears: 5 },
+    { symbol: "^TNX", maturityYears: 10 },
+    { symbol: "^TYX", maturityYears: 30 },
+] as const;
+export const RATE_CURVE_CURRENCY = "USD";
+// Les taux ne bougent qu'en séance : une demi-heure de cache évite de rappeler Yahoo à chaque calcul
+export const RATES_CACHE_TTL_MS = 30 * MINUTE_MS;
+
 // Contrôle du fournisseur par `/readiness` (D10) : un symbole liquide toujours coté, un délai sous les 2 s de l'agrégation
 // de core-backend, et un résultat (succès ou échec) gardé une minute pour ne pas marteler Yahoo à chaque sonde
 export const PROVIDER_PROBE_SYMBOL = "SPY";

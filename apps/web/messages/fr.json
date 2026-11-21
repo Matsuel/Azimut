@@ -22,6 +22,9 @@
         "EXECUTION_IN_PROGRESS": "Une exécution est déjà en cours pour ce backtest.",
         "BACKTEST_QUEUE_FAILED": "Le backtest n’a pas pu être mis en file d’attente. Relancez-le.",
         "INVALID_RISK_LIMIT": "Le seuil de drawdown doit être un entier de 1 % à 99 %.",
+        "INVALID_PRICING": "La saisie de l’obligation est invalide.",
+        "PRICING_NOT_FOUND": "Ce calcul est introuvable.",
+        "PRICING_QUEUE_FAILED": "Le calcul n’a pas pu être lancé. Réessayez.",
         "SYMBOLS_NOT_UNIQUE": "Chaque actif ne peut apparaître qu’une fois.",
         "WEIGHTS_NOT_100": "Les poids doivent totaliser 100 %.",
         "END_BEFORE_START": "La date de fin doit être postérieure à la date de début.",
@@ -42,6 +45,7 @@
         "sections": {
             "laboratory": "Laboratoire",
             "analysis": "Analyse",
+            "derivatives": "Dérivés",
             "virtualTrading": "Trading virtuel",
             "followUp": "Suivi",
             "administration": "Administration"
@@ -56,6 +60,7 @@
             "risk": "Risque",
             "projection": "Projection",
             "optimization": "Optimisation",
+            "rates": "Taux",
             "reports": "Rapports",
             "monitoring": "Monitoring",
             "users": "Utilisateurs",
@@ -1096,6 +1101,45 @@
             "unit": "Ratio affiché en pourcentage.",
             "readingTip": "Calculée sur des scénarios historiques, pas une promesse : le futur peut sortir de cette fourchette."
         },
+        "bondPrice": {
+            "title": "Prix actualisé",
+            "purpose": "Ce que vaut aujourd’hui l’obligation : la somme de ses flux futurs ramenés à aujourd’hui.",
+            "computation": "Chaque flux (coupon, puis nominal à la dernière échéance) est multiplié par son facteur d’actualisation ; le prix est la somme de ces valeurs actuelles.",
+            "formula": "Prix = Σ flux ÷ (1 + taux)^année",
+            "unit": "Euros, pour le nominal saisi.",
+            "readingTip": "Un prix sous le nominal signifie que le taux d’actualisation est supérieur au coupon."
+        },
+        "macaulayDuration": {
+            "title": "Duration de Macaulay",
+            "purpose": "La durée moyenne, en années, au bout de laquelle on récupère l’obligation, flux actualisés compris.",
+            "computation": "Moyenne des années d’échéance pondérée par la valeur actuelle de chaque flux, divisée par le prix.",
+            "formula": "Σ année × valeur actuelle ÷ prix",
+            "unit": "Années.",
+            "readingTip": "Pour un zéro-coupon, elle vaut exactement la maturité."
+        },
+        "modifiedDuration": {
+            "title": "Duration modifiée",
+            "purpose": "La sensibilité du prix aux taux : de combien il baisse quand les taux montent.",
+            "computation": "Duration de Macaulay divisée par (1 + taux). Une hausse de 1 point de taux fait varier le prix d’environ −duration modifiée × 1 %.",
+            "formula": "Macaulay ÷ (1 + taux)",
+            "unit": "Années ; la variation de prix affichée est un ratio en pourcentage.",
+            "readingTip": "Approximation du premier ordre : fiable pour de petites variations de taux."
+        },
+        "discountFactor": {
+            "title": "Facteur d’actualisation",
+            "purpose": "Ce que vaut aujourd’hui un euro reçu à l’échéance.",
+            "computation": "1 divisé par (1 + taux) élevé à la puissance du nombre d’années (actualisation composée annuelle, base 365).",
+            "formula": "1 ÷ (1 + taux)^année",
+            "unit": "Ratio sans unité, inférieur à 1 pour un taux positif.",
+            "readingTip": "Plus l’échéance est lointaine, plus le facteur est petit."
+        },
+        "interpolatedRate": {
+            "title": "Taux utilisé",
+            "purpose": "Le taux d’actualisation appliqué à tous les flux de l’obligation.",
+            "computation": "Taux saisi (taux plat), ou taux de la courbe US lu à la maturité de l’obligation par interpolation linéaire entre les deux points qui l’encadrent. Hors de la courbe, le calcul échoue : pas d’extrapolation.",
+            "unit": "Ratio annuel affiché en pourcentage.",
+            "readingTip": "La courbe est américaine, en dollars ; il n’existe pas de courbe euro gratuite et fiable."
+        },
         "serviceState": {
             "title": "État d’un service",
             "purpose": "Dire si un service peut travailler, et sinon si c’est lui ou l’une de ses dépendances qui fait défaut.",
@@ -1194,6 +1238,108 @@
                 "blockDays": "{count} jours ouvrés",
                 "history": "Historique utilisé",
                 "historyValue": "{period} ({days} jours)"
+            }
+        },
+        "rates": {
+            "title": "Taux et obligations",
+            "badge": "Taux US seulement",
+            "description": "Courbe Yahoo du {date} · actualisation composée annuelle, base 365 · interpolation linéaire",
+            "reset": "Réinitialiser",
+            "retry": "Réessayer",
+            "cards": {
+                "irx": "Taux 13 semaines",
+                "fvx": "Taux 5 ans",
+                "tnx": "Taux 10 ans",
+                "tyx": "Taux 30 ans",
+                "caption": "Taux US au {date}"
+            },
+            "curve": {
+                "title": "Courbe des taux US",
+                "subtitle": "Rendement selon la maturité · {count} points",
+                "months": "{count} m",
+                "market": "Point de marché",
+                "interpolated": "Interpolé · {maturity} {rate}",
+                "note": "Taux US seulement, pas de courbe euro. Pas de point 2 ans : un taux intermédiaire est interpolé linéairement entre deux points."
+            },
+            "form": {
+                "title": "Prix d’une obligation",
+                "description": "Saisissez un flux et une maturité",
+                "type": "Type",
+                "types": {
+                    "ZERO": "Zéro-coupon",
+                    "COUPON": "À coupons"
+                },
+                "nominal": "Nominal (€)",
+                "coupon": "Coupon annuel (%)",
+                "zeroHint": "Zéro-coupon : aucun coupon.",
+                "maturity": "Maturité (années)",
+                "valueDate": "Date de valeur",
+                "discount": "Taux d’actualisation",
+                "discounts": {
+                    "CURVE": "Courbe US interpolée",
+                    "FLAT": "Taux euro saisi"
+                },
+                "flatRate": "Taux euro plat (%)",
+                "flatHint": "Saisi par vous : aucune source euro gratuite et fiable.",
+                "submit": "Calculer le prix",
+                "validation": {
+                    "nominal": "Le nominal doit être supérieur à 0.",
+                    "coupon": "Le coupon est un pourcentage de 0 à 100.",
+                    "maturity": "La maturité est un nombre entier d’années, de 1 à 30.",
+                    "valueDate": "Choisissez une date de valeur.",
+                    "flatRate": "Le taux est un pourcentage de 0 à 100."
+                }
+            },
+            "result": {
+                "title": "Résultat",
+                "subtitle": "{kind} {years} actualisé à {rate}",
+                "kinds": {
+                    "zero": "Zéro-coupon",
+                    "coupon": "Obligation à coupons"
+                },
+                "price": "Prix actualisé",
+                "priceCaption": "pour {nominal} dans {years}",
+                "macaulay": "Duration",
+                "macaulayCaption": "Macaulay",
+                "modified": "Duration modifiée",
+                "modifiedCaption": "{change} si taux +1 pt",
+                "columns": {
+                    "year": "Année",
+                    "flow": "Flux",
+                    "factor": "Facteur",
+                    "presentValue": "Valeur actuelle"
+                },
+                "range": "{from} à {to}",
+                "total": "Total",
+                "footnote": "Un euro dans {years} vaut {factor} € aujourd’hui à {rate} par an."
+            },
+            "method": {
+                "title": "Méthode et source",
+                "description": "Ce qui a servi au calcul",
+                "source": "Source des taux",
+                "sourceValue": "Yahoo · {symbols}",
+                "curveDate": "Date des taux",
+                "rateUsed": "Taux utilisé",
+                "rateUsedValue": {
+                    "CURVE": "{rate} · courbe US interpolée",
+                    "FLAT": "{rate} · taux euro saisi"
+                },
+                "discounting": "Actualisation",
+                "discountingValue": "Composée annuelle, base 365",
+                "interpolation": "Interpolation",
+                "interpolationValue": "Linéaire entre deux points",
+                "euroCurve": "Courbe euro",
+                "euroCurveValue": "Non disponible",
+                "credit": "Risque de crédit",
+                "creditValue": "Non modélisé",
+                "note": "Les conventions de marché (taux continus, base 360) ne sont pas appliquées."
+            },
+            "states": {
+                "empty": "Saisissez une obligation, puis calculez son prix.",
+                "pending": "Calcul en cours…",
+                "failed": "Le calcul a échoué : {reason}",
+                "readError": "Le résultat n’a pas pu être chargé.",
+                "curveError": "La courbe des taux n’a pas pu être chargée."
             }
         },
         "optimization": {

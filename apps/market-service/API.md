@@ -30,6 +30,7 @@ Catalogue des routes internes de market-service (port 8001, données yahoo-finan
 - [`GET /api/market/defaults`](#get-apimarketdefaults)
 - [`GET /api/market/closes`](#get-apimarketcloses)
 - [`GET /api/market/dividends`](#get-apimarketdividends)
+- [`GET /api/market/rates`](#get-apimarketrates)
 
 ## Conventions communes
 
@@ -125,3 +126,16 @@ Catalogue des routes internes de market-service (port 8001, données yahoo-finan
 - **Effets** : aucun.
 - **Appelant** : `MarketRepository.getDividends` de `apps/backtest-engine/repositories/market.repository.ts`.
 - **Source** : `routes/market/market.routes.ts`, `controller/market.controller.ts` (`getDividends`), `services/market.service.ts`, `repositories/market.repository.ts` (`getDividends`), `interfaces/market.interface.ts` (`dailyClosesQuerySchema`).
+
+### GET /api/market/rates
+
+- **Auth** : `x-internal-key` (comme toute route). Appelée par le web via le proxy de core-backend (`GET /api/market/rates`, liste blanche) et directement par **backtest-engine** (pricing d'obligation à taux de courbe).
+- **Entrée** : aucune.
+- **Réponse** : `200`, `RateCurve` : la courbe des taux US, un point par indice Yahoo (`^IRX` 0,25 an, `^FVX` 5 ans, `^TNX` 10 ans, `^TYX` 30 ans), triés par maturité. `rate` = ratio annuel (`0.0421` = 4,21 %), converti du pourcentage Yahoo une seule fois, ici ; `date` = jour de cotation (`YYYY-MM-DD`, fuseau de la place). Gardée 30 min en cache mémoire.
+  ```json
+  { "currency": "USD", "points": [{ "symbol": "^IRX", "maturityYears": 0.25, "rate": 0.0432, "date": "2026-10-28" }, { "symbol": "^FVX", "maturityYears": 5, "rate": 0.0398, "date": "2026-10-28" }] }
+  ```
+- **Erreurs** : `502 { "code": "BAD_GATEWAY" }` → un indice sans cotation (courbe à trous refusée) ; `500` → erreur yahoo-finance2.
+- **Effets** : aucun (lecture yahoo-finance2).
+- **Appelant** : `useRateCurve()` de `apps/web/src/features/pricing/hook.ts` ; `MarketClient.getRateCurve` de `packages/market-client` pour backtest-engine.
+- **Source** : `routes/market/market.routes.ts`, `controller/market.controller.ts` (`getRateCurve`), `services/market.service.ts`, `repositories/market.repository.ts` (`getRateCurve`).

@@ -4,6 +4,8 @@ Worker Kafka sans serveur applicatif **et sans base de données** (seul un serve
 
 Les cours cotés hors euros sont convertis en euros par l'engine (`engine/backtest.fx.ts`, taux `EURxxx=X` lus comme des cours) et les dividendes réinvestis à l'ex-date (`backtest.portfolio.ts`) ; `runBacktest` reçoit ces données en entrée, jamais d'I/O.
 
+Même worker pour le **pricing** (`pricing.requested` → `pricing.completed` ou `pricing.failed`, clé Kafka = `requestId`) : `consumers/pricing.consumer.ts`, `services/pricing.service.ts` (lit la courbe des taux auprès de market-service via `getRateCurve` de `MarketClient`, seulement si le taux d'actualisation vient de la courbe), `publishers/pricing.publisher.ts`, calcul pur dans `engine/bonds.ts`. Une erreur de calcul ou de courbe est publiée en `pricing.failed`, jamais levée.
+
 S'il manque une donnée pour calculer, ajoute-la au contrat `backtest.requested` : seul core-backend lit et écrit la base.
 
 ## Structure (à respecter, crée un dossier seulement quand un fichier en a besoin)

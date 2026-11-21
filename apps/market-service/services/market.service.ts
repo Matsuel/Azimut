@@ -1,4 +1,4 @@
-import type { DailyCloses, Dividends, MarketAsset, Paginated, PaginationQuery, Period } from "@azimut/contracts";
+import type { DailyCloses, Dividends, MarketAsset, Paginated, PaginationQuery, Period, RateCurve } from "@azimut/contracts";
 import MarketRepository, { type IMarketRepository } from "../repositories/market.repository";
 import {
     ASSETS_CACHE_TTL_MS,
@@ -7,6 +7,7 @@ import {
     PROVIDER_PROBE_CACHE_TTL_MS,
     PROVIDER_PROBE_SYMBOL,
     PROVIDER_PROBE_TIMEOUT_MS,
+    RATES_CACHE_TTL_MS,
     SEARCH_CACHE_TTL_MS,
 } from "../constants/market.constants";
 import { TtlCache } from "../utils/cache";
@@ -41,6 +42,10 @@ class MarketService {
         if (data.length < symbols.length) this.cache.delete(key)
 
         return { data, count: DEFAULT_TICKERS.length, page, pageSize }
+    }
+
+    async getRateCurve(): Promise<RateCurve> {
+        return this.cache.getOrLoad("rates", RATES_CACHE_TTL_MS, () => this.repo.getRateCurve())
     }
 
     // Jamais mis en cache : un backtest publie l'empreinte et l'instant de récupération de ces cours (reproductibilité)

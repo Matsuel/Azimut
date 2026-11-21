@@ -33,6 +33,17 @@ function countingRepo() {
     return { repo, calls }
 }
 
+test("la courbe des taux est gardée en cache", async () => {
+    let calls = 0
+    const service = new MarketService()
+    service.repo = { getRateCurve: async () => (calls++, { currency: "USD", points: [] }) } as unknown as IMarketRepository
+
+    await service.getRateCurve()
+    await service.getRateCurve()
+
+    expect(calls).toBe(1)
+})
+
 test("recherche, détails et liste par défaut sont gardés en cache", async () => {
     const { repo, calls } = countingRepo()
     const service = new MarketService()

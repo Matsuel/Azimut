@@ -22,6 +22,9 @@
         "EXECUTION_IN_PROGRESS": "An execution is already in progress for this backtest.",
         "BACKTEST_QUEUE_FAILED": "The backtest could not be queued. Run it again.",
         "INVALID_RISK_LIMIT": "The drawdown limit must be a whole number from 1% to 99%.",
+        "INVALID_PRICING": "The bond input is invalid.",
+        "PRICING_NOT_FOUND": "This calculation was not found.",
+        "PRICING_QUEUE_FAILED": "The calculation could not be started. Try again.",
         "SYMBOLS_NOT_UNIQUE": "Each asset can only appear once.",
         "WEIGHTS_NOT_100": "Weights must add up to 100%.",
         "END_BEFORE_START": "The end date must be after the start date.",
@@ -42,6 +45,7 @@
         "sections": {
             "laboratory": "Laboratory",
             "analysis": "Analysis",
+            "derivatives": "Derivatives",
             "virtualTrading": "Virtual trading",
             "followUp": "Follow-up",
             "administration": "Administration"
@@ -56,6 +60,7 @@
             "risk": "Risk",
             "projection": "Projection",
             "optimization": "Optimisation",
+            "rates": "Rates",
             "reports": "Reports",
             "monitoring": "Monitoring",
             "users": "Users",
@@ -1096,6 +1101,45 @@
             "unit": "Ratio shown as a percentage.",
             "readingTip": "Computed on historical scenarios, not a promise: the future can fall outside this range."
         },
+        "bondPrice": {
+            "title": "Discounted price",
+            "purpose": "What the bond is worth today: the sum of its future cash flows brought back to today.",
+            "computation": "Each cash flow (coupon, then the principal at the last date) is multiplied by its discount factor; the price is the sum of these present values.",
+            "formula": "Price = Σ cash flow ÷ (1 + rate)^year",
+            "unit": "Euros, for the entered face value.",
+            "readingTip": "A price below the face value means the discount rate is above the coupon."
+        },
+        "macaulayDuration": {
+            "title": "Macaulay duration",
+            "purpose": "The average time, in years, after which you get the bond back, discounted cash flows included.",
+            "computation": "Average of the payment years weighted by the present value of each cash flow, divided by the price.",
+            "formula": "Σ year × present value ÷ price",
+            "unit": "Years.",
+            "readingTip": "For a zero-coupon bond it equals the maturity exactly."
+        },
+        "modifiedDuration": {
+            "title": "Modified duration",
+            "purpose": "The price sensitivity to rates: how much it drops when rates rise.",
+            "computation": "Macaulay duration divided by (1 + rate). A 1-point rise in rates moves the price by about −modified duration × 1%.",
+            "formula": "Macaulay ÷ (1 + rate)",
+            "unit": "Years; the price change shown is a ratio displayed as a percentage.",
+            "readingTip": "First-order approximation: reliable for small rate moves."
+        },
+        "discountFactor": {
+            "title": "Discount factor",
+            "purpose": "What one euro received at the payment date is worth today.",
+            "computation": "1 divided by (1 + rate) raised to the number of years (annual compound discounting, 365 basis).",
+            "formula": "1 ÷ (1 + rate)^year",
+            "unit": "Ratio without unit, below 1 for a positive rate.",
+            "readingTip": "The later the payment date, the smaller the factor."
+        },
+        "interpolatedRate": {
+            "title": "Rate used",
+            "purpose": "The discount rate applied to every cash flow of the bond.",
+            "computation": "Entered rate (flat rate), or the US curve rate read at the bond maturity by linear interpolation between the two points around it. Outside the curve, the calculation fails: no extrapolation.",
+            "unit": "Annual ratio shown as a percentage.",
+            "readingTip": "The curve is American, in dollars; there is no free and reliable euro curve."
+        },
         "serviceState": {
             "title": "Service state",
             "purpose": "Tells whether a service can work and, if not, whether the service itself or one of its dependencies is failing.",
@@ -1194,6 +1238,108 @@
                 "blockDays": "{count} business days",
                 "history": "History used",
                 "historyValue": "{period} ({days} days)"
+            }
+        },
+        "rates": {
+            "title": "Rates and bonds",
+            "badge": "US rates only",
+            "description": "Yahoo curve of {date} · annual compound discounting, 365 basis · linear interpolation",
+            "reset": "Reset",
+            "retry": "Retry",
+            "cards": {
+                "irx": "13-week rate",
+                "fvx": "5-year rate",
+                "tnx": "10-year rate",
+                "tyx": "30-year rate",
+                "caption": "US rate on {date}"
+            },
+            "curve": {
+                "title": "US rate curve",
+                "subtitle": "Yield by maturity · {count} points",
+                "months": "{count} m",
+                "market": "Market point",
+                "interpolated": "Interpolated · {maturity} {rate}",
+                "note": "US rates only, no euro curve. No 2-year point: an intermediate rate is linearly interpolated between two points."
+            },
+            "form": {
+                "title": "Bond price",
+                "description": "Enter a cash flow and a maturity",
+                "type": "Type",
+                "types": {
+                    "ZERO": "Zero-coupon",
+                    "COUPON": "With coupons"
+                },
+                "nominal": "Face value (€)",
+                "coupon": "Annual coupon (%)",
+                "zeroHint": "Zero-coupon: no coupon.",
+                "maturity": "Maturity (years)",
+                "valueDate": "Value date",
+                "discount": "Discount rate",
+                "discounts": {
+                    "CURVE": "Interpolated US curve",
+                    "FLAT": "Entered euro rate"
+                },
+                "flatRate": "Flat euro rate (%)",
+                "flatHint": "Entered by you: no free and reliable euro source.",
+                "submit": "Calculate the price",
+                "validation": {
+                    "nominal": "The face value must be greater than 0.",
+                    "coupon": "The coupon is a percentage from 0 to 100.",
+                    "maturity": "The maturity is a whole number of years, from 1 to 30.",
+                    "valueDate": "Choose a value date.",
+                    "flatRate": "The rate is a percentage from 0 to 100."
+                }
+            },
+            "result": {
+                "title": "Result",
+                "subtitle": "{kind} {years} discounted at {rate}",
+                "kinds": {
+                    "zero": "Zero-coupon",
+                    "coupon": "Coupon bond"
+                },
+                "price": "Discounted price",
+                "priceCaption": "for {nominal} in {years}",
+                "macaulay": "Duration",
+                "macaulayCaption": "Macaulay",
+                "modified": "Modified duration",
+                "modifiedCaption": "{change} if rates +1 pt",
+                "columns": {
+                    "year": "Year",
+                    "flow": "Cash flow",
+                    "factor": "Factor",
+                    "presentValue": "Present value"
+                },
+                "range": "{from} to {to}",
+                "total": "Total",
+                "footnote": "One euro in {years} is worth €{factor} today at {rate} per year."
+            },
+            "method": {
+                "title": "Method and source",
+                "description": "What was used for the calculation",
+                "source": "Rate source",
+                "sourceValue": "Yahoo · {symbols}",
+                "curveDate": "Rate date",
+                "rateUsed": "Rate used",
+                "rateUsedValue": {
+                    "CURVE": "{rate} · interpolated US curve",
+                    "FLAT": "{rate} · entered euro rate"
+                },
+                "discounting": "Discounting",
+                "discountingValue": "Annual compound, 365 basis",
+                "interpolation": "Interpolation",
+                "interpolationValue": "Linear between two points",
+                "euroCurve": "Euro curve",
+                "euroCurveValue": "Not available",
+                "credit": "Credit risk",
+                "creditValue": "Not modelled",
+                "note": "Market conventions (continuous rates, 360 basis) are not applied."
+            },
+            "states": {
+                "empty": "Enter a bond, then calculate its price.",
+                "pending": "Calculating…",
+                "failed": "The calculation failed: {reason}",
+                "readError": "The result could not be loaded.",
+                "curveError": "The rate curve could not be loaded."
             }
         },
         "optimization": {

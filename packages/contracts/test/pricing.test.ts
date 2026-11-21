@@ -1,0 +1,36 @@
+import { expect, test } from "bun:test"
+import { bondInputSchema, pricingInputSchema, pricingRequestedEventSchema, rateCurveSchema } from "../src"
+
+const bond = { nominal: 100, couponRate: 0, maturityYears: 5, discount: { source: "FLAT", rate: 0.03 }, valueDate: "2026-10-28" }
+
+test("bondInputSchema : maturité entière de 1 à 30 ans, taux plat de 0 à 1", () => {
+    expect(bondInputSchema.safeParse(bond).success).toBe(true)
+    expect(bondInputSchema.safeParse({ ...bond, discount: { source: "CURVE" } }).success).toBe(true)
+    expect(bondInputSchema.safeParse({ ...bond, maturityYears: 0 }).success).toBe(false)
+    expect(bondInputSchema.safeParse({ ...bond, maturityYears: 31 }).success).toBe(false)
+    expect(bondInputSchema.safeParse({ ...bond, maturityYears: 2.5 }).success).toBe(false)
+    expect(bondInputSchema.safeParse({ ...bond, discount: { source: "FLAT", rate: 3 } }).success).toBe(false)
+    expect(bondInputSchema.safeParse({ ...bond, discount: { source: "FLAT" } }).success).toBe(false)
+})
+
+test("bondInputSchema : nominal positif, coupon en ratio, date de valeur ISO", () => {
+    expect(bondInputSchema.safeParse({ ...bond, nominal: 0 }).success).toBe(false)
+    expect(bondInputSchema.safeParse({ ...bond, couponRate: 5 }).success).toBe(false)
+    expect(bondInputSchema.safeParse({ ...bond, valueDate: "28/10/2026" }).success).toBe(false)
+})
+
+test("pricing.requested : enveloppe avec requestId, type de produit et obligation", () => {
+    const event = { eventId: "e1", eventType: "pricing.requested", occurredAt: "2026-11-20T10:00:00.000Z", version: 1, payload: { requestId: "p1", kind: "BOND", bond } }
+
+    expect(pricingRequestedEventSchema.safeParse(event).success).toBe(true)
+    expect(pricingRequestedEventSchema.safeParse({ ...event, payload: { kind: "BOND", bond } }).success).toBe(false)
+    expect(pricingInputSchema.safeParse({ kind: "OPTION", bond }).success).toBe(false)
+})
+
+test("rateCurveSchema : au moins un point, jour de cotation ISO", () => {
+    const point = { symbol: "^TNX", maturityYears: 10, rate: 0.0421, date: "2026-10-28" }
+
+    expect(rateCurveSchema.safeParse({ currency: "USD", points: [point] }).success).toBe(true)
+    expect(rateCurveSchema.safeParse({ currency: "USD", points: [] }).success).toBe(false)
+    expect(rateCurveSchema.safeParse({ currency: "USD", points: [{ ...point, maturityYears: 0 }] }).success).toBe(false)
+})

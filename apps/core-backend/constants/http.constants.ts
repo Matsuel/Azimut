@@ -7,3 +7,5 @@ export const RATE_LIMIT_WINDOW_MS = 60_000;
 // Requêtes par fenêtre et par IP : l'authentification est la cible des attaques par force brute, la création d'un backtest lance un calcul
 export const AUTH_RATE_LIMIT = 30;
 export const BACKTEST_CREATE_RATE_LIMIT = 20;
+// Demandes de pricing par minute et par client : un clic sur « Calculer le prix » en publie une
+export const PRICING_CREATE_RATE_LIMIT = 30;

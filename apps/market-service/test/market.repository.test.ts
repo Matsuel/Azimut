@@ -15,6 +15,26 @@ const mockChart = (chart: unknown) => {
 
 afterEach(() => spies.splice(0).forEach((spy) => spy.mockRestore()))
 
+test("getRateCurve convertit le pourcentage Yahoo en ratio et date chaque taux dans le fuseau de la place", async () => {
+    spies.push(spyOn(yahoo, "quote").mockImplementation(async (symbol) => ({
+        regularMarketPrice: symbol === "^IRX" ? 4.1470003 : 4.21,
+        regularMarketTime: new Date("2026-10-28T02:00:00Z"),
+        exchangeTimezoneName: "America/Chicago",
+    })))
+
+    const curve = await new MarketRepository().getRateCurve()
+
+    expect(curve.currency).toBe("USD")
+    expect(curve.points.map((point) => point.symbol)).toEqual(["^IRX", "^FVX", "^TNX", "^TYX"])
+    expect(curve.points[0]).toEqual({ symbol: "^IRX", maturityYears: 0.25, rate: 0.04147, date: "2026-10-27" })
+})
+
+test("getRateCurve refuse une courbe dont un indice n'a pas de cotation", async () => {
+    spies.push(spyOn(yahoo, "quote").mockImplementation(async (symbol) => (symbol === "^TNX" ? {} : { regularMarketPrice: 4, regularMarketTime: new Date() })))
+
+    await expect(new MarketRepository().getRateCurve()).rejects.toBeInstanceOf(BadGatewayError)
+})
+
 test("getDailyCloses lit le jour de cotation dans le fuseau de la place et écarte les jours sans clôture", async () => {
     mockChart({
         meta: { exchangeTimezoneName: "Asia/Tokyo", currency: "JPY" },

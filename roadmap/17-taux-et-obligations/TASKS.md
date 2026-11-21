@@ -6,14 +6,14 @@
 
 | Tâche | Titre | US | Couche | Priorité | Points | Dépend de | Commits |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T-01 | Contrat : courbe de taux et valeurs de pricing | US-01, US-02 | contracts | MUST | 2 | — | — |
-| T-02 | Route de courbe US dans market-service | US-01 | market-service | MUST | 3 | — | — |
-| T-03 | Engine : actualisation, prix d'obligation, duration | US-02 | backtest-engine | MUST | 5 | — | — |
-| T-04 | Engine : interpolation linéaire de la courbe | US-01 | backtest-engine | MUST | 3 | — | — |
-| T-05 | Calcul des obligations passé par le worker | US-02 | core-backend | MUST | 5 | T-01, T-03 | — |
-| T-06 | Worker : consumer pricing et publication | US-02 | backtest-engine | MUST | 3 | T-03, T-04, T-05 | — |
-| T-07 | Page calculateur obligation et courbe | US-01, US-02, US-03 | web | SHOULD | 5 | T-02, T-05 | — |
-| T-08 | Catalogues API et composants | US-02 | docs | SHOULD | 1 | T-05 | — |
+| T-01 | Contrat : courbe de taux et valeurs de pricing | US-01, US-02 | contracts | MUST | 2 | — | `db2ffe3` |
+| T-02 | Route de courbe US dans market-service | US-01 | market-service | MUST | 3 | — | `27d77b2`, `6328924` |
+| T-03 | Engine : actualisation, prix d'obligation, duration | US-02 | backtest-engine | MUST | 5 | — | `42a798a` |
+| T-04 | Engine : interpolation linéaire de la courbe | US-01 | backtest-engine | MUST | 3 | — | `42a798a` |
+| T-05 | Calcul des obligations passé par le worker | US-02 | core-backend | MUST | 5 | T-01, T-03 | `e0bd11f` |
+| T-06 | Worker : consumer pricing et publication | US-02 | backtest-engine | MUST | 3 | T-03, T-04, T-05 | `e13bfcb` |
+| T-07 | Page calculateur obligation et courbe | US-01, US-02, US-03 | web | SHOULD | 5 | T-02, T-05 | `1105ad1`, `cd314a1` |
+| T-08 | Catalogues API et composants | US-02 | docs | SHOULD | 1 | T-05 | `e0bd11f`, `1105ad1` |
 
 **Total** : 27 points — MUST 21, SHOULD 6.
 
@@ -58,85 +58,85 @@ flowchart LR
 
 ### T-01 · Contrat : courbe de taux et valeurs de pricing
 
-- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : —
+- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : `db2ffe3`
 - **Fichiers** : `packages/contracts/src/pricing.ts`
 
 Critères d’acceptation :
-- [ ] Point de courbe : maturité en années (nombre), taux en ratio annuel (0,045 = 4,5 %), devise.
-- [ ] Ajout de `pricing.requested` et `pricing.completed` (enveloppe `KafkaEvent`).
+- [x] Point de courbe : maturité en années (nombre), taux en ratio annuel (0,045 = 4,5 %), devise.
+- [x] Ajout de `pricing.requested` et `pricing.completed` (enveloppe `KafkaEvent`).
 
 ## Lot 2 — Données
 
 ### T-02 · Route de courbe US dans market-service
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : `27d77b2`, `6328924`
 - **Fichiers** : `apps/market-service/routes/market/`, `repositories/market.repository.ts`, `API.md`
 
 Critères d’acceptation :
-- [ ] `GET /api/market/rates` renvoie les points `^IRX` (0,25 an), `^FVX` (5 ans), `^TNX` (10 ans), `^TYX` (30 ans).
-- [ ] Taux en pourcentage Yahoo converti en ratio une seule fois, ici (D1).
-- [ ] Route cataloguée dans `API.md`.
+- [x] `GET /api/market/rates` renvoie les points `^IRX` (0,25 an), `^FVX` (5 ans), `^TNX` (10 ans), `^TYX` (30 ans).
+- [x] Taux en pourcentage Yahoo converti en ratio une seule fois, ici (D1).
+- [x] Route cataloguée dans `API.md`.
 
 ## Lot 3 — Moteur
 
 ### T-03 · Engine : actualisation, prix d'obligation, duration
 
-- **US** : US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : — · **Commits** : —
+- **US** : US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : — · **Commits** : `42a798a`
 - **Fichiers** : `apps/backtest-engine/engine/bonds.ts`, `bonds.test.ts`
 
 Critères d’acceptation :
-- [ ] Actualisation composée annuelle (D3) : PV = flux / (1 + r)^t.
-- [ ] Prix d'un zéro-coupon à 3 % sur 5 ans = 86,26 pour 100.
-- [ ] Entrées : nominal, coupon annuel, maturité, taux ; zéro-coupon = coupon à 0 (D8).
-- [ ] Duration de Macaulay (années) et modifiée (D7) ; une hausse de 1 % des taux change le prix d'environ duration modifiée × 1 %.
+- [x] Actualisation composée annuelle (D3) : PV = flux / (1 + r)^t.
+- [x] Prix d'un zéro-coupon à 3 % sur 5 ans = 86,26 pour 100.
+- [x] Entrées : nominal, coupon annuel, maturité, taux ; zéro-coupon = coupon à 0 (D8).
+- [x] Duration de Macaulay (années) et modifiée (D7) ; une hausse de 1 % des taux change le prix d'environ duration modifiée × 1 %.
 
 ### T-04 · Engine : interpolation linéaire de la courbe
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : `42a798a`
 - **Fichiers** : `apps/backtest-engine/engine/bonds.ts`
 
 Critères d’acceptation :
-- [ ] Taux à une maturité quelconque, interpolé entre deux points (D2).
-- [ ] Hors de la courbe : erreur explicite, jamais d'extrapolation silencieuse.
+- [x] Taux à une maturité quelconque, interpolé entre deux points (D2).
+- [x] Hors de la courbe : erreur explicite, jamais d'extrapolation silencieuse.
 
 ## Lot 4 — Service
 
 ### T-05 · Calcul des obligations passé par le worker
 
-- **US** : US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-01, T-03 · **Commits** : —
+- **US** : US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-01, T-03 · **Commits** : `e0bd11f`
 - **Fichiers** : `apps/core-backend/services/pricing.service.ts`, `routes/pricing/`, `prisma/schema.prisma`
 
 Critères d’acceptation :
-- [ ] POST crée une demande `PENDING`, publie `pricing.requested`.
-- [ ] Résultat stocké (prix, duration) ; rejeu sans doublon.
+- [x] POST crée une demande `PENDING`, publie `pricing.requested`.
+- [x] Résultat stocké (prix, duration) ; rejeu sans doublon.
 
 ## Lot 5 — Worker
 
 ### T-06 · Worker : consumer pricing et publication
 
-- **US** : US-02 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-03, T-04, T-05 · **Commits** : —
+- **US** : US-02 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-03, T-04, T-05 · **Commits** : `e13bfcb`
 - **Fichiers** : `apps/backtest-engine/consumers/pricing.consumer.ts`, `publishers/`
 
 Critères d’acceptation :
-- [ ] Consomme `pricing.requested`, publie `pricing.completed` ou un échec.
-- [ ] Message invalide loggué et ignoré.
+- [x] Consomme `pricing.requested`, publie `pricing.completed` ou un échec.
+- [x] Message invalide loggué et ignoré.
 
 ## Lot 6 — Écrans
 
 ### T-07 · Page calculateur obligation et courbe
 
-- **US** : US-01, US-02, US-03 · **Priorité** : SHOULD · **Points** : 5 · **Dépend de** : T-02, T-05 · **Commits** : —
+- **US** : US-01, US-02, US-03 · **Priorité** : SHOULD · **Points** : 5 · **Dépend de** : T-02, T-05 · **Commits** : `1105ad1`, `cd314a1`
 - **Fichiers** : `apps/web/src/features/pricing/` (nouveau)
 
 Critères d’acceptation :
-- [ ] Courbe affichée telle que reçue.
-- [ ] Formulaire d'obligation : nominal, coupon annuel, maturité, taux (pris sur la courbe ou saisi, D8).
-- [ ] Prix et duration affichés telle que reçus du backend.
+- [x] Courbe affichée telle que reçue.
+- [x] Formulaire d'obligation : nominal, coupon annuel, maturité, taux (pris sur la courbe ou saisi, D8).
+- [x] Prix et duration affichés telle que reçus du backend.
 
 ### T-08 · Catalogues API et composants
 
-- **US** : US-02 · **Priorité** : SHOULD · **Points** : 1 · **Dépend de** : T-05 · **Commits** : —
+- **US** : US-02 · **Priorité** : SHOULD · **Points** : 1 · **Dépend de** : T-05 · **Commits** : `e0bd11f`, `1105ad1`
 - **Fichiers** : `apps/core-backend/API.md`, `apps/web/COMPONENTS.md`
 
 Critères d’acceptation :
-- [ ] Routes et composants documentés.
+- [x] Routes et composants documentés.

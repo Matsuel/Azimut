@@ -29,18 +29,19 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
 
 - [Conventions communes](#conventions-communes)
 - [Auth](#auth) : `ALL /api/auth/{*path}`
-- [Market (proxy)](#market-proxy) : `GET /api/market/{search,details/:id,defaults}`
+- [Market (proxy)](#market-proxy) : `GET /api/market/{search,details/:id,defaults,rates}`
 - [Notifications (proxy)](#notifications-proxy) : `GET /api/notifications`, `GET /unread-count`, `GET /stream` (SSE), `POST /read-all`, `POST /:id/read`
 - [Portfolio](#portfolio) : `POST`, `GET`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
 - [Backtest](#backtest) : `POST`, `POST /preview`, `POST /:id/executions`, `GET /stats`, `POST /batch`, `GET /batch/:batchId`, `POST /batch/:batchId/starts`, `POST /batch/:batchId/executions`, `GET /compare`, `GET /:id`, `GET`
 - [Risque](#risque) : `GET /api/risk/:backtestId`, `PUT /api/risk/:backtestId/constraint`
 - [Projection](#projection) : `GET /api/projection/:backtestId`
+- [Pricing](#pricing) : `POST /api/pricing`, `GET /api/pricing/:id`
 - [Monitoring (admin)](#monitoring-admin) : `GET /api/admin/monitoring/services`
 
 ## Conventions communes
 
 - **Base** : `http://localhost:8000`. Le web appelle via `apiFetch(path)` (`apps/web/src/lib/api.ts`) avec `NEXT_PUBLIC_API_URL=http://localhost:8000/api` : `apiFetch("/backtest")` → `GET /api/backtest`. Cookies envoyés (`credentials: "include"`), CORS limité à `env.WEB_URL` (défaut `http://localhost:3000`, `env.ts`).
-- **Ordre d'enregistrement** (`index.ts`) : `GET /liveness` et `GET /readiness` (`registerProbes`), `helmet`, `cors`, limiteur `/api/auth` + `authRouter`, `marketRouter` et `notificationRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, `monitoringRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
+- **Ordre d'enregistrement** (`index.ts`) : `GET /liveness` et `GET /readiness` (`registerProbes`), `helmet`, `cors`, limiteur `/api/auth` + `authRouter`, `marketRouter` et `notificationRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, limiteur `/api/pricing` + `pricingRouter`, `monitoringRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
 - **Santé** (sans auth, hors `/api`, `registerProbes` et `kafkaCheck` de `@azimut/http`) :
   - `GET /liveness` → toujours `200 { "status": "ok" }`, sans toucher aucune dépendance.
   - `GET /readiness` → `200 { "status": "ok", "checks": { "database": "ok", "kafka": "ok" } }` ; `503 { "status": "unavailable", "checks": { … } }` dès qu'un contrôle vaut `"down"`. `database` : la base `trading` répond (`isDbConnected`) ; `kafka` : le consumer (groupe rejoint) et le producer (connecté) sont prêts (`isReady()`). Forme : `readinessResponseSchema` de `@azimut/contracts`.
@@ -97,11 +98,11 @@ Les routes de liste (`GET /api/portfolio`, `GET /api/backtest`) suivent le contr
 
 ## Market (proxy)
 
-### GET /api/market/search · GET /api/market/details/:id · GET /api/market/defaults
+### GET /api/market/search · GET /api/market/details/:id · GET /api/market/defaults · GET /api/market/rates
 
 - **Auth** : session requise (`authMiddleware`).
 - **Entrée** : requête relayée telle quelle (chemin complet `/api/market/...`, query) vers `env.MARKET_SERVICE_URL` (défaut `http://localhost:8001`, `env.ts`). L'en-tête `x-user-id` entrant est supprimé puis remplacé par `req.userId` (anti-usurpation). L'en-tête `x-internal-key` (`INTERNAL_KEY_HEADER`, valeur `INTERNAL_API_KEY`) est ajouté : market-service refuse tout appel qui ne le porte pas.
-- **Réponse** : statut et corps de market-service, inchangés. Liste blanche : seules ces trois routes sont relayées ; toute autre (dont `GET /api/market/closes`, réservée à backtest-engine) reçoit la 404 par défaut d'Express. Détail des routes : voir [`apps/market-service/API.md`](../market-service/API.md).
+- **Réponse** : statut et corps de market-service, inchangés. Liste blanche : seules ces quatre routes sont relayées ; toute autre (dont `GET /api/market/closes`, réservée à backtest-engine) reçoit la 404 par défaut d'Express. Détail des routes : voir [`apps/market-service/API.md`](../market-service/API.md).
 - **Erreurs** : `401` → pas de session ; `502 { "error": "Service unavailable" }` → market-service injoignable ou sans réponse sous 10 s (`proxyTimeout: 10_000`) ; erreurs de market-service relayées avec leur statut.
 - **Effets** : aucun.
 - **Appelant** : fonctions de `apps/web/src/features/market/api.ts` (détail dans `apps/market-service/API.md`).
@@ -413,6 +414,33 @@ Calculée par `risk-engine` après le risque de chaque backtest (`projection.com
 - **Effets** : aucun.
 - **Appelant** : `getProjection` (`features/projection/api.ts`), page Projection.
 - **Source** : `routes/projection/projection.routes.ts`, `controller/projection.controller.ts`, `services/projection.service.ts`, `repositories/projection.repository.ts`.
+
+## Pricing
+
+Calcul de prix demandé à backtest-engine par `pricing.requested`, résultat reçu par `pricing.completed` ou `pricing.failed` (feature 17). Le web interroge la demande jusqu'à ce qu'elle ne soit plus `PENDING`.
+
+### POST /api/pricing
+
+- **Auth** : session requise.
+- **Entrée** : body `PricingInput` (`packages/contracts/src/pricing.ts`) : `kind` (`BOND`) et `bond` : `nominal` (EUR > 0), `couponRate` (ratio annuel 0..1, `0` = zéro-coupon), `maturityYears` (entier de 1 à 30), `discount` (`{ source: "CURVE" }` pour le taux de la courbe US interpolé à la maturité, ou `{ source: "FLAT", rate }` avec `rate` ratio annuel 0..1), `valueDate` (`YYYY-MM-DD`, ne date que les échéances).
+- **Réponse** : `202`, `PricingView` : `status` `PENDING`, `result` et `error` `null`.
+  ```json
+  { "id": "c1", "kind": "BOND", "status": "PENDING", "input": { "kind": "BOND", "bond": { "nominal": 100, "couponRate": 0, "maturityYears": 5, "discount": { "source": "FLAT", "rate": 0.03 }, "valueDate": "2026-10-28" } }, "result": null, "error": null, "createdAt": "2026-11-20T10:00:00.000Z" }
+  ```
+- **Erreurs** : `400 { "code": "INVALID_PRICING", "issues": [ZodIssue] }` ; `401` ; `429` → plus de `PRICING_CREATE_RATE_LIMIT` (30) demandes par minute et par client (`pricingCreateRateLimit`, les `GET` ne comptent pas) ; `500 { "code": "PRICING_QUEUE_FAILED" }` → `pricing.requested` non publié, la demande est passée `FAILED`.
+- **Effets** : crée la demande `PENDING` et publie `pricing.requested` (clé Kafka = id de la demande).
+- **Appelant** : `createPricing` (`features/pricing/api.ts`), page Taux.
+- **Source** : `routes/pricing/pricing.routes.ts`, `controller/pricing.controller.ts`, `services/pricing.service.ts`, `repositories/pricing.repository.ts`.
+
+### GET /api/pricing/:id
+
+- **Auth** : session requise ; la demande doit appartenir à l'utilisateur.
+- **Entrée** : params `id` (string, cuid).
+- **Réponse** : `200`, `PricingView`. `status` : `PENDING` (calcul en cours), `COMPLETED` (`result` : `PricingResult`, `bond` = taux utilisé `rate` et sa source, `curveDate`, `price` et `totalCashFlow` (flux non actualisés) en EUR, `macaulayDuration` et `modifiedDuration` en années, `priceChangeOnRatePlusOnePoint` ratio, `flows` : `year`, `date`, `cashFlow` et `presentValue` en EUR, `discountFactor`), `FAILED` (`error` : cause, par exemple maturité hors de la courbe, ou `Pricing timed out…` quand la demande est restée `PENDING` plus de `PRICING_TIMEOUT_MS`, 2 min : backtest-engine n'a pas répondu ; l'expiration est écrite à la lecture).
+- **Erreurs** : `401` ; `403 { "error": "Access denied" }` ; `404 { "code": "PRICING_NOT_FOUND" }`.
+- **Effets** : aucun. Les transitions `PENDING` → `COMPLETED` / `FAILED` viennent de `pricing.completed` / `pricing.failed` (gardées par statut, un rejeu est ignoré).
+- **Appelant** : `getPricing` (`features/pricing/api.ts`), hook `usePricing()`.
+- **Source** : `routes/pricing/pricing.routes.ts`, `controller/pricing.controller.ts`, `services/pricing.service.ts`.
 
 ## Monitoring (admin)
 

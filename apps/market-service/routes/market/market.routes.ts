@@ -31,6 +31,11 @@ const createMarketRoutes = (): RouteDescriptor[] => {
         },
         {
             method: "get",
+            path: `${prefix}/rates`,
+            handler: asyncHandler(controller.getRateCurve)
+        },
+        {
+            method: "get",
             path: `${prefix}/defaults`,
             handler: asyncHandler(controller.getDefaultsAssets)
         },

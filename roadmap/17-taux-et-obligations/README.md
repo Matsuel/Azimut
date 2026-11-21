@@ -1,10 +1,10 @@
 # 17 · Taux et obligations
 
-- **Statut** : Planifiée
+- **Statut** : Livrée
 - **Roadmap** : Mois 8 — Mois 8 — Taux et obligations (courbe, actualisation, prix, duration, zéro-coupon)
-- **Période** : à fixer au démarrage de la feature
-- **Branche / PR** : `feat/taux-et-obligations` — PR à ouvrir
-- **Points** : 27 (MUST 21, SHOULD 6) — prévus
+- **Période** : 2026-11-20
+- **Branche / PR** : `feat/taux-et-obligations` — PR à ouvrir (vers `develop`)
+- **Points** : 27 (MUST 21, SHOULD 6) — estimés (points réalisés non mesurés séparément)
 - **Maquettes** : `35 · Taux et obligations` (créée, node `456:12522`)
 - **Écrans modifiés** : aucun (page `Taux` de la sidebar existante)
 - **Dépend de** : 08 (livrée). Introduit le pipeline `pricing.*` réutilisé par 18 à 22.
@@ -29,14 +29,17 @@ Taux US lus dans `market-service` (4 points, pas de clé). Interpolation et actu
 | D6 | **Source des taux** : D1 confirmée (Yahoo, gratuit, sans clé) | Seule contrainte : gratuit. L'index parlait de FRED : corrigé. | Décision du 2026-11-14 |
 | D7 | **Duration** : Macaulay (années) et modifiée (sensibilité du prix à +1 % de taux) | Le couple pédagogique complet. | Décision du 2026-11-14 |
 | D8 | **Obligation saisie** : nominal, coupon annuel, maturité, taux ; zéro-coupon = coupon à 0 | Pas de fréquence de coupon en MVP : moins de cas, limite affichée. | Décision du 2026-11-14 |
+| D9 | **Date de valeur** : date de départ des flux, sert seulement à afficher les échéances ; le prix n'en dépend pas | Maquette 35 : champ « Date de valeur ». Le prix actualisé ne dépend que des années écoulées. | Décision du 2026-11-20 (conversation) |
 
 ## Écarts au plan
 
-Aucun : feature planifiée, rien de livré.
+Le contrat porte `totalCashFlow` (somme des flux non actualisés, ligne « Total » de la maquette : le web ne somme pas) et un topic `pricing.failed` en plus de `pricing.requested` / `pricing.completed` (cause lisible de l'échec). La courbe est lue par backtest-engine via `MarketClient.getRateCurve` (interface `IRateCurveClient`, pour ne pas imposer la méthode à risk-engine).  Le proxy de core-backend relaie `GET /api/market/rates` au web (liste blanche).
 
 ## Bilan
 
-À écrire à la clôture de la feature.
+- **Livré** : les 8 tâches (27 points). Contrat `pricing.ts` (courbe, saisie d'obligation, résultat, événements), `GET /api/market/rates` (Yahoo `^IRX`, `^FVX`, `^TNX`, `^TYX`, ratio arrondi à 6 décimales, cache 30 min), `engine/bonds.ts` (interpolation linéaire, prix, durations Macaulay et modifiée, flux), pipeline `pricing.*` (modèle `PricingRequest`, routes `POST` et `GET /api/pricing`, consumer core-backend, worker backtest-engine), page `/app/rates` (maquette 35, validée le 20/11/2026), glossaire, catalogues.
+- **Écarts** : voir « Écarts au plan » ; D9 ajoutée (date de valeur). Maquette 35 plus riche que `TASKS.md` (tableau des flux, date de valeur, réinitialiser) : suivie.
+- **Dette** : TD-53 fermée le 2026-11-21 (expiration d'une demande `PENDING` après 2 min, limiteur de `POST /api/pricing`) ; TD-54 ouverte, réduite aux écarts de composants partagés (écran mesuré le 2026-11-21 à 5 largeurs contre la maquette 35 ; spec E2E `rates.e2e.ts` exécuté : 18 tests de la suite passent). Bug trouvé par l'E2E et corrigé : core-backend ne créait pas les topics `pricing.*` au démarrage. Services à redémarrer : core-backend (migration `PricingRequest` appliquée), market-service, backtest-engine.
 
 ## Fichiers
 

@@ -79,3 +79,18 @@ test("lit les dividendes et la devise auprès de market-service", async () => {
     expect(calls[0]!.headers.get("x-internal-key")).toBeTruthy()
 })
 
+
+test("lit la courbe des taux avec la clé interne et valide la réponse", async () => {
+    const curve = { currency: "USD", points: [{ symbol: "^TNX", maturityYears: 10, rate: 0.0421, date: "2026-10-28" }] }
+    const calls = stubFetch(() => Response.json(curve))
+
+    expect(await client().getRateCurve()).toEqual(curve)
+    expect(new URL(calls[0]!.url).pathname).toBe("/api/market/rates")
+    expect(calls[0]!.headers.get("x-internal-key")).toBe("test-internal-key-0000")
+})
+
+test("courbe hors contrat : erreur", async () => {
+    stubFetch(() => Response.json({ currency: "USD", points: [] }))
+
+    await expect(client().getRateCurve()).rejects.toThrow()
+})

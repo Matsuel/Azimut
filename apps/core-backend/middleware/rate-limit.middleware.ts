@@ -1,5 +1,5 @@
 import { rateLimit } from "express-rate-limit";
-import { AUTH_RATE_LIMIT, BACKTEST_CREATE_RATE_LIMIT, RATE_LIMIT_WINDOW_MS } from "../constants/http.constants";
+import { AUTH_RATE_LIMIT, BACKTEST_CREATE_RATE_LIMIT, PRICING_CREATE_RATE_LIMIT, RATE_LIMIT_WINDOW_MS } from "../constants/http.constants";
 
 const base = { windowMs: RATE_LIMIT_WINDOW_MS, standardHeaders: "draft-7", legacyHeaders: false } as const;
 
@@ -15,3 +15,6 @@ export const backtestCreateRateLimit = rateLimit({
     limit: BACKTEST_CREATE_RATE_LIMIT,
     skip: (req) => req.method !== "POST" || req.path === "/preview",
 });
+
+/** Limite les demandes de pricing (`POST /api/pricing`) ; la lecture `GET /api/pricing/:id`, relancée chaque seconde pendant un calcul, n'est pas comptée. */
+export const pricingCreateRateLimit = rateLimit({ ...base, limit: PRICING_CREATE_RATE_LIMIT, skip: (req) => req.method !== "POST" });

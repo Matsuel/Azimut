@@ -20,3 +20,19 @@ test("formatAxis : compact à partir du million pour tenir dans l'axe, entier en
     expect(formatAxis(5)).toBe("5")
     expect(formatAxis(0)).toBe("0")
 })
+
+// Formatters de la page Taux : taux à 2 décimales fixes, facteur d'actualisation à 4, durations en années à 2
+test("formatPercent2, formatFactor et formatYears2 : décimales fixes, même pour un nombre rond", () => {
+    const wrapper = ({ children }: { children: ReactNode }) => (
+        <NextIntlClientProvider locale="fr" messages={fr}>
+            {children}
+        </NextIntlClientProvider>
+    )
+    const { result } = renderHook(() => useFormatters(), { wrapper })
+
+    expect(normalize(result.current.formatPercent2(0.0421))).toBe("4,21 %")
+    expect(normalize(result.current.formatPercent2(0.04))).toBe("4,00 %")
+    expect(result.current.formatFactor(0.862609)).toBe("0,8626")
+    expect(normalize(result.current.formatYears2(5))).toBe("5,00 ans")
+    expect(normalize(result.current.formatYears2(4.8544))).toBe("4,85 ans")
+})

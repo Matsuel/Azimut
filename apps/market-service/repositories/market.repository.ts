@@ -1,10 +1,11 @@
 import YahooFinance from "yahoo-finance2";
 import type { ChartOptions } from "yahoo-finance2/modules/chart";
-import type { DailyCloses, Dividends, MarketAsset, MarketData, MarketDetails, Period } from "@azimut/contracts";
+import type { DailyCloses, Dividends, MarketAsset, MarketData, MarketDetails, Period, RateCurve } from "@azimut/contracts";
 import { BadGatewayError } from "@azimut/http";
 import { env } from "../env";
-import { DAY_MS, Logger } from "@azimut/utils";
+import { DAY_MS, Logger, round } from "@azimut/utils";
 import { toMajorCurrency } from "../utils/currency";
+import { RATE_CURVE_CURRENCY, RATE_CURVE_SYMBOLS } from "../constants/market.constants";
 
 const logger = Logger.here();
 
@@ -14,6 +15,7 @@ export interface IMarketRepository {
     getAssets(symbols: string[]): Promise<MarketAsset[]>;
     getDailyCloses(symbols: string[], start: Date, end: Date): Promise<DailyCloses>;
     getDividends(symbols: string[], start: Date, end: Date): Promise<Dividends>;
+    getRateCurve(): Promise<RateCurve>;
     ping(symbol: string): Promise<void>;
 }
 
@@ -146,6 +148,26 @@ class MarketRepository implements IMarketRepository {
         )
 
         return Object.fromEntries(series)
+    }
+
+    /**
+     * Courbe des taux US : dernier niveau des indices `RATE_CURVE_SYMBOLS`, triés par maturité. Le pourcentage de Yahoo
+     * (4.21) est converti en ratio (0.0421, arrondi à 6 décimales) ici, une seule fois (D1). Un indice sans cotation lève `BadGatewayError` :
+     * une courbe à trous fausserait l'interpolation.
+     */
+    async getRateCurve(): Promise<RateCurve> {
+        const points = await Promise.all(
+            RATE_CURVE_SYMBOLS.map(async ({ symbol, maturityYears }) => {
+                const quote = await MarketRepository.yahooFinance.quote(symbol)
+                if (quote.regularMarketPrice == null || !quote.regularMarketTime) throw new BadGatewayError()
+
+                // Jour de cotation dans le fuseau de la place, comme les clôtures
+                const toDay = new Intl.DateTimeFormat("en-CA", { timeZone: quote.exchangeTimezoneName ?? "UTC" })
+                return { symbol, maturityYears, rate: round(quote.regularMarketPrice / 100, 6), date: toDay.format(quote.regularMarketTime) }
+            }),
+        )
+
+        return { currency: RATE_CURVE_CURRENCY, points }
     }
 
     /** Requête légère (cotation d'un symbole) qui lève l'erreur du fournisseur s'il ne répond pas. Sert à `/readiness`. */
