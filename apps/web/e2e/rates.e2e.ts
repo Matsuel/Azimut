@@ -7,7 +7,7 @@ test("la page Taux montre la courbe des taux US et la mention « Taux US seuleme
     await page.goto("/app/rates")
 
     await expect(page.getByRole("heading", { name: "Taux et obligations" })).toBeVisible()
-    await expect(page.getByText("Taux US seulement")).toBeVisible()
+    await expect(page.getByText("Taux US seulement", { exact: true })).toBeVisible()
     for (const symbol of ["^IRX", "^FVX", "^TNX", "^TYX"])
         await expect(page.getByText(symbol, { exact: true })).toBeVisible()
     await expect(page.getByText("Saisissez une obligation, puis calculez son prix.")).toBeVisible()
