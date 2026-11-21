@@ -42,15 +42,23 @@ Les dossiers des features 02 à 08 citent les anciens numéros ; cette table les
 | 06 | [Extraction de market-service](06-market-service/) | 2 | 2026-10-28 | #3 | Livrée | 8 ᵃ |
 | 07 | [Clôture du Strategy Lab](07-strategy-lab-cloture/) | 3 | 2026-10-29 → 2026-10-30 | #3 | Livrée | 24 ᵃ |
 | 08 | [Portfolio Management V1](08-portfolio-v1/) | 4 | 2026-10-30 → 2026-10-31 | — | Livrée | 104 |
+| fix-01 | [Revue de la PR Portfolio Management V1](fix-01-revue-portfolio-v1/) | — | 2026-10-31 | — | Livrée | 3 ᵃ |
 | 09 | [Aide contextuelle sur les données](09-aide-contextuelle/) | 4–5 ᵇ | 2026-11-01 | — | Livrée | 28 |
+| fix-02 | [Navigation, proxy et primitives shadcn du web](fix-02-navigation-et-shadcn-web/) | — | 2026-11-01 → 2026-11-02 | — | Livrée | 7 ᵃ |
 | 10 | [Internationalisation et apparence du web](10-internationalisation/) | 5 | — | — | En cours (T-11 restant) | 50 |
 | 11 | [Dividendes, splits et effet devise](11-dividendes-splits-devise/) | 5 | 2026-11-12 | — | Livrée | 36 |
+| fix-03 | [Passe de dette : proxy, limites de débit et démarrage](fix-03-passe-de-dette-lot-1/) | — | 2026-11-12 | — | Livrée | 11 ᵃ |
+| fix-04 | [Revue de la feature 11 : dividendes, splits et devise](fix-04-revue-dividendes/) | — | 2026-11-12 | — | Livrée | 14 ᵃ |
 | 12 | [Robustesse : dates de départ et métriques glissantes](12-robustesse-dates-de-depart/) | 5 | 2026-11-13 | #10 | Livrée | 36 |
+| fix-05 | [CI sur les PR et passe de dette du 13 novembre](fix-05-ci-et-dette-lot-2/) | — | 2026-11-12 → 2026-11-13 | — | Livrée | 7 ᵃ |
 | 13 | [Risk Engine](13-risk-engine/) | 6 | 2026-11-14 → 2026-11-15 | — | Livrée | 50 |
 | 14 | [Projection Monte Carlo](14-projection-monte-carlo/) | 7 | 2026-11-16 → 2026-11-16 | — | Livrée | 37 |
+| fix-06 | [Robustesse de la projection Monte Carlo](fix-06-projection-robustesse/) | — | 2026-11-16 | — | Livrée | 6 ᵃ |
 | 15 | [Notifications : service dédié, page et toaster](15-notification-service/) | 7 ᶜ | 2026-11-17 → 2026-11-18 | — | Livrée | 46 |
+| fix-07 | [Ajustements web après les notifications](fix-07-web-notifications-et-historique/) | — | 2026-11-18 | — | Livrée | 4 ᵃ |
 | 16 | [Monitoring : sondes de santé et page d'état des services](16-monitoring/) | 8 ᵈ | 2026-11-19 → 2026-11-20 | — | Livrée | 35 |
 | 17 | [Taux et obligations](17-taux-et-obligations/) | 8 | 2026-11-20 | — | Livrée | 27 |
+| fix-08 | [Correctifs après les taux et obligations](fix-08-taux-pricing-et-ci/) | — | 2026-11-21 | — | Livrée | 8 ᵃ |
 
 ᵃ estimés a posteriori d’après les diffs.
 ᵇ hors « Roadmap annuelle » : demande du 2026-10-30, après le lot 3 de la feature 08.
@@ -79,6 +87,7 @@ Planification : **toutes les features 10 à 26 sont planifiées** (dossiers `roa
 | 16 | [Monitoring : sondes de santé et page d'état des services](16-monitoring/) | 8 ᵈ | 04, 15 | Page Monitoring (statuts des services) et routes `/liveness` et `/readiness` sur les cinq services, lues par la page puis par les probes Kubernetes (24). Demande du 2026-11-18. |
 | 17 | Taux et obligations | 8 | 08 | Source de taux (Yahoo, gratuit ; FRED reporté), courbe, actualisation, prix, duration. Indépendant du risque. |
 | 18 | Options vanilles : payoffs et Black-Scholes | 9 | 11, 17 | Besoin du taux (17) et des dividendes (11). |
+| fix-09 | [Navigation automatique et pages d'index de section](fix-09-navigation-automatique/) | — | 18 | Hors feature : le menu du profil et le fil d'Ariane viennent de la source unique `constants/sidebar.tsx`, et chaque titre de section ouvre une page d'index. Livrée le 2026-11-21 (24 points). |
 | 19 | Grecques, volatilité implicite et surface | 9 | 18 | Route `options/:symbol` dans `market-service` ; volatilité implicite recalculée par le moteur. |
 | 20 | Pricing Monte Carlo et option à barrière | 10 | 14, 18 | Moteur de 14, validé contre Black-Scholes (18). |
 | 21 | Produits structurés : décomposition, juste valeur, marge | 10 | 17, 19, 20 | Capital garanti, reverse convertible, autocallable. |
@@ -108,10 +117,15 @@ Planification : **toutes les features 10 à 26 sont planifiées** (dossiers `roa
 | 2026-11-03 | Cap « structureur » : la roadmap des mois 5 à 10 passe de l’optimisation et du reporting à la structuration (taux, obligations, options, produits structurés, term sheet). Optimisation, paper trading, notifications et profils de clients passent en COULD ; CI/CD, Kubernetes, Helm et GitOps (mois 11-12) sont conservés. | [README racine](../README.md#structuration--taux-options-et-produits-structurés) |
 | 2026-11-17 | Les notifications quittent le COULD : service dédié `notification-service` avec sa propre base (exception à « core-backend seul écrivain en base »), alimenté par `notification.requested` publié par core-backend, flux SSE ; les features 15 à 24 deviennent 16 à 25. | [15](15-notification-service/), `4373b83` |
 | 2026-11-18 | Une feature Monitoring prend le numéro 16 (page admin d'état des services, limitée aux statuts) ; les features 16 à 25 deviennent 17 à 26. Routes `/liveness` et `/readiness` sur les cinq services, qui remplacent `/health` ; Kubernetes (24) les consomme au lieu de les écrire. | [16](16-monitoring/) |
+| 2026-11-21 | Les correctifs hors feature ont leur dossier `roadmap/fix-NN-<slug>/`, numéroté à part ; `fix-01` à `fix-08` rétro-documentés, `fix-09` (navigation automatique) planifié après la feature 18. | [fix-09](fix-09-navigation-automatique/) |
 
 ## Conventions communes
 
 S’appliquent à tous les dossiers ; les `TASKS.md` y renvoient au lieu de les répéter.
+
+### Correctifs `fix-NN`
+
+Un correctif ou un ajustement hors feature a son dossier `roadmap/fix-NN-<slug>/` (`README.md`, `US.md`, `TASKS.md`), numéroté **indépendamment** des features, dans l'ordre chronologique (`fix-01`, `fix-02`…). Dans l'index, il se place **juste après la feature livrée avant lui** (ligne `fix-NN`, colonnes Mois et PR à `—`). Les `fix-01` à `fix-08` ont été reconstitués a posteriori (2026-11-21) d'après `git log` : seuls les commits `fix(...)`, `ci:` correctifs sont classés ; le suivi `docs(roadmap)` et `docs(tech-debt)` n'y figure pas.
 
 ### Statuts
 

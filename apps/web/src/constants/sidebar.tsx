@@ -1,5 +1,6 @@
 import {
     Activity,
+    BadgeCheck,
     Bell,
     BrainCircuit,
     ChartCandlestick,
@@ -79,3 +80,6 @@ export const sidebarSections: SidebarSection[] = [
         ],
     },
 ]
+
+// Onglets hors sidebar, ouverts depuis le menu du profil (`NavUser`) ; sans section, donc sans page d'index
+export const userTabs: SidebarTab[] = [{ key: "account", url: routes.settings, icon: <BadgeCheck /> }]
