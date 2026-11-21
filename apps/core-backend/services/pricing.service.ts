@@ -11,6 +11,7 @@ import {
     type PricingView,
 } from "@azimut/contracts"
 import { ForbiddenError, InternalError, NotFoundError } from "@azimut/http"
+import { PRICING_TIMEOUT_MS, PRICING_TIMEOUT_REASON } from "../constants/pricing.constants"
 import type { PricingRecord } from "../interfaces/pricing.interface"
 import PricingRepository, { type IPricingRepository } from "../repositories/pricing.repository"
 import { producer } from "../lib/kafka"
@@ -19,6 +20,8 @@ const logger = Logger.here()
 
 class PricingService {
     repo: IPricingRepository = new PricingRepository()
+    // Horloge injectable pour tester l'expiration
+    now: () => Date = () => new Date()
     // Publication de `pricing.requested` (substituable en test)
     publish = (payload: PricingRequestedPayload) =>
         producer.publish(PRICING_TOPICS.requested, { key: payload.requestId, value: createKafkaEvent(PRICING_TOPICS.requested, payload) })
@@ -40,11 +43,18 @@ class PricingService {
         return this.toView(record)
     }
 
-    /** Demande de pricing de l'utilisateur : `NotFoundError` si elle n'existe pas, `ForbiddenError` si elle appartient à un autre. */
+    /**
+     * Demande de pricing de l'utilisateur : `NotFoundError` si elle n'existe pas, `ForbiddenError` si elle appartient à un autre.
+     * Une demande `PENDING` depuis plus de `PRICING_TIMEOUT_MS` passe `FAILED` (transition gardée : un résultat arrivé entre-temps gagne).
+     */
     async get(id: string, userId: string): Promise<PricingView> {
-        const record = await this.repo.getById(id)
+        let record = await this.repo.getById(id)
         if (!record) throw new NotFoundError(API_ERROR_CODES.PRICING_NOT_FOUND)
         if (record.userId !== userId) throw new ForbiddenError()
+        if (record.status === "PENDING" && this.now().getTime() - record.createdAt.getTime() > PRICING_TIMEOUT_MS) {
+            await this.repo.fail(id, PRICING_TIMEOUT_REASON, this.now())
+            record = (await this.repo.getById(id)) ?? record
+        }
         return this.toView(record)
     }
 

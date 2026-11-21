@@ -41,7 +41,7 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
 ## Conventions communes
 
 - **Base** : `http://localhost:8000`. Le web appelle via `apiFetch(path)` (`apps/web/src/lib/api.ts`) avec `NEXT_PUBLIC_API_URL=http://localhost:8000/api` : `apiFetch("/backtest")` → `GET /api/backtest`. Cookies envoyés (`credentials: "include"`), CORS limité à `env.WEB_URL` (défaut `http://localhost:3000`, `env.ts`).
-- **Ordre d'enregistrement** (`index.ts`) : `GET /liveness` et `GET /readiness` (`registerProbes`), `helmet`, `cors`, limiteur `/api/auth` + `authRouter`, `marketRouter` et `notificationRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, `pricingRouter`, `monitoringRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
+- **Ordre d'enregistrement** (`index.ts`) : `GET /liveness` et `GET /readiness` (`registerProbes`), `helmet`, `cors`, limiteur `/api/auth` + `authRouter`, `marketRouter` et `notificationRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, limiteur `/api/pricing` + `pricingRouter`, `monitoringRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
 - **Santé** (sans auth, hors `/api`, `registerProbes` et `kafkaCheck` de `@azimut/http`) :
   - `GET /liveness` → toujours `200 { "status": "ok" }`, sans toucher aucune dépendance.
   - `GET /readiness` → `200 { "status": "ok", "checks": { "database": "ok", "kafka": "ok" } }` ; `503 { "status": "unavailable", "checks": { … } }` dès qu'un contrôle vaut `"down"`. `database` : la base `trading` répond (`isDbConnected`) ; `kafka` : le consumer (groupe rejoint) et le producer (connecté) sont prêts (`isReady()`). Forme : `readinessResponseSchema` de `@azimut/contracts`.
@@ -427,7 +427,7 @@ Calcul de prix demandé à backtest-engine par `pricing.requested`, résultat re
   ```json
   { "id": "c1", "kind": "BOND", "status": "PENDING", "input": { "kind": "BOND", "bond": { "nominal": 100, "couponRate": 0, "maturityYears": 5, "discount": { "source": "FLAT", "rate": 0.03 }, "valueDate": "2026-10-28" } }, "result": null, "error": null, "createdAt": "2026-11-20T10:00:00.000Z" }
   ```
-- **Erreurs** : `400 { "code": "INVALID_PRICING", "issues": [ZodIssue] }` ; `401` ; `500 { "code": "PRICING_QUEUE_FAILED" }` → `pricing.requested` non publié, la demande est passée `FAILED`.
+- **Erreurs** : `400 { "code": "INVALID_PRICING", "issues": [ZodIssue] }` ; `401` ; `429` → plus de `PRICING_CREATE_RATE_LIMIT` (30) demandes par minute et par client (`pricingCreateRateLimit`, les `GET` ne comptent pas) ; `500 { "code": "PRICING_QUEUE_FAILED" }` → `pricing.requested` non publié, la demande est passée `FAILED`.
 - **Effets** : crée la demande `PENDING` et publie `pricing.requested` (clé Kafka = id de la demande).
 - **Appelant** : `createPricing` (`features/pricing/api.ts`), page Taux.
 - **Source** : `routes/pricing/pricing.routes.ts`, `controller/pricing.controller.ts`, `services/pricing.service.ts`, `repositories/pricing.repository.ts`.
@@ -436,7 +436,7 @@ Calcul de prix demandé à backtest-engine par `pricing.requested`, résultat re
 
 - **Auth** : session requise ; la demande doit appartenir à l'utilisateur.
 - **Entrée** : params `id` (string, cuid).
-- **Réponse** : `200`, `PricingView`. `status` : `PENDING` (calcul en cours), `COMPLETED` (`result` : `PricingResult`, `bond` = taux utilisé `rate` et sa source, `curveDate`, `price` et `totalCashFlow` (flux non actualisés) en EUR, `macaulayDuration` et `modifiedDuration` en années, `priceChangeOnRatePlusOnePoint` ratio, `flows` : `year`, `date`, `cashFlow` et `presentValue` en EUR, `discountFactor`), `FAILED` (`error` : cause, par exemple maturité hors de la courbe).
+- **Réponse** : `200`, `PricingView`. `status` : `PENDING` (calcul en cours), `COMPLETED` (`result` : `PricingResult`, `bond` = taux utilisé `rate` et sa source, `curveDate`, `price` et `totalCashFlow` (flux non actualisés) en EUR, `macaulayDuration` et `modifiedDuration` en années, `priceChangeOnRatePlusOnePoint` ratio, `flows` : `year`, `date`, `cashFlow` et `presentValue` en EUR, `discountFactor`), `FAILED` (`error` : cause, par exemple maturité hors de la courbe, ou `Pricing timed out…` quand la demande est restée `PENDING` plus de `PRICING_TIMEOUT_MS`, 2 min : backtest-engine n'a pas répondu ; l'expiration est écrite à la lecture).
 - **Erreurs** : `401` ; `403 { "error": "Access denied" }` ; `404 { "code": "PRICING_NOT_FOUND" }`.
 - **Effets** : aucun. Les transitions `PENDING` → `COMPLETED` / `FAILED` viennent de `pricing.completed` / `pricing.failed` (gardées par statut, un rejeu est ignoré).
 - **Appelant** : `getPricing` (`features/pricing/api.ts`), hook `usePricing()`.

@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { errorMiddleware, registerProbes } from "@azimut/http";
-import { authRateLimit, backtestCreateRateLimit } from './middleware/rate-limit.middleware';
+import { authRateLimit, backtestCreateRateLimit, pricingCreateRateLimit } from './middleware/rate-limit.middleware';
 import { dbHealthCheck } from './utils/db';
 import { CORE_BACKEND_CHECKS } from './utils/probes';
 import authRouter from './routes/auth';
@@ -62,6 +62,7 @@ app.use('/api/backtest', backtestCreateRateLimit);
 app.use(backtestRouter);
 app.use(riskRouter);
 app.use(projectionRouter);
+app.use('/api/pricing', pricingCreateRateLimit);
 app.use(pricingRouter);
 app.use(monitoringRouter);
 

@@ -3,6 +3,7 @@ import { ForbiddenError, InternalError, NotFoundError } from "@azimut/http"
 import type { PricingRequestedPayload } from "@azimut/contracts"
 import type { IPricingRepository } from "../repositories/pricing.repository"
 import type { PricingRecord } from "../interfaces/pricing.interface"
+import { PRICING_TIMEOUT_MS } from "../constants/pricing.constants"
 import PricingService from "../services/pricing.service"
 import { pricingInput, pricingResult } from "./pricing.fixture"
 
@@ -76,4 +77,24 @@ test("complete et fail : un rejeu (0 ligne modifiée) ne lève pas", async () =>
     await service.fail({ requestId: "p1", finishedAt: "2026-11-20T10:00:01.000Z", reason: "boom" })
 
     expect(calls).toEqual(["complete", "fail:boom"])
+})
+
+test("get : demande PENDING depuis plus de PRICING_TIMEOUT_MS → FAILED enregistrée, relue", async () => {
+    const created = new Date("2026-11-20T10:00:00Z")
+    const { service, calls } = setup(record({ createdAt: created }))
+    service.now = () => new Date(created.getTime() + PRICING_TIMEOUT_MS + 1)
+    service.repo.getById = async () => (calls.length ? record({ status: "FAILED", error: "Pricing timed out: no answer from the pricing worker" }) : record({ createdAt: created }))
+
+    const view = await service.get("p1", "u1")
+
+    expect(calls).toEqual(["fail:Pricing timed out: no answer from the pricing worker"])
+    expect(view).toMatchObject({ status: "FAILED", error: expect.stringContaining("timed out") })
+})
+
+test("get : demande PENDING récente → inchangée, rien n'est écrit", async () => {
+    const { service, calls } = setup(record({ createdAt: new Date("2026-11-20T10:00:00Z") }))
+    service.now = () => new Date("2026-11-20T10:00:30Z")
+
+    expect((await service.get("p1", "u1")).status).toBe("PENDING")
+    expect(calls).toEqual([])
 })
