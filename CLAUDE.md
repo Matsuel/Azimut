@@ -22,5 +22,5 @@ Pour toute revue (`/code-review`, relecture d'une PR vers `develop`), les règle
 - Dépôt GitHub : `gh` (pas de MCP GitHub). Recherche de code : `rg`.
 - Gestionnaire de paquets : `bun` uniquement (`bun.lock`).
 - Scripts : `bun run dev`, `bun run verify`, `bun run e2e` (racine) ; `bun test` dans l'app.
-- `docker`, `kubectl`, `argocd` : lecture seule (`ps`, `logs`, `get`, `describe`).
+- `docker` : lecture seule (`ps`, `logs`), sauf la stack E2E jetable (`bun run e2e`, qui lance `docker compose` sur `apps/web/e2e/docker-compose.yml`) : autorisée. `kubectl`, `argocd` : lecture seule (`get`, `describe`, `logs`).
 - MCP actifs : Figma (maquettes), Claude Docs, caveman.
