@@ -67,6 +67,31 @@
             "referenceData": "Données de référence",
             "account": "Compte"
         },
+        "descriptions": {
+            "dashboard": "Vue d’ensemble de vos portefeuilles, backtests et indicateurs clés.",
+            "notifications": "Les événements de vos calculs et de vos exécutions, lus ou non lus.",
+            "market": "Cours, recherche de symboles et détail d’un instrument.",
+            "backtests": "Lancez, suivez et relisez vos simulations de portefeuille.",
+            "compare": "Comparez les résultats de plusieurs backtests côte à côte.",
+            "paperTrading": "Testez une stratégie sur un portefeuille virtuel.",
+            "risk": "Corrélations, VaR, CVaR et contributions au risque.",
+            "projection": "Projetez la valeur d’un portefeuille par simulation Monte Carlo.",
+            "optimization": "Explorez des allocations pour un objectif donné.",
+            "rates": "Courbe des taux, prix et duration d’une obligation.",
+            "reports": "Rapports de gestion de vos portefeuilles.",
+            "monitoring": "État des services et de leurs dépendances.",
+            "users": "Comptes et rôles des utilisateurs.",
+            "referenceData": "Données de référence utilisées par les calculs.",
+            "account": "Votre profil, votre portefeuille virtuel et l’apparence."
+        },
+        "sectionDescriptions": {
+            "laboratory": "Vos portefeuilles simulés et le marché qui les alimente.",
+            "analysis": "Comparez, mesurez le risque et projetez vos résultats.",
+            "derivatives": "Taux, obligations et, bientôt, options et produits structurés.",
+            "virtualTrading": "Passez des ordres sur un portefeuille virtuel.",
+            "followUp": "Rapports et notifications de vos calculs.",
+            "administration": "Supervision des services, utilisateurs et données de référence."
+        },
         "logout": "Se déconnecter"
     },
     "theme": {

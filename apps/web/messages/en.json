@@ -67,6 +67,31 @@
             "referenceData": "Reference data",
             "account": "Account"
         },
+        "descriptions": {
+            "dashboard": "Overview of your portfolios, backtests and key indicators.",
+            "notifications": "Events from your calculations and runs, read or unread.",
+            "market": "Prices, symbol search and instrument details.",
+            "backtests": "Run, follow and review your portfolio simulations.",
+            "compare": "Compare the results of several backtests side by side.",
+            "paperTrading": "Test a strategy on a virtual portfolio.",
+            "risk": "Correlations, VaR, CVaR and risk contributions.",
+            "projection": "Project a portfolio's value with a Monte Carlo simulation.",
+            "optimization": "Explore allocations for a given objective.",
+            "rates": "Yield curve, bond price and duration.",
+            "reports": "Management reports for your portfolios.",
+            "monitoring": "Status of the services and their dependencies.",
+            "users": "User accounts and roles.",
+            "referenceData": "Reference data used by the calculations.",
+            "account": "Your profile, virtual portfolio and appearance."
+        },
+        "sectionDescriptions": {
+            "laboratory": "Your simulated portfolios and the market that feeds them.",
+            "analysis": "Compare, measure risk and project your results.",
+            "derivatives": "Rates, bonds and, soon, options and structured products.",
+            "virtualTrading": "Place orders on a virtual portfolio.",
+            "followUp": "Reports and notifications from your calculations.",
+            "administration": "Service supervision, users and reference data."
+        },
         "logout": "Log out"
     },
     "theme": {
