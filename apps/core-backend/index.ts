@@ -76,7 +76,7 @@ async function main(): Promise<void> {
     const server = app.listen(env.PORT, () => logger.info(`Server is running on port ${env.PORT}`));
     onShutdown(() => new Promise<void>((resolve) => server.close(() => resolve())));
 
-    await kafkaClient.ensureTopics([...Object.values(BACKTEST_TOPICS), ...Object.values(RISK_TOPICS), ...Object.values(PROJECTION_TOPICS)]);
+    await kafkaClient.ensureTopics([...Object.values(BACKTEST_TOPICS), ...Object.values(RISK_TOPICS), ...Object.values(PROJECTION_TOPICS), ...Object.values(PRICING_TOPICS)]);
     await producer.connect();
     await consumer.connect();
     await consumer.subscribe(BACKTEST_TOPICS.started);
