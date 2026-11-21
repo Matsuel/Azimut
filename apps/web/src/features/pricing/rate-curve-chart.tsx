@@ -1,14 +1,12 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { CartesianGrid, Line, LineChart, ReferenceDot, XAxis, YAxis } from "recharts"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { CartesianGrid, LabelList, Line, LineChart, ReferenceDot, XAxis, YAxis } from "recharts"
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { useFormatters } from "@/lib/format"
+import { CurveLegend, type InterpolatedRate, PointLabel } from "./rate-curve-parts"
 import type { RateCurve } from "./types"
-
-// Point d'un taux de courbe interpolé à la maturité de l'obligation (résultat à taux de courbe)
-export type InterpolatedRate = { maturityYears: number; rate: number }
 
 const config = { rate: { label: "", color: "var(--chart-1)" } } satisfies ChartConfig
 
@@ -21,10 +19,12 @@ export function RateCurveChart({ curve, interpolated }: { curve: RateCurve; inte
             <CardHeader>
                 <CardTitle>{t("title")}</CardTitle>
                 <CardDescription>{t("subtitle", { count: curve.points.length })}</CardDescription>
+                <CardAction>
+                    <CurveLegend interpolated={interpolated} />
+                </CardAction>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
                 <CurvePlot curve={curve} interpolated={interpolated} />
-                <CurveLegend interpolated={interpolated} />
                 <p className="text-small text-muted-foreground">{t("note")}</p>
             </CardContent>
         </Card>
@@ -49,6 +49,7 @@ function CurvePlot({ curve, interpolated }: { curve: RateCurve; interpolated?: I
                     domain={[0, maxMaturity]}
                     ticks={curve.points.map((p) => p.maturityYears)}
                     tickFormatter={tick}
+                    padding={{ left: 28, right: 28 }}
                     tickLine={false}
                     axisLine={false}
                 />
@@ -77,7 +78,12 @@ function CurvePlot({ curve, interpolated }: { curve: RateCurve; interpolated?: I
                     strokeWidth={2}
                     dot={{ r: 4 }}
                     isAnimationActive={false}
-                />
+                >
+                    <LabelList
+                        dataKey="rate"
+                        content={({ x, y, index }) => <PointLabel x={x} y={y} index={index} points={curve.points} />}
+                    />
+                </Line>
                 {interpolated && (
                     <ReferenceDot
                         x={interpolated.maturityYears}
@@ -89,29 +95,5 @@ function CurvePlot({ curve, interpolated }: { curve: RateCurve; interpolated?: I
                 )}
             </LineChart>
         </ChartContainer>
-    )
-}
-
-// Légende sous le graphique : points de marché, et taux interpolé quand le résultat en a un
-function CurveLegend({ interpolated }: { interpolated?: InterpolatedRate }) {
-    const f = useFormatters()
-    const t = useTranslations("pages.rates.curve")
-
-    return (
-        <div className="flex gap-4 text-small text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-chart-1" />
-                {t("market")}
-            </span>
-            {interpolated && (
-                <span className="flex items-center gap-1.5">
-                    <span className="size-2 rounded-full bg-chart-3" />
-                    {t("interpolated", {
-                        maturity: f.formatYears(interpolated.maturityYears),
-                        rate: f.formatPercent2(interpolated.rate),
-                    })}
-                </span>
-            )}
-        </div>
     )
 }

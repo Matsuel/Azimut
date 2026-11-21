@@ -152,6 +152,10 @@ test("calculer envoie la saisie puis affiche le prix reçu, sans le recalculer",
     })
     expect(await screen.findByText(/86,26/, { selector: "span" })).toBeTruthy()
     expect(screen.getByText("Macaulay")).toBeTruthy()
+    // Durations à 2 décimales fixes (maquette 35) et nominal entier sans décimales dans la légende
+    expect(screen.getByText("5,00 ans")).toBeTruthy()
+    expect(screen.getByText("4,85 ans")).toBeTruthy()
+    expect(screen.getByText(/pour 100 € dans 5 ans/)).toBeTruthy()
     expect(screen.getByText("1 à 4")).toBeTruthy()
 })
 

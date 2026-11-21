@@ -25,6 +25,13 @@ Page Taux et obligations (feature 17, maquette `35 · Taux et obligations`). La 
   - `interpolated` : `{ maturityYears, rate }`, non requis (résultat calculé au taux de la courbe).
 - **Source** : `src/features/pricing/rate-curve-chart.tsx`.
 
+### CurveLegend et PointLabel
+
+- **Import** : `import { CurveLegend, PointLabel, type InterpolatedRate } from "@/features/pricing/rate-curve-parts"`.
+- **Rôle** : pièces de `RateCurveChart`. `CurveLegend` : points de marché, et taux interpolé si `interpolated` (dans `CardAction` de l'en-tête). `PointLabel` : valeur d'un point de la courbe (`LabelList` `content`), au-dessus du point, sous lui pour un creux.
+- **Props** : `CurveLegend` : `interpolated` (`InterpolatedRate`, non requis). `PointLabel` : `x`, `y`, `index` du point, `points` (`RateCurvePoint[]`).
+- **Source** : `src/features/pricing/rate-curve-parts.tsx`.
+
 ### BondForm
 
 - **Import** : `import { BondForm } from "@/features/pricing/bond-form"`.

@@ -37,16 +37,22 @@ export function BondResultCard({ view }: { view: PricingView }) {
                     <StatCard
                         label={<InfoHint entry="bondPrice">{t("price")}</InfoHint>}
                         value={f.formatPrice(price.price, PRICING_CURRENCY)}
-                        caption={t("priceCaption", { nominal: f.formatPrice(bond.nominal, PRICING_CURRENCY), years })}
+                        caption={t("priceCaption", {
+                            nominal: (Number.isInteger(bond.nominal) ? f.formatWholePrice : f.formatPrice)(
+                                bond.nominal,
+                                PRICING_CURRENCY,
+                            ),
+                            years,
+                        })}
                     />
                     <StatCard
                         label={<InfoHint entry="macaulayDuration">{t("macaulay")}</InfoHint>}
-                        value={f.formatYears(price.macaulayDuration)}
+                        value={f.formatYears2(price.macaulayDuration)}
                         caption={t("macaulayCaption")}
                     />
                     <StatCard
                         label={<InfoHint entry="modifiedDuration">{t("modified")}</InfoHint>}
-                        value={f.formatYears(price.modifiedDuration)}
+                        value={f.formatYears2(price.modifiedDuration)}
                         caption={t("modifiedCaption", { change: f.formatRatio(price.priceChangeOnRatePlusOnePoint) })}
                     />
                 </div>

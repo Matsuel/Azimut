@@ -178,6 +178,7 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [RatesPage](src/features/pricing/COMPONENTS.md#ratespage) : écran Taux et obligations (maquette 35, route `routes.rates`) et ses états
   - [RateCards](src/features/pricing/COMPONENTS.md#ratecards) : une carte par point de la courbe des taux US
   - [RateCurveChart](src/features/pricing/COMPONENTS.md#ratecurvechart) : courbe des taux selon la maturité, avec le taux interpolé
+  - [CurveLegend et PointLabel](src/features/pricing/COMPONENTS.md#curvelegend-et-pointlabel) : légende et valeurs de la courbe
   - [BondForm](src/features/pricing/COMPONENTS.md#bondform) : formulaire d'obligation (type, nominal, coupon, maturité, date de valeur, taux)
   - [BondResultCard](src/features/pricing/COMPONENTS.md#bondresultcard) : prix, durations et flux d'une obligation calculée
   - [FlowsTable](src/features/pricing/COMPONENTS.md#flowstable) : tableau des flux actualisés
@@ -902,6 +903,7 @@ Source : `src/components/form/form-issues.ts`.
 | `formatRate` | Proportion en **fraction** → % non signé, arrondi à l'unité : `0.3846` → « 38 % ». Taux de réussite/échec, poids d'allocation, axe du drawdown. |
 | `formatPercent` | Taux en **fraction** → % non signé, jusqu'à 2 décimales : `0.001` → « 0,1 % », `0.1532` → « 15,32 % ». Frais, volatilité, taux sans risque. |
 | `formatPercent2` | Taux en **fraction** → % non signé, 2 décimales fixes : `0.0421` → « 4,21 % », `0.04` → « 4,00 % ». Taux de la courbe et taux d'actualisation. |
+| `formatYears2` | Durée en années, 2 décimales fixes : `4.8544` → « 4,85 ans ». Durations d'une obligation. |
 | `formatFactor` | Facteur d'actualisation (ratio sans unité), 4 décimales : `0.862609` → « 0,8626 ». |
 | `formatPercent1` | Taux en **fraction** → % non signé, 1 décimale : `0.132` → « 13,2 % », `-0.014` → « −1,4 % ». Volatilité, VaR, CVaR, drawdown mesuré. |
 | `formatDecimal1` | Nombre sans unité, 1 décimale au plus : `3.571` → « 3,6 » (actifs effectifs). |

@@ -60,6 +60,13 @@ function createFormatters(locale: string) {
     const formatDay = date({ day: "2-digit", month: "2-digit", year: "numeric" })
     const formatDays = number({ style: "unit", unit: "day", unitDisplay: "long" })
     const formatYears = number({ style: "unit", unit: "year", unitDisplay: "long", maximumFractionDigits: 1 })
+    const formatYears2 = number({
+        style: "unit",
+        unit: "year",
+        unitDisplay: "long",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })
     const formatMonths = number({ style: "unit", unit: "month", unitDisplay: "long", maximumFractionDigits: 0 })
 
     const formatAxisSmall = number({ maximumFractionDigits: 2 })
@@ -93,6 +100,8 @@ function createFormatters(locale: string) {
             days < 2 * DAYS_PER_MONTH ? formatDays(days) : formatMonths(days / DAYS_PER_MONTH),
         /** Durée en années, 1 décimale au plus (`10,5 ans`). */
         formatYears,
+        /** Durée en années, 2 décimales fixes (`4,85 ans`) : durations d'une obligation. */
+        formatYears2,
         /** Symbole d'une devise ISO pour un libellé : `currencySymbol("EUR")` → « € ». */
         currencySymbol: (currency: string) =>
             currencyFormat(currency)

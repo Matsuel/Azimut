@@ -90,7 +90,7 @@ export function RatesPage() {
             {curve.data && (
                 <>
                     <RateCards curve={curve.data} />
-                    <div className="grid gap-4 xl:grid-cols-2">
+                    <div className="grid gap-6 xl:grid-cols-2">
                         <RateCurveChart curve={curve.data} interpolated={pricing.interpolated} />
                         <BondForm
                             key={pricing.formKey}
@@ -99,7 +99,7 @@ export function RatesPage() {
                             error={pricing.createError ? errorMessage(pricing.createError) : undefined}
                         />
                     </div>
-                    <div className="grid gap-4 xl:grid-cols-2">
+                    <div className="grid gap-6 xl:grid-cols-2">
                         {pricing.bond && pricing.view ? (
                             <BondResultCard view={pricing.view} />
                         ) : (
