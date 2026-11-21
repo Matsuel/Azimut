@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sidebar"
 import type { SidebarSection } from "@/constants/sidebar"
 import { findActiveTab } from "@/lib/navigation"
+import { routes } from "@/lib/routes"
 
 /** Une section du menu : titre, puis un lien par onglet ; sidebar repliée, l'icône seule avec le nom en infobulle. */
 export function SidebarNav({ section }: { section: SidebarSection }) {
@@ -20,7 +21,9 @@ export function SidebarNav({ section }: { section: SidebarSection }) {
 
     return (
         <SidebarGroup>
-            <SidebarGroupLabel>{t(`sections.${section.key}`)}</SidebarGroupLabel>
+            <SidebarGroupLabel render={<Link href={routes.section(section.key)} />}>
+                {t(`sections.${section.key}`)}
+            </SidebarGroupLabel>
             <SidebarMenu>
                 {section.tabs.map((tab) => (
                     <SidebarMenuItem key={tab.url}>
