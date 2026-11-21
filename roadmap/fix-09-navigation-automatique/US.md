@@ -1,6 +1,6 @@
 # fix-09 · Navigation automatique et pages d'index de section — User stories
 
-> Sources : demande du 2026-11-21, maquettes `41`, `41.1`, `42` (Figma `Trading`, section « Fix 09 · Navigation automatique (41–42) »), état proposé.
+> Sources : demande du 2026-11-21, maquettes `41`, `41.1`, `42` (Figma `Trading`, section « Fix 09 · Navigation automatique (41–42) »), validées le 21/11/2026.
 
 ## Point de départ
 
@@ -21,7 +21,7 @@
 
 Voir `README.md` (D1 à D5).
 
-**Maquettes** : `41` (index Laboratoire, proposée), `41.1` (index Analyse, 4 cartes, proposée), `42` (états sidebar et fil d'Ariane, proposée).
+**Maquettes** : `41` (index Laboratoire, validée le 21/11/2026), `41.1` (index Analyse, 4 cartes, proposée), `42` (états sidebar et fil d'Ariane, proposée).
 
 ---
 
@@ -34,10 +34,10 @@ Voir `README.md` (D1 à D5).
 **En tant que** développeur, **je veux** que le menu du profil vienne de la même source que la sidebar **afin de** ne jamais oublier une page.
 
 Critères d'acceptation :
-- [ ] `nav-user.tsx` génère ses liens depuis `userTabs`, sans `routes.settings` en dur.
-- [ ] `findActiveTab` couvre `userTabs` ; `ActiveTab.section` est optionnelle.
-- [ ] `test/sidebar.test.ts` échoue si une page statique de `src/app/app/**/page.tsx` n'est rattachée à aucun onglet ni page de section.
-- [ ] `navigation.account` est déplacé en `navigation.tabs.account` (FR et EN, usages, tests et E2E).
+- [x] `nav-user.tsx` génère ses liens depuis `userTabs`, sans `routes.settings` en dur.
+- [x] `findActiveTab` couvre `userTabs` ; `ActiveTab.section` est optionnelle.
+- [x] `test/sidebar.test.ts` échoue si une page statique de `src/app/app/**/page.tsx` n'est rattachée à aucun onglet ni page de section.
+- [x] `navigation.account` est déplacé en `navigation.tabs.account` (FR et EN, usages, tests et E2E).
 
 Tâches : T-01, T-02, T-03.
 
@@ -48,11 +48,11 @@ Tâches : T-01, T-02, T-03.
 **En tant qu'** utilisateur, **je veux** cliquer sur un titre de section **afin de** voir les onglets de la section avec leur description.
 
 Critères d'acceptation :
-- [ ] `/app/sections/<clé>` liste une carte par onglet (icône, titre, description) menant à la bonne page.
-- [ ] Section inconnue ou `adminOnly` pour un non-admin : 404.
-- [ ] Le titre de section de la sidebar est un lien sans aucun style de lien (ni soulignement, ni couleur).
-- [ ] Fil d'Ariane : maillon de section cliquable sur une page d'onglet ; maillon seul sur la page d'index ; page Paramètres sans maillon de section.
-- [ ] Dictionnaires FR et EN avec mêmes clés ; un onglet sans description casse `tsc`.
+- [x] `/app/sections/<clé>` liste une carte par onglet (icône, titre, description) menant à la bonne page.
+- [x] Section inconnue ou `adminOnly` pour un non-admin : 404.
+- [x] Le titre de section de la sidebar est un lien sans aucun style de lien (ni soulignement, ni couleur).
+- [x] Fil d'Ariane : maillon de section cliquable sur une page d'onglet ; maillon seul sur la page d'index ; page Paramètres sans maillon de section.
+- [x] Dictionnaires FR et EN avec mêmes clés ; un onglet sans description casse `tsc`.
 
 Tâches : T-04 à T-09.
 

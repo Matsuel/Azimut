@@ -87,7 +87,7 @@ Planification : **toutes les features 10 à 26 sont planifiées** (dossiers `roa
 | 16 | [Monitoring : sondes de santé et page d'état des services](16-monitoring/) | 8 ᵈ | 04, 15 | Page Monitoring (statuts des services) et routes `/liveness` et `/readiness` sur les cinq services, lues par la page puis par les probes Kubernetes (24). Demande du 2026-11-18. |
 | 17 | Taux et obligations | 8 | 08 | Source de taux (Yahoo, gratuit ; FRED reporté), courbe, actualisation, prix, duration. Indépendant du risque. |
 | 18 | Options vanilles : payoffs et Black-Scholes | 9 | 11, 17 | Besoin du taux (17) et des dividendes (11). |
-| fix-09 | [Navigation automatique et pages d'index de section](fix-09-navigation-automatique/) | — | 18 | Hors feature : le menu du profil et le fil d'Ariane viennent de la source unique `constants/sidebar.tsx`, et chaque titre de section ouvre une page d'index. Demande du 2026-11-21. |
+| fix-09 | [Navigation automatique et pages d'index de section](fix-09-navigation-automatique/) | — | 18 | Hors feature : le menu du profil et le fil d'Ariane viennent de la source unique `constants/sidebar.tsx`, et chaque titre de section ouvre une page d'index. Livrée le 2026-11-21 (24 points). |
 | 19 | Grecques, volatilité implicite et surface | 9 | 18 | Route `options/:symbol` dans `market-service` ; volatilité implicite recalculée par le moteur. |
 | 20 | Pricing Monte Carlo et option à barrière | 10 | 14, 18 | Moteur de 14, validé contre Black-Scholes (18). |
 | 21 | Produits structurés : décomposition, juste valeur, marge | 10 | 17, 19, 20 | Capital garanti, reverse convertible, autocallable. |
