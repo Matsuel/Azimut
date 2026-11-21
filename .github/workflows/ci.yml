@@ -83,6 +83,9 @@ jobs:
         working-directory: apps/notification-service
         env:
           DATABASE_URL: postgresql://trading:trading@localhost:5432/notifications_test
+      # Les types globaux PageProps/LayoutProps de Next ne sont pas versionnés : requis par tsc du web
+      - run: bunx next typegen
+        working-directory: apps/web
       - run: bun .claude/skills/verify/verify.ts origin/develop --ci
 
   # Parcours E2E (Playwright) sur toute la stack : PostgreSQL et Kafka jetables (apps/web/e2e/docker-compose.yml), services
