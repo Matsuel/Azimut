@@ -49,7 +49,8 @@ Une ligne par entrée : le détail (import, props, exemple) est dans l'entrée l
   - [AppHeader](#appheader) : barre du haut de l'espace `/app` 
   - [AppSidebar](#appsidebar) : sidebar repliable de l'espace `/app` 
   - [SidebarNav](#sidebarnav) : une section du menu 
-  - [NavUser](#navuser) : menu utilisateur en pied de sidebar 
+  - [NavUser](#navuser) : menu utilisateur en pied de sidebar
+  - [SectionIndex](#sectionindex) : page d'index d'une section de la sidebar, une carte cliquable par onglet 
   - [ThemeToggle](#themetoggle) : bouton icône soleil/lune ouvrant un menu Clair / Sombre / Système
   - [AppSheet](#appsheet) : panneau latéral droit ouvert par un déclencheur, avec titre et description
   - [AppDialog](#appdialog) : boîte de dialogue centrée ouverte par un déclencheur, avec titre et description
@@ -94,7 +95,7 @@ Une ligne par entrée : le détail (import, props, exemple) est dans l'entrée l
   - [`lib/api.ts`](#libapits) : exports `apiFetch`, `useApiErrorMessages`, `ApiError`, `apiIssues`
   - [`lib/pagination.ts`](#libpaginationts) : exports `PaginationParams`, `getPageItems`, `paginate`
   - [`lib/routes.ts`](#libroutests) : exports `prefix`, `routes`, `safeRedirect`
-  - [`lib/navigation.ts`](#libnavigationts) : exports `findActiveTab`
+  - [`lib/navigation.ts`](#libnavigationts) : exports `findActiveTab`, `findSectionPage`
   - [`lib/env.ts`](#libenvts) : exports `env`
   - [`lib/trend.ts`](#libtrendts) : exports `Trend`, `Direction`, `Tone`, `trendOf`, `directionOf`, `toneOf`, `trendStyles`
   - [`lib/utils.ts`](#libutilsts) : exports `cn`
@@ -102,7 +103,7 @@ Une ligne par entrée : le détail (import, props, exemple) est dans l'entrée l
   - [`lib/session.ts`](#libsessionts) : exports `getSession`, `requireSession`, `isAdmin`
 - [`constants`](#constants)
   - [`constants/pagination.ts`](#constantspaginationts) : exports `PAGE_SIZE`
-  - [`constants/sidebar.tsx`](#constantssidebartsx) : exports `SidebarTab`, `SidebarSection`, `sidebarSections`
+  - [`constants/sidebar.tsx`](#constantssidebartsx) : exports `SidebarTab`, `SidebarSection`, `sidebarSections`, `userTabs`
   - [`constants/theme.ts`](#constantsthemets) : exports `themes` / `Theme`
   - [`constants/glossary.ts`](#constantsglossaryts) : exports `GlossaryEntry`, `GLOSSARY`, `GlossaryKey`
 - [`hooks`](#hooks)
@@ -294,7 +295,7 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 ### AppHeader
 
 - **Import** : `import { AppHeader } from "@/components/app-header"`.
-- **Rôle** : barre du haut de l'espace `/app` : bouton de repli de la sidebar et fil d'Ariane « section › onglet » (`findActiveTab`). Sur une sous-page, l'onglet est un lien vers sa liste ; hors du menu (paramètres), pas de fil.
+- **Rôle** : barre du haut de l'espace `/app` : bouton de repli de la sidebar et fil d'Ariane « section › onglet » (`findActiveTab`). La section est un lien vers sa page d'index (`routes.section`, sans changement au survol) ; sur cette page (`findSectionPage`), elle est le seul maillon. Sur une sous-page, l'onglet est un lien vers sa liste ; un onglet de `userTabs` (Compte) n'a pas de maillon de section ; hors de ces pages, pas de fil.
 - **Props** : aucune.
 - **Source** : `src/components/app-header.tsx`.
 
@@ -318,7 +319,7 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
 ### SidebarNav
 
 - **Import** : `import { SidebarNav } from "@/components/sidebar-nav"`.
-- **Rôle** : une section du menu : titre, puis un `Link` par onglet (navigation client, sans rechargement). Onglet actif : `findActiveTab(usePathname())`. Sidebar repliée : icône seule, nom en infobulle. Affiche le `badge` de l'onglet à droite du libellé.
+- **Rôle** : une section du menu : titre (un `Link` vers la page d'index de la section, `routes.section`, sans style de lien), puis un `Link` par onglet (navigation client, sans rechargement). Onglet actif : `findActiveTab(usePathname())`. Sidebar repliée : icône seule, nom en infobulle. Affiche le `badge` de l'onglet à droite du libellé.
 - **Props** :
 
   | Nom | Type | Requis | Défaut | Description |
@@ -331,10 +332,26 @@ Primitives shadcn (base-ui), voir la doc shadcn. Seule base des briques d'interf
   ```
 - **Source** : `src/components/sidebar-nav.tsx`.
 
+### SectionIndex
+
+- **Import** : `import { SectionIndex } from "@/components/section-index"`.
+- **Rôle** : page d'index d'une section de la sidebar (`/app/sections/<clé>`) : `PageHeader` (titre `navigation.sections.<clé>`, description `navigation.sectionDescriptions.<clé>`) et une carte cliquable par onglet (icône, titre `navigation.tabs.<clé>`, description `navigation.descriptions.<clé>`) vers `tab.url`. Un onglet sans description casse `tsc`.
+- **Props** :
+
+  | Nom | Type | Requis | Défaut | Description |
+  | --- | --- | --- | --- | --- |
+  | `section` | `SidebarSection` (`constants/sidebar.tsx`) | oui | — | Section dont les onglets sont listés. La garde (section inconnue ou `adminOnly` pour un non-admin → 404) est celle de `app/app/sections/[section]/page.tsx`. |
+
+- **Exemple** (tiré de `src/app/app/sections/[section]/page.tsx`) :
+  ```tsx
+  <SectionIndex section={section} />
+  ```
+- **Source** : `src/components/section-index.tsx`.
+
 ### NavUser
 
 - **Import** : `import { NavUser } from "@/components/nav-user"`.
-- **Rôle** : menu utilisateur en pied de sidebar : avatar, nom, email, lien « Compte » (`routes.settings`), « Se déconnecter » (`signOut`, retour à `routes.login`, `router.refresh`).
+- **Rôle** : menu utilisateur en pied de sidebar : avatar, nom, email, un lien par onglet de `userTabs` (« Compte », `routes.settings`), « Se déconnecter » (`signOut`, retour à `routes.login`, `router.refresh`).
 - **Props** :
 
   | Nom | Type | Requis | Défaut | Description |
@@ -962,11 +979,12 @@ Source : `src/lib/routes.ts`.
 
 ### `lib/navigation.ts`
 
-- **Import** : `import { findActiveTab } from "@/lib/navigation"`.
+- **Import** : `import { findActiveTab, findSectionPage } from "@/lib/navigation"`.
 
 | Export | Rôle |
 | --- | --- |
-| `findActiveTab` | Onglet de `constants/sidebar.tsx` qui correspond au chemin (avec `section` = clé de sa section), le plus long préfixe gagnant ; le dashboard ne matche qu'exactement. `undefined` hors du menu. |
+| `findActiveTab` | Onglet de `sidebarSections` ou de `userTabs` qui correspond au chemin (avec `section` = clé de sa section, absente pour un onglet de `userTabs`), le plus long préfixe gagnant ; le dashboard ne matche qu'exactement. `undefined` hors du menu. |
+| `findSectionPage` | Section dont le chemin est la page d'index (`routes.section(clé)`), `undefined` sinon. |
 
 Source : `src/lib/navigation.ts`.
 
@@ -1044,13 +1062,14 @@ Source : `src/constants/pagination.ts`.
 
 ### `constants/sidebar.tsx`
 
-- **Import** : `import { sidebarSections, type SidebarSection, type SidebarTab } from "@/constants/sidebar"`.
+- **Import** : `import { sidebarSections, type SidebarSection, type SidebarTab, userTabs } from "@/constants/sidebar"`.
 
 | Export | Rôle |
 | --- | --- |
 | `SidebarTab` | Un onglet ; `key` = clé du libellé (`navigation.tabs.<key>` dans `messages/*.json`), `url` vient de `routes`, `badge` (optionnel) = pastille à droite du libellé (compteur `UnreadBadge` de « Notifications »). |
 | `SidebarSection` | Une section du menu ; `key` = clé du libellé (`navigation.sections.<key>`). |
-| `sidebarSections` | Menu (maquette) : Laboratoire (Dashboard, Marché, Backtests), Analyse (Comparaison, Risque, Projection, Optimisation), Trading virtuel (Paper trading), Suivi (Rapports, Notifications), Administration (`adminOnly` : Monitoring, Utilisateurs, Données de référence). Une page ajoutée = sa route dans `routes`, son libellé dans `messages/fr.json` et `messages/en.json`, puis son onglet ici. |
+| `sidebarSections` | Menu (maquette) : Laboratoire (Dashboard, Marché, Backtests), Analyse (Comparaison, Risque, Projection, Optimisation), Trading virtuel (Paper trading), Suivi (Rapports, Notifications), Administration (`adminOnly` : Monitoring, Utilisateurs, Données de référence). Une page ajoutée = sa route dans `routes`, son libellé (`navigation.tabs.<clé>`) et sa description (`navigation.descriptions.<clé>`) dans `messages/fr.json` et `messages/en.json`, puis son onglet ici ; `test/sidebar.test.ts` échoue si une page statique n'est rattachée à aucun onglet. |
+| `userTabs` | Onglets du menu du profil (`NavUser`), sans section : « Compte » (`routes.settings`). |
 
 Source : `src/constants/sidebar.tsx`.
 
