@@ -1,11 +1,12 @@
 import YahooFinance from "yahoo-finance2";
 import type { ChartOptions } from "yahoo-finance2/modules/chart";
-import type { DailyCloses, Dividends, MarketAsset, MarketData, MarketDetails, Period, RateCurve } from "@azimut/contracts";
-import { BadGatewayError } from "@azimut/http";
+import { API_ERROR_CODES, type DailyCloses, type Dividends, type MarketAsset, type MarketData, type MarketDetails, type OptionInputs, type Period, type RateCurve } from "@azimut/contracts";
+import { BadGatewayError, NotFoundError } from "@azimut/http";
 import { env } from "../env";
-import { DAY_MS, Logger, round } from "@azimut/utils";
+import { addYears, DAY_MS, Logger, round } from "@azimut/utils";
 import { toMajorCurrency } from "../utils/currency";
-import { RATE_CURVE_CURRENCY, RATE_CURVE_SYMBOLS } from "../constants/market.constants";
+import { OPTION_INPUTS_WINDOW_YEARS, RATE_CURVE_CURRENCY, RATE_CURVE_SYMBOLS } from "../constants/market.constants";
+import { historicalVolatility, trailingDividendYield } from "../utils/option-inputs";
 
 const logger = Logger.here();
 
@@ -16,6 +17,7 @@ export interface IMarketRepository {
     getDailyCloses(symbols: string[], start: Date, end: Date): Promise<DailyCloses>;
     getDividends(symbols: string[], start: Date, end: Date): Promise<Dividends>;
     getRateCurve(): Promise<RateCurve>;
+    getOptionInputs(symbol: string): Promise<OptionInputs>;
     ping(symbol: string): Promise<void>;
 }
 
@@ -168,6 +170,40 @@ class MarketRepository implements IMarketRepository {
         )
 
         return { currency: RATE_CURVE_CURRENCY, points }
+    }
+
+    /**
+     * Préremplissage du calculateur d'option (D2, D4) : dernier cours (`quote`), volatilité historique 1 an annualisée sur 252 jours
+     * et dividendes des 12 derniers mois rapportés au cours (une seule série `chart` avec `events: "div"`). Montants dans la devise
+     * principale (`toMajorCurrency`). `volatility` vaut `null` sans historique suffisant. Un symbole inconnu ou sans cours lève
+     * `NotFoundError` (`SYMBOL_NOT_FOUND`).
+     */
+    async getOptionInputs(symbol: string): Promise<OptionInputs> {
+        const quote = await MarketRepository.yahooFinance.quote(symbol)
+        // Un cours nul ou négatif ne se price pas : traité comme un symbole sans cours
+        if (!quote || quote.regularMarketPrice == null || quote.regularMarketPrice <= 0) throw new NotFoundError(API_ERROR_CODES.SYMBOL_NOT_FOUND)
+
+        const end = new Date()
+        const { chart, divisor, currency } = await MarketRepository.fetchChart(symbol, {
+            period1: addYears(end, -OPTION_INPUTS_WINDOW_YEARS),
+            period2: end,
+            events: "div",
+        })
+        // Le cours de `quote` suit la devise de cotation du `chart` (même place) : même diviseur pour le cours et les dividendes
+        const spot = quote.regularMarketPrice / divisor
+        // Le contrat exige spot > 0 après arrondi à 4 décimales
+        if (round(spot, 4) <= 0) throw new NotFoundError(API_ERROR_CODES.SYMBOL_NOT_FOUND)
+        const closes = chart.quotes.filter((point) => point.close != null).map((point) => point.close! / divisor)
+        const volatility = historicalVolatility(closes)
+        const dividends = (chart.events?.dividends ?? []).map((dividend) => dividend.amount / divisor)
+
+        return {
+            symbol,
+            currency,
+            spot: round(spot, 4),
+            dividendYield: round(trailingDividendYield(dividends, spot), 6),
+            volatility: volatility == null ? null : round(volatility, 6),
+        }
     }
 
     /** Requête légère (cotation d'un symbole) qui lève l'erreur du fournisseur s'il ne répond pas. Sert à `/readiness`. */

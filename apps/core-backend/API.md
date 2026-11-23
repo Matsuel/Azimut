@@ -98,11 +98,11 @@ Les routes de liste (`GET /api/portfolio`, `GET /api/backtest`) suivent le contr
 
 ## Market (proxy)
 
-### GET /api/market/search · GET /api/market/details/:id · GET /api/market/defaults · GET /api/market/rates
+### GET /api/market/search · GET /api/market/details/:id · GET /api/market/defaults · GET /api/market/rates · GET /api/market/option-inputs
 
 - **Auth** : session requise (`authMiddleware`).
 - **Entrée** : requête relayée telle quelle (chemin complet `/api/market/...`, query) vers `env.MARKET_SERVICE_URL` (défaut `http://localhost:8001`, `env.ts`). L'en-tête `x-user-id` entrant est supprimé puis remplacé par `req.userId` (anti-usurpation). L'en-tête `x-internal-key` (`INTERNAL_KEY_HEADER`, valeur `INTERNAL_API_KEY`) est ajouté : market-service refuse tout appel qui ne le porte pas.
-- **Réponse** : statut et corps de market-service, inchangés. Liste blanche : seules ces quatre routes sont relayées ; toute autre (dont `GET /api/market/closes`, réservée à backtest-engine) reçoit la 404 par défaut d'Express. Détail des routes : voir [`apps/market-service/API.md`](../market-service/API.md).
+- **Réponse** : statut et corps de market-service, inchangés. Liste blanche : seules ces cinq routes sont relayées ; toute autre (dont `GET /api/market/closes`, réservée à backtest-engine) reçoit la 404 par défaut d'Express. Détail des routes : voir [`apps/market-service/API.md`](../market-service/API.md).
 - **Erreurs** : `401` → pas de session ; `502 { "error": "Service unavailable" }` → market-service injoignable ou sans réponse sous 10 s (`proxyTimeout: 10_000`) ; erreurs de market-service relayées avec leur statut.
 - **Effets** : aucun.
 - **Appelant** : fonctions de `apps/web/src/features/market/api.ts` (détail dans `apps/market-service/API.md`).
@@ -422,7 +422,7 @@ Calcul de prix demandé à backtest-engine par `pricing.requested`, résultat re
 ### POST /api/pricing
 
 - **Auth** : session requise.
-- **Entrée** : body `PricingInput` (`packages/contracts/src/pricing.ts`) : `kind` (`BOND`) et `bond` : `nominal` (EUR > 0), `couponRate` (ratio annuel 0..1, `0` = zéro-coupon), `maturityYears` (entier de 1 à 30), `discount` (`{ source: "CURVE" }` pour le taux de la courbe US interpolé à la maturité, ou `{ source: "FLAT", rate }` avec `rate` ratio annuel 0..1), `valueDate` (`YYYY-MM-DD`, ne date que les échéances).
+- **Entrée** : body `PricingInput` (`packages/contracts/src/pricing.ts`) : `kind` (`BOND` ou `OPTION`), puis selon le `kind` : `bond` ou `option`. `bond` : `nominal` (EUR > 0), `couponRate` (ratio annuel 0..1, `0` = zéro-coupon), `maturityYears` (entier de 1 à 30), `discount` (`{ source: "CURVE" }` pour le taux de la courbe US interpolé à la maturité, ou `{ source: "FLAT", rate }` avec `rate` ratio annuel 0..1), `valueDate` (`YYYY-MM-DD`, ne date que les échéances). `option` (européenne, Black-Scholes à dividende continu) : `spot` et `strike` (devise du sous-jacent, > 0), `maturityYears` (années, > 0, au plus 30), `rate` (ratio annuel continu, de -0,1 à 1), `dividendYield` (ratio annuel continu, 0..1), `volatility` (ratio annuel, > 0, au plus 5). Une entrée `OPTION` terminée porte `result.option` : prix, valeur intrinsèque, valeur temps et point mort du call et du put, parité call-put, grille `payoffGrid` de 21 cours finaux (payoff et gain net de prime à l'achat). Exemple : `{ "kind": "OPTION", "option": { "spot": 100, "strike": 100, "maturityYears": 1, "rate": 0.05, "dividendYield": 0, "volatility": 0.2 } }`.
 - **Réponse** : `202`, `PricingView` : `status` `PENDING`, `result` et `error` `null`.
   ```json
   { "id": "c1", "kind": "BOND", "status": "PENDING", "input": { "kind": "BOND", "bond": { "nominal": 100, "couponRate": 0, "maturityYears": 5, "discount": { "source": "FLAT", "rate": 0.03 }, "valueDate": "2026-10-28" } }, "result": null, "error": null, "createdAt": "2026-11-20T10:00:00.000Z" }

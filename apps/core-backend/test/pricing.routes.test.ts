@@ -4,7 +4,7 @@ import { startApp } from "@azimut/http/testing"
 import { auth } from "../lib/auth"
 import createPricingRoutes from "../routes/pricing/pricing.routes"
 import PricingService from "../services/pricing.service"
-import { pricingInput } from "./pricing.fixture"
+import { optionInput, optionParams, pricingInput } from "./pricing.fixture"
 
 let signedIn = true
 const session = spyOn(auth.api, "getSession").mockImplementation((async () => (signedIn ? { user: { id: "u1" } } : null)) as never)
@@ -53,6 +53,20 @@ test("POST invalide (maturité hors bornes, taux négatif) : 400 INVALID_PRICING
     expect(response.status).toBe(400)
     expect(((await response.json()) as { code: string }).code).toBe("INVALID_PRICING")
     expect((await post({ ...pricingInput, bond: { ...pricingInput.bond, discount: { source: "FLAT", rate: -0.01 } } })).status).toBe(400)
+    expect(create).not.toHaveBeenCalled()
+})
+
+test("POST OPTION valide : 202 ; spot, strike, volatilité ou maturité <= 0 : 400 INVALID_PRICING", async () => {
+    create.mockResolvedValue({ id: "p2" } as never)
+
+    expect((await post(optionInput)).status).toBe(202)
+    expect(create.mock.calls[0]).toEqual(["u1", optionInput])
+    create.mockClear()
+    for (const field of ["spot", "strike", "volatility", "maturityYears"] as const) {
+        const response = await post({ kind: "OPTION", option: { ...optionParams, [field]: 0 } })
+        expect(response.status).toBe(400)
+        expect(((await response.json()) as { code: string }).code).toBe("INVALID_PRICING")
+    }
     expect(create).not.toHaveBeenCalled()
 })
 

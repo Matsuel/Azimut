@@ -33,7 +33,8 @@
         "INITIAL_AMOUNT_NOT_POSITIVE": "Le capital initial doit être positif.",
         "IDS_NOT_DISTINCT": "Choisissez deux backtests différents.",
         "START_DATES_NOT_UNIQUE": "Les dates de départ doivent être distinctes.",
-        "START_TOO_CLOSE_TO_END": "Un départ doit précéder la fin d’au moins un an."
+        "START_TOO_CLOSE_TO_END": "Un départ doit précéder la fin d’au moins un an.",
+        "SYMBOL_NOT_FOUND": "Ce symbole est introuvable."
     },
     "notFound": {
         "title": "Page introuvable",
@@ -61,6 +62,7 @@
             "projection": "Projection",
             "optimization": "Optimisation",
             "rates": "Taux",
+            "options": "Options",
             "reports": "Rapports",
             "monitoring": "Monitoring",
             "users": "Utilisateurs",
@@ -78,6 +80,7 @@
             "projection": "Projetez la valeur d’un portefeuille par simulation Monte Carlo.",
             "optimization": "Explorez des allocations pour un objectif donné.",
             "rates": "Courbe des taux, prix et duration d’une obligation.",
+            "options": "Prix d’un call et d’un put européens, et leur gain ou perte à l’échéance.",
             "reports": "Rapports de gestion de vos portefeuilles.",
             "monitoring": "État des services et de leurs dépendances.",
             "users": "Comptes et rôles des utilisateurs.",
@@ -87,7 +90,7 @@
         "sectionDescriptions": {
             "laboratory": "Vos portefeuilles simulés et le marché qui les alimente.",
             "analysis": "Comparez, mesurez le risque et projetez vos résultats.",
-            "derivatives": "Taux, obligations et, bientôt, options et produits structurés.",
+            "derivatives": "Taux, obligations, options et, bientôt, produits structurés.",
             "virtualTrading": "Passez des ordres sur un portefeuille virtuel.",
             "followUp": "Rapports et notifications de vos calculs.",
             "administration": "Supervision des services, utilisateurs et données de référence."
@@ -642,7 +645,8 @@
         },
         "sheet": {
             "title": "Test rapide · {symbol}",
-            "trigger": "Tester"
+            "trigger": "Tester",
+            "optionTrigger": "Pricer une option"
         },
         "columns": {
             "symbol": "Symbole",
@@ -1177,6 +1181,37 @@
             "purpose": "Repérer un service qui répond lentement avant qu’il ne dépasse le délai et passe hors ligne.",
             "computation": "Durée mesurée par core-backend entre l’envoi de l’appel à /readiness et la réception de la réponse, arrondie à la milliseconde ; pour core-backend, durée de ses propres contrôles. Absente quand le service est hors ligne.",
             "unit": "Millisecondes."
+        },
+        "optionPrice": {
+            "title": "Prix de l’option",
+            "purpose": "Ce que vaut aujourd’hui le droit d’acheter (call) ou de vendre (put) une action au prix d’exercice, à l’échéance.",
+            "computation": "Modèle de Black-Scholes européen avec dividende continu : espérance actualisée du gain à l’échéance, sous une volatilité constante.",
+            "formula": "Call = S·e^(−qT)·N(d1) − K·e^(−rT)·N(d2)",
+            "unit": "Devise du sous-jacent, par action.",
+            "readingTip": "Valeur temps = prix − valeur intrinsèque : ce que le marché paie pour l’incertitude restante."
+        },
+        "optionBreakEven": {
+            "title": "Point mort",
+            "purpose": "Le cours final de l’action à partir duquel l’achat de l’option rembourse la prime payée.",
+            "computation": "Strike + prime pour un call, strike − prime pour un put.",
+            "unit": "Devise du sous-jacent.",
+            "readingTip": "En dessous (call) ou au-dessus (put) du point mort, l’achat perd une partie de la prime ; la perte maximale est la prime."
+        },
+        "callPutParity": {
+            "title": "Parité call-put",
+            "purpose": "Contrôle de cohérence : un call et un put de même strike et de même échéance sont liés par une relation exacte.",
+            "computation": "Call − Put doit égaler le cours actualisé du dividende moins le strike actualisé ; l’écart mesure ce que le moteur ne respecte pas.",
+            "formula": "C − P = S·e^(−qT) − K·e^(−rT)",
+            "unit": "Devise du sous-jacent.",
+            "readingTip": "Un écart à zéro (à 6 décimales) signifie que les deux prix sont cohérents entre eux."
+        },
+        "optionVolatility": {
+            "title": "Volatilité utilisée",
+            "purpose": "L’amplitude annuelle supposée des variations du cours : c’est le paramètre qui fait le plus varier le prix d’une option.",
+            "computation": "Pré-remplie par l’écart-type des rendements logarithmiques journaliers sur 1 an, multiplié par √252 ; vous pouvez la modifier.",
+            "formula": "σ = écart-type(ln(Pt ÷ Pt−1)) × √252",
+            "unit": "Pourcentage annuel.",
+            "readingTip": "C’est une volatilité passée, pas une volatilité implicite : le marché des options peut en attendre une autre."
         }
     },
     "pages": {
@@ -1365,6 +1400,87 @@
                 "failed": "Le calcul a échoué : {reason}",
                 "readError": "Le résultat n’a pas pu être chargé.",
                 "curveError": "La courbe des taux n’a pas pu être chargée."
+            }
+        },
+        "options": {
+            "title": "Calculateur d’option",
+            "titleSymbol": "Calculateur d’option · {symbol}",
+            "badge": "Black-Scholes · européen",
+            "description": "Spot {spot} · strike {strike} · maturité {maturity} · données indicatives",
+            "descriptionEmpty": "Prix d’un call et d’un put européens · données indicatives",
+            "reset": "Réinitialiser",
+            "cards": {
+                "perAction": "par action",
+                "call": "Prix du call",
+                "put": "Prix du put",
+                "timeCaption": "Valeur temps {time} · intrinsèque {intrinsic}",
+                "parity": "Parité call-put",
+                "parityVerified": "Vérifiée",
+                "parityGap": "Écart",
+                "parityBadge": "écart {gap}",
+                "parityCaption": "C − P = {value} des deux côtés",
+                "volatility": "Volatilité utilisée",
+                "volatilityHistorical": "historique",
+                "volatilityEntered": "saisie",
+                "volatilityHistoricalCaption": "Pré-remplie sur 1 an, modifiée ou non",
+                "volatilityEnteredCaption": "Saisie par vous"
+            },
+            "form": {
+                "title": "Paramètres",
+                "description": "Option européenne sur une action, dividende continu",
+                "spot": "Spot",
+                "strike": "Strike",
+                "maturity": "Maturité (jours)",
+                "rate": "Taux sans risque (%)",
+                "dividendYield": "Dividende continu q (%)",
+                "volatility": "Volatilité (%)",
+                "volatilityHint": "Pré-remplie : volatilité historique 1 an.",
+                "note": "Exercice à l’échéance seulement. Options américaines et dividendes discrets hors périmètre.",
+                "submit": "Calculer",
+                "validation": {
+                    "spot": "Le spot doit être supérieur à 0.",
+                    "strike": "Le strike doit être supérieur à 0.",
+                    "maturity": "La maturité est un nombre entier de jours, de 1 à {max}.",
+                    "rate": "Le taux est compris entre −10 et 100 %.",
+                    "dividendYield": "Le dividende est compris entre 0 et 100 %.",
+                    "volatility": "La volatilité est supérieure à 0 et au plus 500 %."
+                }
+            },
+            "chart": {
+                "title": "Gain ou perte à l’échéance",
+                "subtitle": "Achat d’une option, prime déduite · par action",
+                "call": "Call",
+                "put": "Put",
+                "strike": "Strike {value}",
+                "note": "Points morts : {call} pour le call, {put} pour le put. Perte maximale : la prime payée."
+            },
+            "parity": {
+                "title": "Parité call-put",
+                "subtitle": "Contrôle de cohérence du moteur",
+                "term": "Terme",
+                "value": "Valeur",
+                "callMinusPut": "Call − Put",
+                "right": "S·e^(−qT) − K·e^(−rT)",
+                "gap": "Écart",
+                "verified": "{gap} · vérifiée",
+                "notVerified": "{gap} · écart",
+                "note": "Test moteur : la parité tient à 1e-6 près."
+            },
+            "grid": {
+                "title": "Grille de payoff",
+                "subtitle": "Résultat net à l’échéance selon le cours final, par action",
+                "finalSpot": "Cours final",
+                "callPayoff": "Payoff call",
+                "putPayoff": "Payoff put",
+                "callNet": "Net call",
+                "putNet": "Net put"
+            },
+            "states": {
+                "empty": "Saisissez les paramètres d’une option, puis calculez son prix.",
+                "pending": "Calcul en cours…",
+                "failed": "Le calcul a échoué : {reason}",
+                "readError": "Le résultat n’a pas pu être chargé.",
+                "prefillError": "Les valeurs de {symbol} n’ont pas pu être préremplies : saisissez-les à la main."
             }
         },
         "optimization": {

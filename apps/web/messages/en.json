@@ -33,7 +33,8 @@
         "INITIAL_AMOUNT_NOT_POSITIVE": "The initial capital must be positive.",
         "IDS_NOT_DISTINCT": "Pick two different backtests.",
         "START_DATES_NOT_UNIQUE": "Start dates must be different.",
-        "START_TOO_CLOSE_TO_END": "A start date must be at least one year before the end."
+        "START_TOO_CLOSE_TO_END": "A start date must be at least one year before the end.",
+        "SYMBOL_NOT_FOUND": "This symbol was not found."
     },
     "notFound": {
         "title": "Page not found",
@@ -61,6 +62,7 @@
             "projection": "Projection",
             "optimization": "Optimisation",
             "rates": "Rates",
+            "options": "Options",
             "reports": "Reports",
             "monitoring": "Monitoring",
             "users": "Users",
@@ -78,6 +80,7 @@
             "projection": "Project a portfolio's value with a Monte Carlo simulation.",
             "optimization": "Explore allocations for a given objective.",
             "rates": "Yield curve, bond price and duration.",
+            "options": "Price of a European call and put, and their profit or loss at expiry.",
             "reports": "Management reports for your portfolios.",
             "monitoring": "Status of the services and their dependencies.",
             "users": "User accounts and roles.",
@@ -87,7 +90,7 @@
         "sectionDescriptions": {
             "laboratory": "Your simulated portfolios and the market that feeds them.",
             "analysis": "Compare, measure risk and project your results.",
-            "derivatives": "Rates, bonds and, soon, options and structured products.",
+            "derivatives": "Rates, bonds, options and, soon, structured products.",
             "virtualTrading": "Place orders on a virtual portfolio.",
             "followUp": "Reports and notifications from your calculations.",
             "administration": "Service supervision, users and reference data."
@@ -642,7 +645,8 @@
         },
         "sheet": {
             "title": "Quick test · {symbol}",
-            "trigger": "Test"
+            "trigger": "Test",
+            "optionTrigger": "Price an option"
         },
         "columns": {
             "symbol": "Symbol",
@@ -1177,6 +1181,37 @@
             "purpose": "Spots a slow service before it exceeds the timeout and goes offline.",
             "computation": "Time measured by core-backend between sending the /readiness call and receiving the response, rounded to the millisecond; for core-backend, the duration of its own checks. Missing when the service is offline.",
             "unit": "Milliseconds."
+        },
+        "optionPrice": {
+            "title": "Option price",
+            "purpose": "What the right to buy (call) or sell (put) a stock at the strike price at expiry is worth today.",
+            "computation": "European Black-Scholes model with continuous dividend: discounted expected payoff at expiry, under constant volatility.",
+            "formula": "Call = S·e^(−qT)·N(d1) − K·e^(−rT)·N(d2)",
+            "unit": "Currency of the underlying, per share.",
+            "readingTip": "Time value = price − intrinsic value: what the market pays for the remaining uncertainty."
+        },
+        "optionBreakEven": {
+            "title": "Break-even",
+            "purpose": "The final stock price from which buying the option pays back the premium.",
+            "computation": "Strike + premium for a call, strike − premium for a put.",
+            "unit": "Currency of the underlying.",
+            "readingTip": "Below (call) or above (put) the break-even, the purchase loses part of the premium; the maximum loss is the premium."
+        },
+        "callPutParity": {
+            "title": "Call-put parity",
+            "purpose": "Consistency check: a call and a put with the same strike and expiry are linked by an exact relation.",
+            "computation": "Call − Put must equal the discounted spot net of dividends minus the discounted strike; the gap measures what the engine does not respect.",
+            "formula": "C − P = S·e^(−qT) − K·e^(−rT)",
+            "unit": "Currency of the underlying.",
+            "readingTip": "A gap of zero (to 6 decimals) means the two prices are consistent with each other."
+        },
+        "optionVolatility": {
+            "title": "Volatility used",
+            "purpose": "The assumed yearly amplitude of price moves: the parameter that moves an option price the most.",
+            "computation": "Prefilled with the standard deviation of daily log returns over 1 year, times √252; you can change it.",
+            "formula": "σ = stdev(ln(Pt ÷ Pt−1)) × √252",
+            "unit": "Annual percentage.",
+            "readingTip": "It is a past volatility, not an implied one: the options market may expect another."
         }
     },
     "pages": {
@@ -1365,6 +1400,87 @@
                 "failed": "The calculation failed: {reason}",
                 "readError": "The result could not be loaded.",
                 "curveError": "The rate curve could not be loaded."
+            }
+        },
+        "options": {
+            "title": "Option calculator",
+            "titleSymbol": "Option calculator · {symbol}",
+            "badge": "Black-Scholes · European",
+            "description": "Spot {spot} · strike {strike} · maturity {maturity} · indicative data",
+            "descriptionEmpty": "Price of a European call and put · indicative data",
+            "reset": "Reset",
+            "cards": {
+                "perAction": "per share",
+                "call": "Call price",
+                "put": "Put price",
+                "timeCaption": "Time value {time} · intrinsic {intrinsic}",
+                "parity": "Call-put parity",
+                "parityVerified": "Verified",
+                "parityGap": "Gap",
+                "parityBadge": "gap {gap}",
+                "parityCaption": "C − P = {value} on both sides",
+                "volatility": "Volatility used",
+                "volatilityHistorical": "historical",
+                "volatilityEntered": "entered",
+                "volatilityHistoricalCaption": "Prefilled over 1 year, edited or not",
+                "volatilityEnteredCaption": "Entered by you"
+            },
+            "form": {
+                "title": "Parameters",
+                "description": "European option on a stock, continuous dividend",
+                "spot": "Spot",
+                "strike": "Strike",
+                "maturity": "Maturity (days)",
+                "rate": "Risk-free rate (%)",
+                "dividendYield": "Continuous dividend q (%)",
+                "volatility": "Volatility (%)",
+                "volatilityHint": "Prefilled: 1-year historical volatility.",
+                "note": "Exercise at expiry only. American options and discrete dividends are out of scope.",
+                "submit": "Calculate",
+                "validation": {
+                    "spot": "Spot must be greater than 0.",
+                    "strike": "Strike must be greater than 0.",
+                    "maturity": "Maturity is a whole number of days, from 1 to {max}.",
+                    "rate": "The rate is between −10 and 100 %.",
+                    "dividendYield": "The dividend is between 0 and 100 %.",
+                    "volatility": "Volatility is greater than 0 and at most 500 %."
+                }
+            },
+            "chart": {
+                "title": "Profit or loss at expiry",
+                "subtitle": "Buying one option, premium deducted · per share",
+                "call": "Call",
+                "put": "Put",
+                "strike": "Strike {value}",
+                "note": "Break-evens: {call} for the call, {put} for the put. Maximum loss: the premium paid."
+            },
+            "parity": {
+                "title": "Call-put parity",
+                "subtitle": "Engine consistency check",
+                "term": "Term",
+                "value": "Value",
+                "callMinusPut": "Call − Put",
+                "right": "S·e^(−qT) − K·e^(−rT)",
+                "gap": "Gap",
+                "verified": "{gap} · verified",
+                "notVerified": "{gap} · gap",
+                "note": "Engine test: parity holds to within 1e-6."
+            },
+            "grid": {
+                "title": "Payoff grid",
+                "subtitle": "Net result at expiry by final price, per share",
+                "finalSpot": "Final price",
+                "callPayoff": "Call payoff",
+                "putPayoff": "Put payoff",
+                "callNet": "Net call",
+                "putNet": "Net put"
+            },
+            "states": {
+                "empty": "Enter an option’s parameters, then calculate its price.",
+                "pending": "Calculating…",
+                "failed": "The calculation failed: {reason}",
+                "readError": "The result could not be loaded.",
+                "prefillError": "The values for {symbol} could not be prefilled: enter them by hand."
             }
         },
         "optimization": {

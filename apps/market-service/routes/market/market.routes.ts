@@ -36,6 +36,11 @@ const createMarketRoutes = (): RouteDescriptor[] => {
         },
         {
             method: "get",
+            path: `${prefix}/option-inputs`,
+            handler: asyncHandler(controller.getOptionInputs)
+        },
+        {
+            method: "get",
             path: `${prefix}/defaults`,
             handler: asyncHandler(controller.getDefaultsAssets)
         },

@@ -38,8 +38,8 @@
 **En tant que** utilisateur, **je veux** calculer le prix d'un call ou d'un put à partir de mes paramètres **afin de** comprendre comment le prix dépend du cours, du temps, des taux et de la volatilité..
 
 Critères d’acceptation :
-- [ ] Je saisis spot, strike, maturité, taux, dividende et volatilité.
-- [ ] Le prix du call et du put est affiché, et correspond au test de référence.
+- [x] Je saisis spot, strike, maturité, taux, dividende et volatilité.
+- [x] Le prix du call et du put est affiché, et correspond au test de référence.
 
 Tâches : T-01, T-02, T-04, T-05, T-06, T-07 (détail dans `TASKS.md`).
 
@@ -50,7 +50,7 @@ Tâches : T-01, T-02, T-04, T-05, T-06, T-07 (détail dans `TASKS.md`).
 **En tant que** utilisateur, **je veux** voir le gain ou la perte à l'échéance selon le cours final **afin de** comprendre ce que j'achète ou vends..
 
 Critères d’acceptation :
-- [ ] Un diagramme de payoff montre call et put sur une grille de cours.
+- [x] Un diagramme de payoff montre call et put sur une grille de cours.
 
 Tâches : T-02, T-04, T-07 (détail dans `TASKS.md`).
 
@@ -61,7 +61,7 @@ Tâches : T-02, T-04, T-07 (détail dans `TASKS.md`).
 **En tant que** développeur, **je veux** un test de parité call-put et une valeur de référence **afin de** avoir confiance dans les prix affichés..
 
 Critères d’acceptation :
-- [ ] La parité passe à 1e-6 près ; la valeur de référence passe.
+- [x] La parité passe à 1e-6 près ; la valeur de référence passe.
 
 Tâches : T-01 (détail dans `TASKS.md`).
 

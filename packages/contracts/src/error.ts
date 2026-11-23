@@ -19,6 +19,7 @@ export const API_ERROR_CODES = {
     INVALID_PRICING: "INVALID_PRICING",
     PRICING_NOT_FOUND: "PRICING_NOT_FOUND",
     PRICING_QUEUE_FAILED: "PRICING_QUEUE_FAILED",
+    SYMBOL_NOT_FOUND: "SYMBOL_NOT_FOUND",
     // Issues de validation personnalisées (refine)
     SYMBOLS_NOT_UNIQUE: "SYMBOLS_NOT_UNIQUE",
     WEIGHTS_NOT_100: "WEIGHTS_NOT_100",
@@ -52,6 +53,7 @@ export const API_ERROR_MESSAGES: Record<ApiErrorCode, string> = {
     INVALID_PRICING: "Invalid pricing request",
     PRICING_NOT_FOUND: "Pricing request not found",
     PRICING_QUEUE_FAILED: "Pricing could not be queued",
+    SYMBOL_NOT_FOUND: "Symbol not found",
     SYMBOLS_NOT_UNIQUE: "Symbols must be unique",
     WEIGHTS_NOT_100: "Weights must sum to 100",
     END_BEFORE_START: "Must be after start",

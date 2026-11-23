@@ -18,6 +18,8 @@ export const routes = {
     compare: `${prefix}/backtest/compare`,
     compareIds: (a: string, b: string) => `${prefix}/backtest/compare?ids=${a},${b}`,
     rates: `${prefix}/rates`,
+    options: `${prefix}/options`,
+    symbolOptions: (symbol: string) => `${prefix}/options?symbol=${encodeURIComponent(symbol)}`,
     paperTrading: `${prefix}/paper-trading`,
     risk: `${prefix}/risk`,
     backtestProjection: (backtestId: string) => `${prefix}/projection?backtest=${encodeURIComponent(backtestId)}`,

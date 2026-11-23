@@ -1,7 +1,7 @@
 import { beforeEach, expect, test } from "bun:test"
 import PricingRepository from "../repositories/pricing.repository"
 import { createUser, describeWithDb, resetDatabase } from "./database"
-import { pricingInput, pricingResult } from "./pricing.fixture"
+import { optionInput, optionResult, pricingInput, pricingResult } from "./pricing.fixture"
 
 const repo = new PricingRepository()
 
@@ -36,5 +36,13 @@ describeWithDb("PricingRepository (base de test)", () => {
         expect(await repo.complete(id, pricingResult, new Date())).toBe(false)
 
         expect(await repo.getById(id)).toMatchObject({ status: "FAILED", error: "outside the rate curve", result: null })
+    })
+
+    test("OPTION : saisie et résultat d'option écrits puis relus", async () => {
+        const record = await repo.create(userId, optionInput)
+
+        expect(record).toMatchObject({ kind: "OPTION", status: "PENDING", input: optionInput })
+        expect(await repo.complete(record.id, optionResult, new Date())).toBe(true)
+        expect(await repo.getById(record.id)).toMatchObject({ kind: "OPTION", status: "COMPLETED", result: optionResult })
     })
 })

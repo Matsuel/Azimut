@@ -16,6 +16,8 @@ const RISK_ENGINE = "apps/risk-engine/engine/risk.engine.ts"
 const RISK_UTILS = "apps/risk-engine/engine/risk.utils.ts"
 const PROJECTION_ENGINE = "apps/risk-engine/engine/projection.engine.ts"
 const BONDS = "apps/backtest-engine/engine/bonds.ts"
+const OPTIONS = "apps/backtest-engine/engine/options.ts"
+const OPTION_INPUTS = "apps/market-service/utils/option-inputs.ts"
 const MONITORING_SERVICE = "apps/core-backend/services/monitoring.service.ts"
 
 /**
@@ -40,6 +42,11 @@ export const GLOSSARY = {
     modifiedDuration: { source: `${BONDS} · priceBond (modifiedDuration, priceChangeOnRatePlusOnePoint)` },
     discountFactor: { source: `${BONDS} · priceBond (flows.discountFactor)` },
     interpolatedRate: { source: `${BONDS} · interpolateRate (rate)` },
+    // Options vanilles (feature 18)
+    optionPrice: { source: `${OPTIONS} · priceOption (call.price, put.price, timeValue)` },
+    optionBreakEven: { source: `${OPTIONS} · priceOption (breakEven)` },
+    callPutParity: { source: `${OPTIONS} · priceOption (callMinusPut, parityRight, parityGap)` },
+    optionVolatility: { source: `${OPTION_INPUTS} · historicalVolatility` },
     // Résultat d'un backtest
     finalValue: { source: `${ENGINE} · simulate (finalValue)` },
     profit: { source: `${ENGINE} · simulate (profit)` },

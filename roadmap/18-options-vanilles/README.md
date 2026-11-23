@@ -1,6 +1,6 @@
 # 18 · Options vanilles : payoffs et Black-Scholes
 
-- **Statut** : Planifiée
+- **Statut** : En cours (backend et écran livrés, PR à ouvrir)
 - **Roadmap** : Mois 9 — Mois 9 — Options (payoffs, Black-Scholes, grecques, volatilité implicite)
 - **Période** : à fixer au démarrage de la feature
 - **Branche / PR** : `feat/options-vanilles` — PR à ouvrir
@@ -26,10 +26,12 @@ Moteur : `options.ts`, Black-Scholes et payoffs purs. Pas de chaîne d'options (
 | D3 | **Options américaines** : Hors périmètre | Exercice anticipé : pas en MVP (voir README, COULD). | `US.md` (à valider) |
 | D4 | **Pré-remplissage** : volatilité historique sur 1 an (annualisée, 252 jours ouvrés) et taux US 3 mois, tous deux modifiables | Une seule fenêtre : pas de sélecteur à coder ni tester. | Décision du 2026-11-14 |
 | D5 | **Chaîne d'options** : absente de la 18, la route arrive en 19 avec le filtre de qualité | Évite d'afficher une chaîne brute incohérente avant son filtre. Le calculateur est 100 % saisi. | Décision du 2026-11-14 ; T-03 déplacée en 19 (T-08) |
+| D6 | **Discriminant** : `kind` (`BOND`, `OPTION`), pas `instrument` ; backend livré d'abord, puis écran T-07 et route de préremplissage (D7) | Le code de 17 fait foi : `kind` est déjà l'enum base et le contrat. La grille de payoff (achat, prime déduite) est calculée par le moteur. | Spec feature 18 (backend), 2026-11-23 |
+| D7 | **Préremplissage** : `GET /api/market/option-inputs?symbol=` de market-service (spot via `quote`, volatilité 1 an et rendement du dividende 12 mois via un seul `chart` avec `events: "div"`), jamais en cache, relayée par le proxy ; le taux 3 mois vient de la courbe déjà lue (`^IRX`), pas de la route. Symbole inconnu : `404 SYMBOL_NOT_FOUND`, champs laissés vides côté web. Maturité saisie en jours (182 j = 182 / 365 an). `parityVerified` (booléen, tolérance 1e-6 portée par le moteur, optionnel pour un résultat antérieur : `<Dash />`) ajouté au résultat d'option ; le web l'affiche. Onglets « Grecques et smile » et « Pricing Monte Carlo » de la maquette absents. | Le web ne décide aucun verdict. Pas de chaîne d'options (D5). | Spec feature 18 (page Options), 2026-11-23 |
 
 ## Écarts au plan
 
-Aucun : feature planifiée, rien de livré.
+Aucun sur le périmètre. Un code d'erreur `SYMBOL_NOT_FOUND` et un champ `OptionInputs` du contrat `market` s'ajoutent à ceux prévus (D7).
 
 ## Bilan
 

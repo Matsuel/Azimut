@@ -9,6 +9,7 @@ import {
     marketAssetSchema,
     marketDataSchema,
     marketDetailsSchema,
+    optionInputsSchema,
     rateCurveSchema,
 } from "@azimut/contracts"
 import { INTERNAL_API_KEY, PORTS } from "./env"
@@ -102,6 +103,13 @@ function route(url: URL): unknown {
         ].map(([symbol, maturityYears, rate]) => ({ symbol, maturityYears, rate, date: "2026-10-28" }))
         return rateCurveSchema.parse({ currency: "USD", points })
     }
+    if (path === "/option-inputs") {
+        // Entrées fixes d'un actif connu (même contrat que le vrai service) ; un symbole inconnu : 404 SYMBOL_NOT_FOUND
+        const symbol = params.get("symbol") ?? ""
+        if (!ASSETS.some((asset) => asset.symbol === symbol)) return { notFound: true }
+        const spot = closeOn(symbol, Math.floor(Date.now() / DAY_MS))
+        return optionInputsSchema.parse({ symbol, currency: "USD", spot, dividendYield: 0.005, volatility: 0.243 })
+    }
     if (path === "/search") {
         const query = (params.get("query") ?? "").toLowerCase()
         return ASSETS.filter(({ symbol, name }) => `${symbol} ${name}`.toLowerCase().includes(query)).map((asset) =>
@@ -136,6 +144,8 @@ Bun.serve({
             return Response.json({ error: "Unauthorized", code: "UNAUTHORIZED" }, { status: 401 })
         }
         const body = route(url)
+        if (typeof body === "object" && body !== null && "notFound" in body)
+            return Response.json({ error: "Symbol not found", code: "SYMBOL_NOT_FOUND" }, { status: 404 })
         return body === null
             ? Response.json({ error: "Not found", code: "NOT_FOUND" }, { status: 404 })
             : Response.json(body)

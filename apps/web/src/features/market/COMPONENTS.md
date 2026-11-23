@@ -12,7 +12,7 @@
 ### SymbolDetail
 
 - **Import** : `import { SymbolDetail } from "@/features/market/symbol-detail"`.
-- **Rôle** : écran d'un symbole : `PageHeader` (avec `SymbolCell size="lg"` et `SymbolSheet`) puis `PriceChart`.
+- **Rôle** : écran d'un symbole : `PageHeader` (avec `SymbolCell size="lg"`, le bouton-lien « Pricer une option » vers `routes.symbolOptions(symbol)`, qui ouvre la page Options préremplie, et `SymbolSheet`) puis `PriceChart`.
 - **Props** :
   - `symbol` : Symbole yahoo de l'URL.
 - **Source** : `src/features/market/symbol-detail.tsx`.

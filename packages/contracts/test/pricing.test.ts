@@ -1,7 +1,26 @@
 import { expect, test } from "bun:test"
-import { bondInputSchema, pricingInputSchema, pricingRequestedEventSchema, rateCurveSchema } from "../src"
+import { bondInputSchema, optionInputSchema, optionResultSchema, pricingInputSchema, pricingResultSchema, pricingRequestedEventSchema, rateCurveSchema } from "../src"
 
 const bond = { nominal: 100, couponRate: 0, maturityYears: 5, discount: { source: "FLAT", rate: 0.03 }, valueDate: "2026-10-28" }
+
+const option = { spot: 100, strike: 100, maturityYears: 1, rate: 0.05, dividendYield: 0, volatility: 0.2 }
+
+test("optionInputSchema : spot, strike, maturité et volatilité strictement positifs", () => {
+    expect(optionInputSchema.safeParse(option).success).toBe(true)
+    expect(pricingInputSchema.safeParse({ kind: "OPTION", option }).success).toBe(true)
+    for (const field of ["spot", "strike", "maturityYears", "volatility"] as const) {
+        expect(optionInputSchema.safeParse({ ...option, [field]: 0 }).success).toBe(false)
+        expect(optionInputSchema.safeParse({ ...option, [field]: -1 }).success).toBe(false)
+    }
+    expect(optionInputSchema.safeParse({ ...option, maturityYears: 31 }).success).toBe(false)
+    expect(optionInputSchema.safeParse({ ...option, dividendYield: -0.01 }).success).toBe(false)
+})
+
+test("pricing.requested : demande d'option avec requestId", () => {
+    const event = { eventId: "e1", eventType: "pricing.requested", occurredAt: "2026-11-20T10:00:00.000Z", version: 1, payload: { requestId: "p1", kind: "OPTION", option } }
+
+    expect(pricingRequestedEventSchema.safeParse(event).success).toBe(true)
+})
 
 test("bondInputSchema : maturité entière de 1 à 30 ans, taux plat de 0 à 1", () => {
     expect(bondInputSchema.safeParse(bond).success).toBe(true)
@@ -25,6 +44,7 @@ test("pricing.requested : enveloppe avec requestId, type de produit et obligatio
     expect(pricingRequestedEventSchema.safeParse(event).success).toBe(true)
     expect(pricingRequestedEventSchema.safeParse({ ...event, payload: { kind: "BOND", bond } }).success).toBe(false)
     expect(pricingInputSchema.safeParse({ kind: "OPTION", bond }).success).toBe(false)
+    expect(pricingInputSchema.safeParse({ kind: "BOND", option }).success).toBe(false)
 })
 
 test("rateCurveSchema : au moins un point, jour de cotation ISO", () => {
@@ -33,4 +53,17 @@ test("rateCurveSchema : au moins un point, jour de cotation ISO", () => {
     expect(rateCurveSchema.safeParse({ currency: "USD", points: [point] }).success).toBe(true)
     expect(rateCurveSchema.safeParse({ currency: "USD", points: [] }).success).toBe(false)
     expect(rateCurveSchema.safeParse({ currency: "USD", points: [{ ...point, maturityYears: 0 }] }).success).toBe(false)
+})
+
+test("pricingResultSchema : un résultat OPTION porte option, pas bond", () => {
+    expect(pricingResultSchema.safeParse({ kind: "OPTION", bond: {} }).success).toBe(false)
+})
+
+test("optionResultSchema : grille de payoff d'au moins 2 points", () => {
+    const side = { price: 1, intrinsicValue: 0, timeValue: 1, breakEven: 101 }
+    const point = { spot: 90, callPayoff: 0, putPayoff: 10, callNet: -1, putNet: 9 }
+    const result = { call: side, put: side, callMinusPut: 0, parityRight: 0, parityGap: 0, parityVerified: true, payoffGrid: [point, point] }
+
+    expect(optionResultSchema.safeParse(result).success).toBe(true)
+    expect(optionResultSchema.safeParse({ ...result, payoffGrid: [point] }).success).toBe(false)
 })

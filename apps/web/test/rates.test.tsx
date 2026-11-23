@@ -9,7 +9,8 @@ import type { PricingInput, PricingView, RateCurve } from "../src/features/prici
 const getRateCurve = mock<() => Promise<RateCurve>>()
 const createPricing = mock<(input: PricingInput) => Promise<PricingView>>()
 const getPricing = mock<(id: string) => Promise<PricingView>>()
-mock.module("../src/features/pricing/api", () => ({ getRateCurve, createPricing, getPricing }))
+const getOptionInputs = mock()
+mock.module("../src/features/pricing/api", () => ({ getRateCurve, createPricing, getPricing, getOptionInputs }))
 
 const { RatesPage } = await import("../src/features/pricing/rates-page")
 const { createBondSchema } = await import("../src/features/pricing/schema")
@@ -90,9 +91,12 @@ test("la saisie devient une demande : pourcentages en ratios, coupon à 0 pour u
     const base = { nominal: 100, couponRate: 5, maturityYears: 5, valueDate: new Date(2026, 9, 28), flatRate: 3 }
 
     expect(toPricingInput({ ...base, type: "ZERO", discountSource: "FLAT" })).toEqual(input)
-    expect(toPricingInput({ ...base, type: "COUPON", discountSource: "CURVE" }).bond).toMatchObject({
-        couponRate: 0.05,
-        discount: { source: "CURVE" },
+    expect(toPricingInput({ ...base, type: "COUPON", discountSource: "CURVE" })).toMatchObject({
+        kind: "BOND",
+        bond: {
+            couponRate: 0.05,
+            discount: { source: "CURVE" },
+        },
     })
 })
 

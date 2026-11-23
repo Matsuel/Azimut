@@ -1,5 +1,6 @@
 import {
     Activity,
+    ArrowUpDown,
     BadgeCheck,
     Bell,
     BrainCircuit,
@@ -31,7 +32,7 @@ export type SidebarSection = {
 }
 
 // Sections du menu (maquette Figma) : laboratoire, analyse, dérivés, trading virtuel, suivi, administration.
-// Les onglets « Options » et « Structuration » de « Dérivés » et l'onglet « Alertes » arrivent avec leurs features.
+// L'onglet « Structuration » de « Dérivés » et l'onglet « Alertes » arrivent avec leurs features.
 export const sidebarSections: SidebarSection[] = [
     {
         key: "laboratory",
@@ -55,7 +56,10 @@ export const sidebarSections: SidebarSection[] = [
     {
         key: "derivatives",
         adminOnly: false,
-        tabs: [{ key: "rates", url: routes.rates, icon: <Percent /> }],
+        tabs: [
+            { key: "rates", url: routes.rates, icon: <Percent /> },
+            { key: "options", url: routes.options, icon: <ArrowUpDown /> },
+        ],
     },
     {
         key: "virtualTrading",

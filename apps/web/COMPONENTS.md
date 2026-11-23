@@ -184,11 +184,18 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [BondResultCard](src/features/pricing/COMPONENTS.md#bondresultcard) : prix, durations et flux d'une obligation calculée
   - [FlowsTable](src/features/pricing/COMPONENTS.md#flowstable) : tableau des flux actualisés
   - [PricingMethod](src/features/pricing/COMPONENTS.md#pricingmethod) : méthode, source et taux utilisé
-  - [`features/pricing/api.ts`](src/features/pricing/COMPONENTS.md#featurespricingapits) : exports `getRateCurve`, `createPricing`, `getPricing`
-  - [`features/pricing/hook.ts`](src/features/pricing/COMPONENTS.md#featurespricinghookts) : exports `useRateCurve`, `useCreatePricing`, `usePricing`
-  - [`features/pricing/schema.ts`](src/features/pricing/COMPONENTS.md#featurespricingschemats) : exports `createBondSchema`, `BondFormValues`
-  - [`features/pricing/utils.ts`](src/features/pricing/COMPONENTS.md#featurespricingutilsts) : exports `toPricingInput`, `groupFlows`
-  - [`features/pricing/constants.ts`](src/features/pricing/COMPONENTS.md#featurespricingconstantsts) : exports `PRICING_POLL_MS`, `RATE_CURVE_STALE_MS`, `PRICING_CURRENCY`, `BOND_MATURITY_YEARS`, `RATE_CARD_KEYS`, `BOND_TYPES`, `DISCOUNT_SOURCES`, `DEFAULT_BOND`
+  - [OptionsPage](src/features/pricing/COMPONENTS.md#optionspage) : écran Options (maquette 36, route `routes.options`), prérempli depuis un symbole
+  - [OptionsHeader](src/features/pricing/COMPONENTS.md#optionsheader) : en-tête de la page Options
+  - [OptionForm](src/features/pricing/COMPONENTS.md#optionform) : formulaire d'option (spot, strike, maturité en jours, taux, q, volatilité)
+  - [OptionCards](src/features/pricing/COMPONENTS.md#optioncards) : prix du call, du put, parité et volatilité utilisée
+  - [PayoffChart](src/features/pricing/COMPONENTS.md#payoffchart) : gain ou perte à l'échéance, strike et points morts
+  - [ParityCard](src/features/pricing/COMPONENTS.md#paritycard) : contrôle de parité call-put
+  - [PayoffGrid](src/features/pricing/COMPONENTS.md#payoffgrid) : grille de payoff du moteur
+  - [`features/pricing/api.ts`](src/features/pricing/COMPONENTS.md#featurespricingapits) : exports `getRateCurve`, `createPricing`, `getPricing`, `getOptionInputs`
+  - [`features/pricing/hook.ts`](src/features/pricing/COMPONENTS.md#featurespricinghookts) : exports `useRateCurve`, `useCreatePricing`, `usePricing`, `useOptionInputs`
+  - [`features/pricing/schema.ts`](src/features/pricing/COMPONENTS.md#featurespricingschemats) : exports `createBondSchema`, `BondFormValues`, `createOptionSchema`, `OptionFormValues`
+  - [`features/pricing/utils.ts`](src/features/pricing/COMPONENTS.md#featurespricingutilsts) : exports `toPricingInput`, `groupFlows`, `toOptionPricingInput`, `optionDefaults`, `toMaturityDays`
+  - [`features/pricing/constants.ts`](src/features/pricing/COMPONENTS.md#featurespricingconstantsts) : exports `PRICING_POLL_MS`, `RATE_CURVE_STALE_MS`, `PRICING_CURRENCY`, `BOND_MATURITY_YEARS`, `RATE_CARD_KEYS`, `BOND_TYPES`, `DISCOUNT_SOURCES`, `DEFAULT_BOND`, `DAYS_PER_YEAR`, `OPTION_MATURITY_MAX_DAYS`, `DEFAULT_OPTION_MATURITY_DAYS`, `RISK_FREE_SYMBOL`, `OPTION_DEFAULT_CURRENCY`
   - [`features/pricing/types.ts`](src/features/pricing/COMPONENTS.md#featurespricingtypests) : réexports des types de pricing du contrat
 - [`features/notifications`](src/features/notifications/COMPONENTS.md)
   - [NotificationCenter](src/features/notifications/COMPONENTS.md#notificationcenter) : écran Notifications (maquette 22) : onglets, liste par jour, « Tout marquer comme lu »
@@ -922,6 +929,9 @@ Source : `src/components/form/form-issues.ts`.
 | `formatPercent2` | Taux en **fraction** → % non signé, 2 décimales fixes : `0.0421` → « 4,21 % », `0.04` → « 4,00 % ». Taux de la courbe et taux d'actualisation. |
 | `formatYears2` | Durée en années, 2 décimales fixes : `4.8544` → « 4,85 ans ». Durations d'une obligation. |
 | `formatFactor` | Facteur d'actualisation (ratio sans unité), 4 décimales : `0.862609` → « 0,8626 ». |
+| `formatDays` | Nombre de jours tel quel : `182` → « 182 jours ». |
+| `formatDecimal2` | Nombre sans unité à 2 décimales fixes : `40` → « 40,00 ». |
+| `formatParityGap` | Écart de parité call-put, 6 décimales fixes : `0` → « 0,000000 ». |
 | `formatPercent1` | Taux en **fraction** → % non signé, 1 décimale : `0.132` → « 13,2 % », `-0.014` → « −1,4 % ». Volatilité, VaR, CVaR, drawdown mesuré. |
 | `formatDecimal1` | Nombre sans unité, 1 décimale au plus : `3.571` → « 3,6 » (actifs effectifs). |
 | `formatCorrelation` | Corrélation de −1 à 1, 2 décimales : `0.71` → « 0,71 » ; aussi HHI. |

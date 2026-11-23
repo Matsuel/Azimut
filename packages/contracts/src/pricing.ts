@@ -7,8 +7,8 @@ export const PRICING_TOPICS = {
     failed: "pricing.failed",
 } as const;
 
-// Produits pricés par le pipeline `pricing.*` ; les options (18) et le Monte Carlo (20) s'ajoutent ici
-export const PRICING_KINDS = ["BOND"] as const;
+// Produits pricés par le pipeline `pricing.*` ; le Monte Carlo (20) s'ajoute ici
+export const PRICING_KINDS = ["BOND", "OPTION"] as const;
 
 // Statuts d'une demande de pricing : créée puis publiée, calculée, ou en échec
 export const PRICING_STATUSES = ["PENDING", "COMPLETED", "FAILED"] as const;
@@ -55,16 +55,35 @@ export const bondInputSchema = z.object({
     valueDate: z.iso.date(),
 });
 
-// Demande saisie par l'utilisateur (POST /api/pricing)
-export const pricingInputSchema = z.object({
-    kind: z.literal("BOND"),
-    bond: bondInputSchema,
+// Maturité maximale d'une option, en années : au-delà, Black-Scholes à volatilité constante n'a plus de sens
+export const OPTION_MATURITY_MAX_YEARS = 30;
+
+// Option européenne (D1) : le même jeu de paramètres price un call et un put (Black-Scholes, dividende continu q)
+export const optionInputSchema = z.object({
+    // Devise du sous-jacent (> 0) : cours actuel
+    spot: z.number().gt(0),
+    // Devise du sous-jacent (> 0) : prix d'exercice
+    strike: z.number().gt(0),
+    // Années (nombre > 0, 182 jours = 182 / 365) : temps restant jusqu'à l'échéance
+    maturityYears: z.number().gt(0).max(OPTION_MATURITY_MAX_YEARS),
+    // Ratio annuel continu (0.04 = 4 %) : taux sans risque, négatif toléré
+    rate: z.number().min(-0.1).max(1),
+    // Ratio annuel continu (0.005 = 0,5 %) : rendement du dividende q
+    dividendYield: z.number().min(0).max(1),
+    // Ratio annuel (0.243 = 24,3 %) : volatilité du sous-jacent saisie par l'utilisateur (D2)
+    volatility: z.number().gt(0).max(5),
 });
 
-export const pricingRequestedPayloadSchema = z.object({
-    requestId: z.string().min(1),
-    ...pricingInputSchema.shape,
-});
+const bondPricingInputSchema = z.object({ kind: z.literal("BOND"), bond: bondInputSchema });
+const optionPricingInputSchema = z.object({ kind: z.literal("OPTION"), option: optionInputSchema });
+
+// Demande saisie par l'utilisateur (POST /api/pricing) : un produit à la fois, discriminé par `kind`
+export const pricingInputSchema = z.discriminatedUnion("kind", [bondPricingInputSchema, optionPricingInputSchema]);
+
+export const pricingRequestedPayloadSchema = z.discriminatedUnion("kind", [
+    bondPricingInputSchema.extend({ requestId: z.string().min(1) }),
+    optionPricingInputSchema.extend({ requestId: z.string().min(1) }),
+]);
 
 export const pricingRequestedEventSchema = kafkaEventSchema(pricingRequestedPayloadSchema);
 
@@ -101,10 +120,51 @@ export const bondResultSchema = z.object({
     flows: z.array(bondFlowSchema).min(1),
 });
 
-export const pricingResultSchema = z.object({
-    kind: z.literal("BOND"),
-    bond: bondResultSchema,
+// Prix d'un côté (call ou put)
+export const optionPriceSchema = z.object({
+    // Devise du sous-jacent : prix Black-Scholes d'une action
+    price: z.number(),
+    // Devise du sous-jacent : valeur à l'échéance si le cours restait le spot (max(S − K, 0) pour un call, max(K − S, 0) pour un put)
+    intrinsicValue: z.number(),
+    // Devise du sous-jacent : prix − valeur intrinsèque
+    timeValue: z.number(),
+    // Devise du sous-jacent : cours final qui rembourse la prime (K + prime pour un call, K − prime pour un put)
+    breakEven: z.number(),
 });
+
+// Une ligne de la grille de payoff à l'échéance, en achat d'une option
+export const payoffPointSchema = z.object({
+    // Devise du sous-jacent : cours final
+    spot: z.number(),
+    // Devise du sous-jacent : max(S − K, 0)
+    callPayoff: z.number(),
+    // Devise du sous-jacent : max(K − S, 0)
+    putPayoff: z.number(),
+    // Devise du sous-jacent : callPayoff − prime du call
+    callNet: z.number(),
+    // Devise du sous-jacent : putPayoff − prime du put
+    putNet: z.number(),
+});
+
+export const optionResultSchema = z.object({
+    call: optionPriceSchema,
+    put: optionPriceSchema,
+    // Devise du sous-jacent : prix du call − prix du put
+    callMinusPut: z.number(),
+    // Devise du sous-jacent : S·e^(−qT) − K·e^(−rT), second membre de la parité call-put
+    parityRight: z.number(),
+    // Devise du sous-jacent : callMinusPut − parityRight, nul à l'arrondi près si le moteur est cohérent
+    parityGap: z.number(),
+    // Booléen : |parityGap| sous la tolérance du moteur (1e-6) ; décidé par le moteur seul, le web l'affiche. Absent d'un résultat stocké avant son ajout
+    parityVerified: z.boolean().optional(),
+    // Du plus petit au plus grand cours final, 21 points entre 0,7 × min(spot, strike) et 1,3 × max(spot, strike)
+    payoffGrid: z.array(payoffPointSchema).min(2),
+});
+
+const bondPricingResultSchema = z.object({ kind: z.literal("BOND"), bond: bondResultSchema });
+const optionPricingResultSchema = z.object({ kind: z.literal("OPTION"), option: optionResultSchema });
+
+export const pricingResultSchema = z.discriminatedUnion("kind", [bondPricingResultSchema, optionPricingResultSchema]);
 
 export const pricingCompletedPayloadSchema = z.object({
     requestId: z.string().min(1),
@@ -127,10 +187,14 @@ export type RateCurvePoint = z.infer<typeof rateCurvePointSchema>;
 export type RateCurve = z.infer<typeof rateCurveSchema>;
 export type BondDiscount = z.infer<typeof bondDiscountSchema>;
 export type BondInput = z.infer<typeof bondInputSchema>;
+export type OptionInput = z.infer<typeof optionInputSchema>;
 export type PricingInput = z.infer<typeof pricingInputSchema>;
 export type PricingRequestedPayload = z.infer<typeof pricingRequestedPayloadSchema>;
 export type BondFlow = z.infer<typeof bondFlowSchema>;
 export type BondResult = z.infer<typeof bondResultSchema>;
+export type OptionPrice = z.infer<typeof optionPriceSchema>;
+export type PayoffPoint = z.infer<typeof payoffPointSchema>;
+export type OptionResult = z.infer<typeof optionResultSchema>;
 export type PricingResult = z.infer<typeof pricingResultSchema>;
 export type PricingCompletedPayload = z.infer<typeof pricingCompletedPayloadSchema>;
 export type PricingFailedPayload = z.infer<typeof pricingFailedPayloadSchema>;
