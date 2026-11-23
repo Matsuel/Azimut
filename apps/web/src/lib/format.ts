@@ -30,8 +30,12 @@ function numberFormatters(number: NumberFormat) {
         formatPercent2: number({ style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         /** Facteur d'actualisation (ratio sans unité), 4 décimales (`0,8626`). */
         formatFactor: number({ minimumFractionDigits: 4, maximumFractionDigits: 4 }),
+        /** Écart de parité call-put, 6 décimales fixes comme le moteur (`0,000000`). */
+        formatParityGap: number({ minimumFractionDigits: 6, maximumFractionDigits: 6 }),
         /** Nombre sans unité, 1 décimale au plus (`3,6` actifs effectifs). */
         formatDecimal1: number({ maximumFractionDigits: 1 }),
+        /** Nombre sans unité à 2 décimales fixes (`40,00`), pour une colonne de montants dont la devise est en en-tête. */
+        formatDecimal2: twoDecimals,
         /** Corrélation de −1 à 1, sans unité, 2 décimales (`0,71`, `−0,18`). */
         formatCorrelation: twoDecimals,
         /** Ratio de Sharpe, sans unité, 2 décimales (`1,25`). */
@@ -98,6 +102,8 @@ function createFormatters(locale: string) {
         /** Durée en jours calendaires : en jours sous deux mois (« 45 jours »), sinon en mois arrondis (« 14 mois »). */
         formatDuration: (days: number) =>
             days < 2 * DAYS_PER_MONTH ? formatDays(days) : formatMonths(days / DAYS_PER_MONTH),
+        /** Nombre de jours tel quel, sans passage en mois (`182 jours`) : maturité saisie d'une option. */
+        formatDays,
         /** Durée en années, 1 décimale au plus (`10,5 ans`). */
         formatYears,
         /** Durée en années, 2 décimales fixes (`4,85 ans`) : durations d'une obligation. */

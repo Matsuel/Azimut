@@ -9,7 +9,8 @@ import type { PricingInput, PricingView, RateCurve } from "../src/features/prici
 const getRateCurve = mock<() => Promise<RateCurve>>()
 const createPricing = mock<(input: PricingInput) => Promise<PricingView>>()
 const getPricing = mock<(id: string) => Promise<PricingView>>()
-mock.module("../src/features/pricing/api", () => ({ getRateCurve, createPricing, getPricing }))
+const getOptionInputs = mock()
+mock.module("../src/features/pricing/api", () => ({ getRateCurve, createPricing, getPricing, getOptionInputs }))
 
 const { RatesPage } = await import("../src/features/pricing/rates-page")
 const { createBondSchema } = await import("../src/features/pricing/schema")

@@ -25,3 +25,18 @@ export const DEFAULT_BOND = {
     discountSource: "FLAT",
     flatRate: 3,
 } as const
+
+// Saisie d'une option : la maturité se tape en jours, le backend la reçoit en années de 365 jours (182 jours = 182 / 365)
+export const DAYS_PER_YEAR = 365
+
+// Miroir de OPTION_MATURITY_MAX_YEARS (contracts), que le web n'importe pas à l'exécution ; le backend reste juge
+export const OPTION_MATURITY_MAX_DAYS = 30 * DAYS_PER_YEAR
+
+// Maturité proposée au départ (jours) : un semestre
+export const DEFAULT_OPTION_MATURITY_DAYS = 182
+
+// Indice Yahoo du taux 13 semaines, pré-remplissage du taux sans risque (D4)
+export const RISK_FREE_SYMBOL = "^IRX"
+
+// Devise d'affichage d'une option saisie sans symbole (les montants sont dans la devise du sous-jacent, jamais convertis)
+export const OPTION_DEFAULT_CURRENCY = "USD"
