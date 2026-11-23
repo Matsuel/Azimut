@@ -1,6 +1,6 @@
 # 18 · Options vanilles : payoffs et Black-Scholes
 
-- **Statut** : Planifiée
+- **Statut** : En cours (backend livré, T-07 restant)
 - **Roadmap** : Mois 9 — Mois 9 — Options (payoffs, Black-Scholes, grecques, volatilité implicite)
 - **Période** : à fixer au démarrage de la feature
 - **Branche / PR** : `feat/options-vanilles` — PR à ouvrir
@@ -26,6 +26,7 @@ Moteur : `options.ts`, Black-Scholes et payoffs purs. Pas de chaîne d'options (
 | D3 | **Options américaines** : Hors périmètre | Exercice anticipé : pas en MVP (voir README, COULD). | `US.md` (à valider) |
 | D4 | **Pré-remplissage** : volatilité historique sur 1 an (annualisée, 252 jours ouvrés) et taux US 3 mois, tous deux modifiables | Une seule fenêtre : pas de sélecteur à coder ni tester. | Décision du 2026-11-14 |
 | D5 | **Chaîne d'options** : absente de la 18, la route arrive en 19 avec le filtre de qualité | Évite d'afficher une chaîne brute incohérente avant son filtre. Le calculateur est 100 % saisi. | Décision du 2026-11-14 ; T-03 déplacée en 19 (T-08) |
+| D6 | **Discriminant** : `kind` (`BOND`, `OPTION`), pas `instrument` ; backend livré d'abord, écran T-07 et route de préremplissage reportés | Le code de 17 fait foi : `kind` est déjà l'enum base et le contrat. La grille de payoff (achat, prime déduite) est calculée par le moteur. | Spec feature 18 (backend), 2026-11-23 |
 
 ## Écarts au plan
 

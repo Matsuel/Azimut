@@ -6,11 +6,11 @@
 
 | Tâche | Titre | US | Couche | Priorité | Points | Dépend de | Commits |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T-01 | Engine : Black-Scholes avec dividende continu | US-01, US-03 | backtest-engine | MUST | 5 | — | — |
-| T-02 | Engine : payoffs et parité call-put | US-01, US-02 | backtest-engine | MUST | 3 | T-01 | — |
-| T-04 | Contrat : demande et résultat d'option | US-01, US-02 | contracts | MUST | 3 | — | — |
-| T-05 | Demande d'option par core-backend | US-01 | core-backend | MUST | 3 | T-04 | — |
-| T-06 | Worker : pricing d'option | US-01 | backtest-engine | MUST | 2 | T-01, T-04 | — |
+| T-01 | Engine : Black-Scholes avec dividende continu | US-01, US-03 | backtest-engine | MUST | 5 | — | 35f0283 |
+| T-02 | Engine : payoffs et parité call-put | US-01, US-02 | backtest-engine | MUST | 3 | T-01 | 35f0283 |
+| T-04 | Contrat : demande et résultat d'option | US-01, US-02 | contracts | MUST | 3 | — | 8458e40 |
+| T-05 | Demande d'option par core-backend | US-01 | core-backend | MUST | 3 | T-04 | 8458e40 |
+| T-06 | Worker : pricing d'option | US-01 | backtest-engine | MUST | 2 | T-01, T-04 | c6b988d |
 | T-07 | Calculateur d'option et diagramme de payoff | US-01, US-02 | web | SHOULD | 5 | T-05 | — |
 
 **Total** : 21 points — MUST 16, SHOULD 5. T-03 (chaîne d'options) est déplacée en 19 (T-08), décision D5.
@@ -54,8 +54,8 @@ flowchart LR
 - **Fichiers** : `apps/backtest-engine/engine/options.ts`, `options.test.ts`
 
 Critères d’acceptation :
-- [ ] Prix call et put avec taux r, dividende q, volatilité σ, maturité T.
-- [ ] Test de référence : spot 100, strike 100, r 5 %, σ 20 %, T 1 an → call ≈ 10,45.
+- [x] Prix call et put avec taux r, dividende q, volatilité σ, maturité T.
+- [x] Test de référence : spot 100, strike 100, r 5 %, σ 20 %, T 1 an → call ≈ 10,45.
 
 ### T-02 · Engine : payoffs et parité call-put
 
@@ -63,8 +63,8 @@ Critères d’acceptation :
 - **Fichiers** : `apps/backtest-engine/engine/options.ts`
 
 Critères d’acceptation :
-- [ ] Payoff à l'échéance : call = max(S − K, 0), put = max(K − S, 0), sur une grille de cours.
-- [ ] Parité : C − P = S e^(−qT) − K e^(−rT), à 1e-6 près (test).
+- [x] Payoff à l'échéance : call = max(S − K, 0), put = max(K − S, 0), sur une grille de cours.
+- [x] Parité : C − P = S e^(−qT) − K e^(−rT), à 1e-6 près (test).
 
 ## Lot 3 — Contrat
 
@@ -74,7 +74,7 @@ Critères d’acceptation :
 - **Fichiers** : `packages/contracts/src/pricing.ts`
 
 Critères d’acceptation :
-- [ ] Union sur `instrument` (`BOND`, `OPTION`) ; chaque champ numérique documente son unité (ratio, devise, années).
+- [x] Union sur `kind` (`BOND`, `OPTION`) ; chaque champ numérique documente son unité (ratio, devise, années).
 
 ## Lot 4 — Service
 
@@ -84,8 +84,8 @@ Critères d’acceptation :
 - **Fichiers** : `apps/core-backend/services/pricing.service.ts`, `interfaces/pricing.interface.ts`
 
 Critères d’acceptation :
-- [ ] Validation zod des paramètres ; mapping entrée → DTO dans le service.
-- [ ] Réutilise le pipeline et la table de la feature 17 (T-05).
+- [x] Validation zod des paramètres ; mapping entrée → DTO dans le service.
+- [x] Réutilise le pipeline et la table de la feature 17 (T-05).
 
 ## Lot 5 — Worker
 
@@ -95,7 +95,7 @@ Critères d’acceptation :
 - **Fichiers** : `apps/backtest-engine/consumers/pricing.consumer.ts`
 
 Critères d’acceptation :
-- [ ] Le consumer 15 route l'instrument `OPTION` vers `options.ts`.
+- [x] Le consumer 15 route le `kind` `OPTION` vers `options.ts`.
 
 ## Lot 6 — Écrans
 
