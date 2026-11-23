@@ -6,14 +6,14 @@
 
 | Tâche | Titre | US | Couche | Priorité | Points | Dépend de | Commits |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T-01 | Engine : volatilité implicite par inversion | US-01 | backtest-engine | MUST | 5 | — | — |
-| T-02 | Engine : grecques delta, gamma, vega, theta, rho | US-02 | backtest-engine | MUST | 3 | — | — |
-| T-03 | Engine : filtre de qualité des cotations | US-01 | backtest-engine | MUST | 2 | T-01 | — |
-| T-04 | Contrat : smile et grecques | US-02, US-03 | contracts | MUST | 2 | — | — |
-| T-05 | Calcul d'une chaîne par le worker | US-01, US-03 | core-backend | MUST | 5 | T-01, T-03, T-04, T-08 | — |
-| T-06 | Smile par échéance dans le calculateur | US-03 | web | SHOULD | 5 | T-05 | — |
-| T-07 | Grecques affichées dans le calculateur | US-02 | web | MUST | 2 | T-05 | — |
-| T-08 | Chaîne d'options dans market-service | US-01 | market-service | MUST | 3 | — | — |
+| T-01 | Engine : volatilité implicite par inversion | US-01 | backtest-engine | MUST | 5 | — | `b4efb5a` |
+| T-02 | Engine : grecques delta, gamma, vega, theta, rho | US-02 | backtest-engine | MUST | 3 | — | `b4efb5a` |
+| T-03 | Engine : filtre de qualité des cotations | US-01 | backtest-engine | MUST | 2 | T-01 | `e5ffee0` |
+| T-04 | Contrat : smile et grecques | US-02, US-03 | contracts | MUST | 2 | — | `9fddfa4`, `e0e5cca` |
+| T-05 | Calcul d'une chaîne par le worker | US-01, US-03 | core-backend | MUST | 5 | T-01, T-03, T-04, T-08 | `6e63c37`, `a1df3fd` |
+| T-06 | Smile par échéance dans le calculateur | US-03 | web | SHOULD | 5 | T-05 | `4d36ba5` |
+| T-07 | Grecques affichées dans le calculateur | US-02 | web | MUST | 2 | T-05 | `4d36ba5` |
+| T-08 | Chaîne d'options dans market-service | US-01 | market-service | MUST | 3 | — | `183487c` |
 
 **Total** : 27 points — MUST 22, SHOULD 5.
 
@@ -56,7 +56,7 @@ flowchart LR
 
 ### T-01 · Engine : volatilité implicite par inversion
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : — · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : — · **Commits** : `b4efb5a`
 - **Fichiers** : `apps/backtest-engine/engine/options.ts` (`impliedVolatility`), tests
 
 Critères d’acceptation :
@@ -66,7 +66,7 @@ Critères d’acceptation :
 
 ### T-02 · Engine : grecques delta, gamma, vega, theta, rho
 
-- **US** : US-02 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : —
+- **US** : US-02 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : `b4efb5a`
 - **Fichiers** : `apps/backtest-engine/engine/options.ts`
 
 Critères d’acceptation :
@@ -75,7 +75,7 @@ Critères d’acceptation :
 
 ### T-03 · Engine : filtre de qualité des cotations
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-01 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-01 · **Commits** : `e5ffee0`
 - **Fichiers** : `apps/backtest-engine/engine/options.ts`
 
 Critères d’acceptation :
@@ -86,7 +86,7 @@ Critères d’acceptation :
 
 ### T-04 · Contrat : smile et grecques
 
-- **US** : US-02, US-03 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : —
+- **US** : US-02, US-03 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : `9fddfa4`, `e0e5cca`
 - **Fichiers** : `packages/contracts/src/pricing.ts`
 
 Critères d’acceptation :
@@ -97,7 +97,7 @@ Critères d’acceptation :
 
 ### T-05 · Calcul d'une chaîne par le worker
 
-- **US** : US-01, US-03 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-01, T-03, T-04 · **Commits** : —
+- **US** : US-01, US-03 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-01, T-03, T-04 · **Commits** : `6e63c37`, `a1df3fd`
 - **Fichiers** : `apps/core-backend/services/pricing.service.ts`, `prisma/schema.prisma`
 
 Critères d’acceptation :
@@ -108,7 +108,7 @@ Critères d’acceptation :
 
 ### T-08 · Chaîne d'options dans market-service
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : `183487c`
 - **Fichiers** : `apps/market-service/routes/market/`, `repositories/market.repository.ts`, `API.md`
 
 Critères d’acceptation :
@@ -117,7 +117,7 @@ Critères d’acceptation :
 
 ### T-06 · Smile par échéance dans le calculateur
 
-- **US** : US-03 · **Priorité** : SHOULD · **Points** : 5 · **Dépend de** : T-05 · **Commits** : —
+- **US** : US-03 · **Priorité** : SHOULD · **Points** : 5 · **Dépend de** : T-05 · **Commits** : `4d36ba5`
 - **Fichiers** : `apps/web/src/features/pricing/`
 
 Critères d’acceptation :
@@ -125,7 +125,7 @@ Critères d’acceptation :
 
 ### T-07 · Grecques affichées dans le calculateur
 
-- **US** : US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-05 · **Commits** : —
+- **US** : US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-05 · **Commits** : `4d36ba5`
 - **Fichiers** : `apps/web/src/features/pricing/`
 
 Critères d’acceptation :
