@@ -3,10 +3,10 @@ import type { ChartOptions } from "yahoo-finance2/modules/chart";
 import { API_ERROR_CODES, type DailyCloses, type Dividends, type MarketAsset, type MarketData, type MarketDetails, type OptionInputs, type Period, type RateCurve } from "@azimut/contracts";
 import { BadGatewayError, NotFoundError } from "@azimut/http";
 import { env } from "../env";
-import { addYears, DAY_MS, Logger, round } from "@azimut/utils";
+import { addYears, DAY_MS, historicalVolatility, Logger, round } from "@azimut/utils";
 import { toMajorCurrency } from "../utils/currency";
 import { OPTION_INPUTS_WINDOW_YEARS, RATE_CURVE_CURRENCY, RATE_CURVE_SYMBOLS } from "../constants/market.constants";
-import { historicalVolatility, trailingDividendYield } from "../utils/option-inputs";
+import { trailingDividendYield } from "../utils/option-inputs";
 
 const logger = Logger.here();
 

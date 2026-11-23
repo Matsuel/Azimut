@@ -3,26 +3,10 @@ import { NotFoundError } from "@azimut/http"
 import { API_ERROR_CODES, optionInputsSchema } from "@azimut/contracts"
 import MarketRepository from "../repositories/market.repository"
 import MarketService from "../services/market.service"
-import { historicalVolatility, trailingDividendYield } from "../utils/option-inputs"
+import { trailingDividendYield } from "../utils/option-inputs"
 
 // Clôtures qui alternent +1 % / -1 % : écart-type connu, indépendant du hasard
 const alternating = (days: number) => Array.from({ length: days }, (_, i) => 100 * (i % 2 === 0 ? 1 : 1.01))
-
-test("historicalVolatility annualise l'écart-type des rendements logarithmiques sur 252 jours", () => {
-    const closes = alternating(60)
-    const volatility = historicalVolatility(closes)!
-
-    const returns = closes.slice(1).map((close, i) => Math.log(close / closes[i]!))
-    const mean = returns.reduce((a, b) => a + b, 0) / returns.length
-    const sd = Math.sqrt(returns.reduce((a, r) => a + (r - mean) ** 2, 0) / (returns.length - 1))
-    expect(volatility).toBeCloseTo(sd * Math.sqrt(252), 10)
-})
-
-test("historicalVolatility vaut null sans historique suffisant ou sur une série plate", () => {
-    expect(historicalVolatility(alternating(10))).toBeNull()
-    expect(historicalVolatility([])).toBeNull()
-    expect(historicalVolatility(Array(60).fill(100))).toBeNull()
-})
 
 test("trailingDividendYield rapporte les dividendes au cours, 0 sans dividende", () => {
     expect(trailingDividendYield([0.5, 0.5, 0.5, 0.5], 200)).toBeCloseTo(0.01, 10)

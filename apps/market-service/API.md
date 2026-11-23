@@ -153,4 +153,4 @@ Catalogue des routes internes de market-service (port 8001, données yahoo-finan
 - **Erreurs** : `400 { "code": "INVALID_QUERY", "issues": [ZodIssue] }` → `symbol` absent ; `404 { "code": "SYMBOL_NOT_FOUND" }` → symbole inconnu ou sans cours ; `500` → erreur yahoo-finance2.
 - **Effets** : aucun (lecture yahoo-finance2 : `quote` et `chart` 1 an avec `events: "div"`).
 - **Appelant** : `getOptionInputs(symbol)` de `apps/web/src/features/pricing/api.ts`, hook `useOptionInputs(symbol)`.
-- **Source** : `routes/market/market.routes.ts`, `controller/market.controller.ts` (`getOptionInputs`), `services/market.service.ts`, `repositories/market.repository.ts` (`getOptionInputs`), `utils/option-inputs.ts` (`historicalVolatility`, `trailingDividendYield`).
+- **Source** : `routes/market/market.routes.ts`, `controller/market.controller.ts` (`getOptionInputs`), `services/market.service.ts`, `repositories/market.repository.ts` (`getOptionInputs`), `utils/option-inputs.ts` (`trailingDividendYield`), `historicalVolatility` de `@azimut/utils`.

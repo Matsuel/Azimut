@@ -58,7 +58,5 @@ export const CURRENCY_SUBUNITS: Record<string, { currency: string; divisor: numb
     ZAc: { currency: "ZAR", divisor: 100 },
 };
 
-// Préremplissage du calculateur d'option (D4) : fenêtre d'un an (clôtures et dividendes) et plancher de rendements
-// journaliers (un mois de cotation) sous lequel la volatilité n'est pas estimée
+// Préremplissage du calculateur d'option (D4) : fenêtre d'un an (clôtures et dividendes)
 export const OPTION_INPUTS_WINDOW_YEARS = 1;
-export const OPTION_INPUTS_MIN_RETURNS = 20;
