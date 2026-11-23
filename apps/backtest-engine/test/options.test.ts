@@ -36,6 +36,7 @@ test("parité call-put à 1e-6 près, avec et sans dividende, dans la monnaie ou
     for (const option of cases) {
         const result = priceOption(option)
         expect(Math.abs(result.parityGap)).toBeLessThanOrEqual(1e-6)
+        expect(result.parityVerified).toBe(true)
         expect(result.callMinusPut).toBeCloseTo(
             option.spot * Math.exp(-option.dividendYield * option.maturityYears) - option.strike * Math.exp(-option.rate * option.maturityYears),
             5,

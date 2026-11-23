@@ -35,6 +35,7 @@ export const optionResult: PricingResult = {
         callMinusPut: 4.877058,
         parityRight: 4.877058,
         parityGap: 0,
+        parityVerified: true,
         payoffGrid: [optionPoint, { ...optionPoint, spot: 130, callPayoff: 30, putPayoff: 0, callNet: 19.55, putNet: -5.57 }],
     },
 }

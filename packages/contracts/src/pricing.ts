@@ -155,6 +155,8 @@ export const optionResultSchema = z.object({
     parityRight: z.number(),
     // Devise du sous-jacent : callMinusPut − parityRight, nul à l'arrondi près si le moteur est cohérent
     parityGap: z.number(),
+    // Booléen : |parityGap| sous la tolérance du moteur (1e-6) ; décidé par le moteur seul, le web l'affiche. Absent d'un résultat stocké avant son ajout
+    parityVerified: z.boolean().optional(),
     // Du plus petit au plus grand cours final, 21 points entre 0,7 × min(spot, strike) et 1,3 × max(spot, strike)
     payoffGrid: z.array(payoffPointSchema).min(2),
 });

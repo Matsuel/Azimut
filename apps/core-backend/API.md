@@ -98,11 +98,11 @@ Les routes de liste (`GET /api/portfolio`, `GET /api/backtest`) suivent le contr
 
 ## Market (proxy)
 
-### GET /api/market/search · GET /api/market/details/:id · GET /api/market/defaults · GET /api/market/rates
+### GET /api/market/search · GET /api/market/details/:id · GET /api/market/defaults · GET /api/market/rates · GET /api/market/option-inputs
 
 - **Auth** : session requise (`authMiddleware`).
 - **Entrée** : requête relayée telle quelle (chemin complet `/api/market/...`, query) vers `env.MARKET_SERVICE_URL` (défaut `http://localhost:8001`, `env.ts`). L'en-tête `x-user-id` entrant est supprimé puis remplacé par `req.userId` (anti-usurpation). L'en-tête `x-internal-key` (`INTERNAL_KEY_HEADER`, valeur `INTERNAL_API_KEY`) est ajouté : market-service refuse tout appel qui ne le porte pas.
-- **Réponse** : statut et corps de market-service, inchangés. Liste blanche : seules ces quatre routes sont relayées ; toute autre (dont `GET /api/market/closes`, réservée à backtest-engine) reçoit la 404 par défaut d'Express. Détail des routes : voir [`apps/market-service/API.md`](../market-service/API.md).
+- **Réponse** : statut et corps de market-service, inchangés. Liste blanche : seules ces cinq routes sont relayées ; toute autre (dont `GET /api/market/closes`, réservée à backtest-engine) reçoit la 404 par défaut d'Express. Détail des routes : voir [`apps/market-service/API.md`](../market-service/API.md).
 - **Erreurs** : `401` → pas de session ; `502 { "error": "Service unavailable" }` → market-service injoignable ou sans réponse sous 10 s (`proxyTimeout: 10_000`) ; erreurs de market-service relayées avec leur statut.
 - **Effets** : aucun.
 - **Appelant** : fonctions de `apps/web/src/features/market/api.ts` (détail dans `apps/market-service/API.md`).

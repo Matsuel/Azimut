@@ -20,3 +20,8 @@ export const dailyClosesQuerySchema = z
     .refine((query) => query.start < query.end, { path: ["end"] });
 
 export type DailyClosesQuery = z.infer<typeof dailyClosesQuerySchema>;
+
+// ?symbol=AAPL : symbole dont on préremplit le calculateur d'option
+export const optionInputsQuerySchema = z.object({
+    symbol: z.string().trim().min(1),
+});

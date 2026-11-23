@@ -1,4 +1,4 @@
-import type { DailyCloses, Dividends, MarketAsset, Paginated, PaginationQuery, Period, RateCurve } from "@azimut/contracts";
+import type { DailyCloses, Dividends, MarketAsset, OptionInputs, Paginated, PaginationQuery, Period, RateCurve } from "@azimut/contracts";
 import MarketRepository, { type IMarketRepository } from "../repositories/market.repository";
 import {
     ASSETS_CACHE_TTL_MS,
@@ -46,6 +46,11 @@ class MarketService {
 
     async getRateCurve(): Promise<RateCurve> {
         return this.cache.getOrLoad("rates", RATES_CACHE_TTL_MS, () => this.repo.getRateCurve())
+    }
+
+    // Jamais mis en cache : spot, volatilité et dividende se lisent au moment du calcul
+    async getOptionInputs(symbol: string): Promise<OptionInputs> {
+        return this.repo.getOptionInputs(symbol)
     }
 
     // Jamais mis en cache : un backtest publie l'empreinte et l'instant de récupération de ces cours (reproductibilité)

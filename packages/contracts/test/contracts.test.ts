@@ -8,6 +8,7 @@ import {
     backtestCompletedEventSchema,
     notificationRequestedPayloadSchema,
     riskCompletedEventSchema,
+    optionInputsSchema,
     riskConstraintInputSchema,
 } from "../src"
 
@@ -70,4 +71,12 @@ test("monitoring : ligne down sans checks ni latence, service inconnu refusé", 
     const down = { service: "risk-engine", state: "down", latencyMs: null, checkedAt: "2026-11-19T10:00:00.000Z" }
     expect(monitoringServicesResponseSchema.safeParse({ services: [down], summary }).success).toBe(true)
     expect(monitoringServicesResponseSchema.safeParse({ services: [{ ...down, service: "gateway" }], summary }).success).toBe(false)
+})
+
+test("optionInputsSchema : volatilité null acceptée (historique trop court), spot nul ou volatilité nulle refusés", () => {
+    const base = { symbol: "AAPL", currency: "USD", spot: 224.4, dividendYield: 0, volatility: 0.243 }
+    expect(optionInputsSchema.safeParse(base).success).toBe(true)
+    expect(optionInputsSchema.safeParse({ ...base, volatility: null }).success).toBe(true)
+    expect(optionInputsSchema.safeParse({ ...base, spot: 0 }).success).toBe(false)
+    expect(optionInputsSchema.safeParse({ ...base, volatility: 0 }).success).toBe(false)
 })

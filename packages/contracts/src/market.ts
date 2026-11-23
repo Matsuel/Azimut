@@ -61,6 +61,19 @@ export const symbolDividendsSchema = z.object({
 // Réponse de GET /api/market/dividends : dividendes triés par date, par symbole demandé
 export const dividendsSchema = z.record(z.string(), symbolDividendsSchema);
 
+// Réponse de GET /api/market/option-inputs : de quoi préremplir le calculateur d'option d'un symbole (D2, D4)
+export const optionInputsSchema = z.object({
+    symbol: z.string().min(1),
+    // Code ISO 4217 de la devise principale du cours (`GBp` → "GBP")
+    currency: z.string().min(1),
+    // Devise principale du symbole : dernier cours coté
+    spot: z.number().gt(0),
+    // Ratio annuel continu (0.005 = 0,5 %) : dividendes des 12 derniers mois / spot ; 0 sans dividende
+    dividendYield: z.number().min(0),
+    // Ratio annuel (0.243 = 24,3 %) : écart-type des rendements logarithmiques journaliers sur 1 an × √252 ; null sans historique suffisant
+    volatility: z.number().gt(0).nullable(),
+});
+
 export type Period = z.infer<typeof periodSchema>;
 export type MarketData = z.infer<typeof marketDataSchema>;
 export type MarketDetails = z.infer<typeof marketDetailsSchema>;
@@ -70,3 +83,4 @@ export type MarketAsset = z.infer<typeof marketAssetSchema>;
 export type Dividend = z.infer<typeof dividendSchema>;
 export type SymbolDividends = z.infer<typeof symbolDividendsSchema>;
 export type Dividends = z.infer<typeof dividendsSchema>;
+export type OptionInputs = z.infer<typeof optionInputsSchema>;

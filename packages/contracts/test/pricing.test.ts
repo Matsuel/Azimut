@@ -62,7 +62,7 @@ test("pricingResultSchema : un résultat OPTION porte option, pas bond", () => {
 test("optionResultSchema : grille de payoff d'au moins 2 points", () => {
     const side = { price: 1, intrinsicValue: 0, timeValue: 1, breakEven: 101 }
     const point = { spot: 90, callPayoff: 0, putPayoff: 10, callNet: -1, putNet: 9 }
-    const result = { call: side, put: side, callMinusPut: 0, parityRight: 0, parityGap: 0, payoffGrid: [point, point] }
+    const result = { call: side, put: side, callMinusPut: 0, parityRight: 0, parityGap: 0, parityVerified: true, payoffGrid: [point, point] }
 
     expect(optionResultSchema.safeParse(result).success).toBe(true)
     expect(optionResultSchema.safeParse({ ...result, payoffGrid: [point] }).success).toBe(false)

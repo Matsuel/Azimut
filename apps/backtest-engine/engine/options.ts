@@ -4,6 +4,8 @@ import { round } from "@azimut/utils";
 // Nombre de points de la grille de payoff, bornes comprises
 const PAYOFF_GRID_POINTS = 21;
 // Étendue de la grille autour du spot et du strike : de 0,7 × le plus petit à 1,3 × le plus grand
+// Devise du sous-jacent : écart de parité call-put sous lequel le résultat est déclaré vérifié (`parityVerified`)
+const PARITY_TOLERANCE = 1e-6;
 const PAYOFF_GRID_LOW = 0.7;
 const PAYOFF_GRID_HIGH = 1.3;
 
@@ -100,13 +102,16 @@ export function priceOption(option: OptionInput): OptionResult {
         };
     });
 
+    // + 0 : un écart nul arrondi ne doit pas sortir en -0
+    const parityGap = round(call - put - parityRight, 6) + 0;
+
     return {
         call: side("CALL", call, spot, strike),
         put: side("PUT", put, spot, strike),
         callMinusPut: round(call - put, 6),
         parityRight: round(parityRight, 6),
-        // + 0 : un écart nul arrondi ne doit pas sortir en -0
-        parityGap: round(call - put - parityRight, 6) + 0,
+        parityGap,
+        parityVerified: Math.abs(parityGap) <= PARITY_TOLERANCE,
         payoffGrid,
     };
 }
