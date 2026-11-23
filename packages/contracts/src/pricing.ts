@@ -8,7 +8,7 @@ export const PRICING_TOPICS = {
 } as const;
 
 // Produits pricés par le pipeline `pricing.*` ; le Monte Carlo (20) s'ajoute ici
-export const PRICING_KINDS = ["BOND", "OPTION"] as const;
+export const PRICING_KINDS = ["BOND", "OPTION", "OPTION_CHAIN"] as const;
 
 // Statuts d'une demande de pricing : créée puis publiée, calculée, ou en échec
 export const PRICING_STATUSES = ["PENDING", "COMPLETED", "FAILED"] as const;
@@ -74,15 +74,28 @@ export const optionInputSchema = z.object({
     volatility: z.number().gt(0).max(5),
 });
 
+// Bornes de la volatilité implicite retenue (19, D2) : en dehors, le contrat est écarté
+export const IMPLIED_VOLATILITY_BOUNDS = { min: 0.01, max: 3 } as const;
+
+// Nombre d'échéances du smile (19, D4)
+export const SMILE_EXPIRATIONS = 3;
+
+// Chaîne d'options d'un sous-jacent (19) : IV, grecques et smile recalculés par le moteur
+export const optionChainInputSchema = z.object({
+    symbol: z.string().trim().min(1),
+});
+
 const bondPricingInputSchema = z.object({ kind: z.literal("BOND"), bond: bondInputSchema });
 const optionPricingInputSchema = z.object({ kind: z.literal("OPTION"), option: optionInputSchema });
+const optionChainPricingInputSchema = z.object({ kind: z.literal("OPTION_CHAIN"), chain: optionChainInputSchema });
 
 // Demande saisie par l'utilisateur (POST /api/pricing) : un produit à la fois, discriminé par `kind`
-export const pricingInputSchema = z.discriminatedUnion("kind", [bondPricingInputSchema, optionPricingInputSchema]);
+export const pricingInputSchema = z.discriminatedUnion("kind", [bondPricingInputSchema, optionPricingInputSchema, optionChainPricingInputSchema]);
 
 export const pricingRequestedPayloadSchema = z.discriminatedUnion("kind", [
     bondPricingInputSchema.extend({ requestId: z.string().min(1) }),
     optionPricingInputSchema.extend({ requestId: z.string().min(1) }),
+    optionChainPricingInputSchema.extend({ requestId: z.string().min(1) }),
 ]);
 
 export const pricingRequestedEventSchema = kafkaEventSchema(pricingRequestedPayloadSchema);
@@ -161,10 +174,93 @@ export const optionResultSchema = z.object({
     payoffGrid: z.array(payoffPointSchema).min(2),
 });
 
+// Sensibilités d'une option par action, hors dividende discret (19, D1)
+export const optionGreeksSchema = z.object({
+    // Sans unité : variation du prix pour +1 de spot (call dans [0, 1], put dans [−1, 0])
+    delta: z.number(),
+    // 1 / devise du sous-jacent : variation du delta pour +1 de spot
+    gamma: z.number(),
+    // Devise du sous-jacent : variation du prix pour +1 point de volatilité (0,01)
+    vega: z.number(),
+    // Devise du sous-jacent : variation du prix par jour calendaire écoulé (négative pour un achat sans dividende)
+    theta: z.number(),
+    // Devise du sous-jacent : variation du prix pour +1 point de taux (0,01)
+    rho: z.number(),
+});
+
+// Statut d'une cotation après le filtre de qualité (19, D2) : retenue, ou écartée pour une cause
+export const QUOTE_STATUSES = ["KEPT", "NO_BID_ASK", "NO_PRICE", "IV_OUT_OF_BOUNDS"] as const;
+
+// Une ligne de la chaîne d'une échéance
+export const chainRowSchema = z.object({
+    // Devise du sous-jacent
+    strike: z.number().gt(0),
+    side: z.enum(["CALL", "PUT"]),
+    bid: z.number().min(0),
+    ask: z.number().min(0),
+    // Devise du sous-jacent : (bid + ask) / 2 ; null si bid ou ask est nul
+    mid: z.number().gt(0).nullable(),
+    // Ratio annuel (0.186 = 18,6 %) : calculé par le moteur sur le prix milieu ; null si la cotation est écartée
+    impliedVolatility: z.number().gt(0).nullable(),
+    // Ratio annuel : volatilité de Yahoo, pour comparaison seulement ; null si absente
+    yahooVolatility: z.number().min(0).nullable(),
+    status: z.enum(QUOTE_STATUSES),
+    // Grecques au prix milieu ; null si la cotation est écartée
+    greeks: optionGreeksSchema.nullable(),
+});
+
+// Un point du smile : un strike hors de la monnaie (put sous le spot, call au-dessus) retenu par le filtre
+export const smilePointSchema = z.object({
+    strike: z.number().gt(0),
+    // Ratio annuel : volatilité implicite du contrat retenu
+    impliedVolatility: z.number().gt(0),
+});
+
+export const smileCurveSchema = z.object({
+    // YYYY-MM-DD
+    expiration: z.iso.date(),
+    // Triés par strike croissant
+    points: z.array(smilePointSchema),
+});
+
+export const optionChainResultSchema = z.object({
+    symbol: z.string().min(1),
+    // Jour de la chaîne, YYYY-MM-DD
+    asOf: z.iso.date(),
+    // Devise du sous-jacent
+    spot: z.number().gt(0),
+    // Ratio annuel continu : taux sans risque (maturité la plus courte de la courbe US), commun à toutes les échéances
+    rate: z.number(),
+    // Ratio annuel continu : rendement du dividende q
+    dividendYield: z.number().min(0),
+    // Contrats lus sur les échéances du smile
+    contractsTotal: z.number().int().min(0),
+    // Contrats retenus par le filtre
+    contractsKept: z.number().int().min(0),
+    // Contrats écartés, par cause : leur somme + contractsKept = contractsTotal
+    discarded: z.object({
+        noBidAsk: z.number().int().min(0),
+        noPrice: z.number().int().min(0),
+        ivOutOfBounds: z.number().int().min(0),
+    }),
+    // Ratio annuel : volatilité implicite du contrat retenu le plus proche du spot, première échéance ; null sans contrat retenu
+    atmVolatility: z.number().gt(0).nullable(),
+    // Ratio annuel : écart-type des rendements logarithmiques des 30 derniers jours de bourse × √252 ; null sous 20 rendements ou série plate
+    historicalVolatility: z.number().gt(0).nullable(),
+    // Une courbe par échéance, de la plus proche à la plus lointaine
+    smile: z.array(smileCurveSchema),
+    // Échéance détaillée dans `chain`, YYYY-MM-DD (la première du smile)
+    chainExpiration: z.iso.date(),
+    // Calls puis puts de l'échéance, triés par strike
+    chain: z.array(chainRowSchema),
+});
+
 const bondPricingResultSchema = z.object({ kind: z.literal("BOND"), bond: bondResultSchema });
 const optionPricingResultSchema = z.object({ kind: z.literal("OPTION"), option: optionResultSchema });
 
-export const pricingResultSchema = z.discriminatedUnion("kind", [bondPricingResultSchema, optionPricingResultSchema]);
+const optionChainPricingResultSchema = z.object({ kind: z.literal("OPTION_CHAIN"), chain: optionChainResultSchema });
+
+export const pricingResultSchema = z.discriminatedUnion("kind", [bondPricingResultSchema, optionPricingResultSchema, optionChainPricingResultSchema]);
 
 export const pricingCompletedPayloadSchema = z.object({
     requestId: z.string().min(1),
@@ -194,6 +290,11 @@ export type BondFlow = z.infer<typeof bondFlowSchema>;
 export type BondResult = z.infer<typeof bondResultSchema>;
 export type OptionPrice = z.infer<typeof optionPriceSchema>;
 export type PayoffPoint = z.infer<typeof payoffPointSchema>;
+export type OptionGreeks = z.infer<typeof optionGreeksSchema>;
+export type ChainRow = z.infer<typeof chainRowSchema>;
+export type SmileCurve = z.infer<typeof smileCurveSchema>;
+export type OptionChainResult = z.infer<typeof optionChainResultSchema>;
+export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
 export type OptionResult = z.infer<typeof optionResultSchema>;
 export type PricingResult = z.infer<typeof pricingResultSchema>;
 export type PricingCompletedPayload = z.infer<typeof pricingCompletedPayloadSchema>;

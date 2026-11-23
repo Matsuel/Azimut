@@ -19,6 +19,7 @@ enum BacktestStatus {
 enum PricingKind {
   BOND
   OPTION
+  OPTION_CHAIN
 }
 
 enum PricingStatus {

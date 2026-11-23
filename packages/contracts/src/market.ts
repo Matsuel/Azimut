@@ -74,6 +74,35 @@ export const optionInputsSchema = z.object({
     volatility: z.number().gt(0).nullable(),
 });
 
+// Une cotation d'option de la chaîne du jour : valeurs Yahoo brutes, le filtre de qualité est appliqué par backtest-engine (19, D2)
+export const optionQuoteSchema = z.object({
+    // Devise du sous-jacent (> 0) : prix d'exercice
+    strike: z.number().gt(0),
+    // Devise du sous-jacent : meilleure offre d'achat ; 0 sans offre
+    bid: z.number().min(0),
+    // Devise du sous-jacent : meilleure offre de vente ; 0 sans offre
+    ask: z.number().min(0),
+    // Devise du sous-jacent : dernier prix échangé ; 0 sans échange
+    lastPrice: z.number().min(0),
+    // Nombre de contrats échangés dans la séance ; null si absent
+    volume: z.number().min(0).nullable(),
+    // Ratio annuel (0.184 = 18,4 %) : volatilité implicite de Yahoo, indicative seulement (jamais utilisée pour calculer) ; null si absente
+    yahooVolatility: z.number().min(0).nullable(),
+});
+
+// Réponse de GET /api/market/options : chaîne du jour d'un symbole pour une échéance
+export const optionChainSchema = z.object({
+    symbol: z.string().min(1),
+    // Devise du sous-jacent : dernier cours coté
+    spot: z.number().gt(0),
+    // Échéances disponibles, YYYY-MM-DD, de la plus proche à la plus lointaine
+    expirations: z.array(z.iso.date()),
+    // Échéance des cotations ci-dessous, YYYY-MM-DD
+    expiration: z.iso.date(),
+    calls: z.array(optionQuoteSchema),
+    puts: z.array(optionQuoteSchema),
+});
+
 export type Period = z.infer<typeof periodSchema>;
 export type MarketData = z.infer<typeof marketDataSchema>;
 export type MarketDetails = z.infer<typeof marketDetailsSchema>;
@@ -84,3 +113,5 @@ export type Dividend = z.infer<typeof dividendSchema>;
 export type SymbolDividends = z.infer<typeof symbolDividendsSchema>;
 export type Dividends = z.infer<typeof dividendsSchema>;
 export type OptionInputs = z.infer<typeof optionInputsSchema>;
+export type OptionQuote = z.infer<typeof optionQuoteSchema>;
+export type OptionChain = z.infer<typeof optionChainSchema>;
