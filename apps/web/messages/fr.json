@@ -1212,6 +1212,70 @@
             "formula": "σ = écart-type(ln(Pt ÷ Pt−1)) × √252",
             "unit": "Pourcentage annuel.",
             "readingTip": "C’est une volatilité passée, pas une volatilité implicite : le marché des options peut en attendre une autre."
+        },
+        "impliedVolatility": {
+            "title": "Volatilité implicite",
+            "purpose": "La volatilité que le marché « paie » : celle qui, mise dans Black-Scholes, redonne le prix coté de l’option.",
+            "computation": "Inversion de Black-Scholes par bisection entre 1 % et 300 % sur le prix milieu (bid + ask) / 2, à 1e-6 près sur le prix. Jamais copiée de Yahoo.",
+            "unit": "Ratio annuel, affiché en pourcentage.",
+            "readingTip": "Plus elle est haute, plus le marché anticipe de mouvement ; comparez-la à la volatilité historique."
+        },
+        "historicalVolatility30": {
+            "title": "Volatilité historique 30 jours",
+            "purpose": "Ce qui s’est réellement passé récemment, pour comparer à ce que le marché anticipe.",
+            "computation": "Écart-type des rendements logarithmiques journaliers des 30 derniers jours de bourse, annualisé par √252.",
+            "unit": "Ratio annuel, affiché en pourcentage ; l’écart à l’IV ATM est en points.",
+            "readingTip": "IV ATM au-dessus : le marché anticipe plus de mouvement que le passé récent."
+        },
+        "volatilitySmile": {
+            "title": "Smile de volatilité",
+            "purpose": "Montre que la volatilité implicite dépend du strike, alors que Black-Scholes la suppose constante.",
+            "computation": "Pour chaque échéance, volatilité implicite des contrats retenus hors de la monnaie : puts sous le spot, calls au-dessus.",
+            "unit": "Ratio annuel selon le strike.",
+            "readingTip": "Une courbe qui monte vers les bas strikes : le marché paie plus cher la protection à la baisse."
+        },
+        "quoteFilter": {
+            "title": "Filtre de qualité des cotations",
+            "purpose": "Écarte les cotations inexploitables avant tout calcul, et les compte.",
+            "computation": "Écartés : bid et ask nuls, prix milieu nul (un seul des deux à zéro), volatilité implicite hors de [1 %, 300 %].",
+            "unit": "Nombre de contrats.",
+            "readingTip": "Un grand nombre de contrats écartés signale une chaîne peu liquide, pas une erreur du moteur."
+        },
+        "greekDelta": {
+            "title": "Delta",
+            "purpose": "De combien le prix de l’option bouge quand le sous-jacent bouge de 1.",
+            "computation": "Dérivée du prix de Black-Scholes par rapport au spot, au prix milieu.",
+            "formula": "Call : e^(−qT)·N(d1)",
+            "unit": "Sans unité (call entre 0 et 1, put entre −1 et 0).",
+            "readingTip": "Un delta de 0,5 : l’option gagne environ 0,5 pour +1 du sous-jacent."
+        },
+        "greekGamma": {
+            "title": "Gamma",
+            "purpose": "À quelle vitesse le delta change avec le spot.",
+            "computation": "Dérivée seconde du prix par rapport au spot.",
+            "unit": "Par unité de spot.",
+            "readingTip": "Élevé près de la monnaie et près de l’échéance."
+        },
+        "greekVega": {
+            "title": "Vega",
+            "purpose": "Sensibilité du prix à la volatilité.",
+            "computation": "Dérivée du prix par rapport à la volatilité, rapportée à +1 point.",
+            "unit": "Devise du sous-jacent par point de volatilité.",
+            "readingTip": "Un vega de 0,9 : +1 point de volatilité ajoute environ 0,9 au prix."
+        },
+        "greekTheta": {
+            "title": "Theta",
+            "purpose": "Ce que l’écoulement du temps coûte à l’acheteur.",
+            "computation": "Dérivée du prix par rapport au temps, par jour calendaire.",
+            "unit": "Devise du sous-jacent par jour.",
+            "readingTip": "Négatif pour un achat : l’option perd de la valeur chaque jour."
+        },
+        "greekRho": {
+            "title": "Rho",
+            "purpose": "Sensibilité du prix au taux sans risque.",
+            "computation": "Dérivée du prix par rapport au taux, rapportée à +1 point.",
+            "unit": "Devise du sous-jacent par point de taux.",
+            "readingTip": "Positif pour un call, négatif pour un put."
         }
     },
     "pages": {
@@ -1481,7 +1545,12 @@
                 "failed": "Le calcul a échoué : {reason}",
                 "readError": "Le résultat n’a pas pu être chargé.",
                 "prefillError": "Les valeurs de {symbol} n’ont pas pu être préremplies : saisissez-les à la main."
-            }
+            },
+            "tabs": {
+                "calculator": "Calculateur",
+                "chain": "Grecques et smile"
+            },
+            "impliedVolatility": "Volatilité implicite"
         },
         "optimization": {
             "description": "Explorateur d’allocations et frontière efficiente."
@@ -1497,6 +1566,98 @@
         },
         "referenceData": {
             "description": "Instruments importés, historiques de cours et versions du jeu de données."
+        },
+        "optionChain": {
+            "title": "Grecques et smile",
+            "titleSymbol": "Grecques et smile · {symbol}",
+            "badge": "Chaîne du {date}",
+            "description": "Volatilité implicite recalculée automatiquement (bisection) · données Yahoo indicatives, chaîne du jour seulement",
+            "changeSymbol": "Changer de sous-jacent",
+            "recompute": "Recalculer",
+            "states": {
+                "noSymbol": "Ouvrez cette page depuis un symbole du marché : la chaîne d’options est celle d’un sous-jacent.",
+                "readError": "Le résultat n’a pas pu être lu.",
+                "failed": "Le calcul de la chaîne a échoué : {reason}"
+            },
+            "stats": {
+                "kept": "Contrats exploitables",
+                "keptBadge": "retenus",
+                "keptCaption": "Après le filtre de qualité",
+                "discarded": "Contrats écartés",
+                "discardedBadge": "comptés",
+                "discardedCaption": "Prix nul, bid/ask nuls, IV hors bornes",
+                "atm": "Vol. implicite ATM",
+                "atmCaption": "Calculée automatiquement",
+                "historical": "Vol. historique 30 j",
+                "historicalCaption": "Écart-type annualisé des rendements",
+                "premium": "{points} pts",
+                "marketAnticipatesMore": "Le marché anticipe plus"
+            },
+            "smile": {
+                "title": "Smile de volatilité",
+                "subtitle": "IV selon le strike, par échéance",
+                "spot": "Spot {spot}",
+                "strike": "Strike {strike}",
+                "note": "Black-Scholes suppose une volatilité constante : chaque courbe serait plate. Le smile montre que le marché paie plus cher la protection à la baisse. Puts sous le spot, calls au-dessus."
+            },
+            "greeks": {
+                "title": "Grecques",
+                "subtitle": "Sensibilités du prix d’une option, calculées automatiquement",
+                "contractLabel": "Contrat",
+                "contract": "{side} {strike} · {expiration}",
+                "CALL": "Call",
+                "PUT": "Put",
+                "impliedVolatility": "Vol. implicite calculée",
+                "greek": "Grecque",
+                "value": "Valeur",
+                "unit": "Unité",
+                "readingTitle": "Lecture",
+                "names": {
+                    "delta": "Delta",
+                    "gamma": "Gamma",
+                    "vega": "Vega",
+                    "theta": "Theta",
+                    "rho": "Rho"
+                },
+                "units": {
+                    "delta": "par unité de spot",
+                    "gamma": "par unité de spot",
+                    "vega": "par point de vol",
+                    "theta": "par jour",
+                    "rho": "par point de taux"
+                },
+                "reading": {
+                    "delta": "+1 de {symbol} ≈ {change}",
+                    "gamma": "Le delta varie de {value}",
+                    "vega": "+1 pt de vol ≈ {change}",
+                    "thetaLoss": "Perd {value} par jour",
+                    "thetaGain": "Gagne {value} par jour",
+                    "rho": "+1 pt de taux ≈ {change}"
+                },
+                "note": "Chaque grecque renvoie à sa définition dans le glossaire (aide contextuelle)."
+            },
+            "chain": {
+                "title": "Chaîne · échéance {expiration}",
+                "subtitle": "Contrats retenus et écartés · le filtre est visible, pas silencieux",
+                "strike": "Strike",
+                "type": "Type",
+                "CALL": "Call",
+                "PUT": "Put",
+                "bid": "Bid",
+                "ask": "Ask",
+                "mid": "Prix milieu",
+                "engineVolatility": "IV moteur",
+                "yahooVolatility": "IV Yahoo",
+                "status": "Statut",
+                "empty": "Aucune cotation pour cette échéance.",
+                "footnote": "{discarded} contrats écartés sur {total}, et comptés : {noBidAsk} bid/ask nuls, {noPrice} prix nul, {ivOutOfBounds} IV hors [1 %, 300 %]. L’IV Yahoo est affichée pour comparaison, jamais utilisée."
+            },
+            "status": {
+                "kept": "Retenu",
+                "noBidAsk": "Écarté · bid/ask nuls",
+                "noPrice": "Écarté · prix nul",
+                "ivOutOfBounds": "Écarté · IV hors bornes"
+            }
         }
     },
     "home": {

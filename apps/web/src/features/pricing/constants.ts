@@ -40,3 +40,14 @@ export const RISK_FREE_SYMBOL = "^IRX"
 
 // Devise d'affichage d'une option saisie sans symbole (les montants sont dans la devise du sous-jacent, jamais convertis)
 export const OPTION_DEFAULT_CURRENCY = "USD"
+
+// Couleur de la courbe de chaque échéance du smile, dans l'ordre des échéances (3 au plus, SMILE_EXPIRATIONS du contrat)
+export const SMILE_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-4)"] as const
+
+// Libellé (`pages.optionChain.status.<clé>`) et variant de `Badge` de chaque statut d'une cotation
+export const QUOTE_STATUS_BADGES = {
+    KEPT: { key: "kept", variant: "success" },
+    NO_BID_ASK: { key: "noBidAsk", variant: "outline" },
+    NO_PRICE: { key: "noPrice", variant: "outline" },
+    IV_OUT_OF_BOUNDS: { key: "ivOutOfBounds", variant: "outline" },
+} as const

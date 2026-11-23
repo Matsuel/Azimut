@@ -20,6 +20,8 @@ export const routes = {
     rates: `${prefix}/rates`,
     options: `${prefix}/options`,
     symbolOptions: (symbol: string) => `${prefix}/options?symbol=${encodeURIComponent(symbol)}`,
+    optionsSmile: `${prefix}/options/smile`,
+    symbolOptionsSmile: (symbol: string) => `${prefix}/options/smile?symbol=${encodeURIComponent(symbol)}`,
     paperTrading: `${prefix}/paper-trading`,
     risk: `${prefix}/risk`,
     backtestProjection: (backtestId: string) => `${prefix}/projection?backtest=${encodeURIComponent(backtestId)}`,

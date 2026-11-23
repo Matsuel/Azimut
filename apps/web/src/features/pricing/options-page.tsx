@@ -11,6 +11,7 @@ import { useCreatePricing, useOptionInputs, usePricing, useRateCurve } from "./h
 import { OptionCards } from "./option-cards"
 import { OptionForm } from "./option-form"
 import { OptionsHeader } from "./options-header"
+import { OptionsTabs } from "./options-tabs"
 import { ParityCard } from "./parity-card"
 import { PayoffChart } from "./payoff-chart"
 import { PayoffGrid } from "./payoff-grid"
@@ -69,6 +70,7 @@ export function OptionsPage({ symbol }: { symbol: string | null }) {
     return (
         <>
             <OptionsHeader symbol={symbol} input={input} currency={currency} onReset={pricing.reset} />
+            <OptionsTabs active="calculator" symbol={symbol} />
             {loading ? (
                 <LoadingState className="h-64" />
             ) : (

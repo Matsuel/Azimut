@@ -36,6 +36,8 @@ function numberFormatters(number: NumberFormat) {
         formatDecimal1: number({ maximumFractionDigits: 1 }),
         /** Nombre sans unité à 2 décimales fixes (`40,00`), pour une colonne de montants dont la devise est en en-tête. */
         formatDecimal2: twoDecimals,
+        /** Nombre sans unité à 3 décimales fixes (`0,012`), pour un gamma. */
+        formatDecimal3: number({ minimumFractionDigits: 3, maximumFractionDigits: 3 }),
         /** Corrélation de −1 à 1, sans unité, 2 décimales (`0,71`, `−0,18`). */
         formatCorrelation: twoDecimals,
         /** Ratio de Sharpe, sans unité, 2 décimales (`1,25`). */
