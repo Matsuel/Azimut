@@ -5,7 +5,7 @@ import type { IPricingRepository } from "../repositories/pricing.repository"
 import type { PricingRecord } from "../interfaces/pricing.interface"
 import { PRICING_TIMEOUT_MS } from "../constants/pricing.constants"
 import PricingService from "../services/pricing.service"
-import { pricingInput, pricingResult } from "./pricing.fixture"
+import { optionInput, pricingInput, pricingResult } from "./pricing.fixture"
 
 const record = (over: Partial<PricingRecord> = {}): PricingRecord => ({
     id: "p1",
@@ -97,4 +97,15 @@ test("get : demande PENDING récente → inchangée, rien n'est écrit", async (
 
     expect((await service.get("p1", "u1")).status).toBe("PENDING")
     expect(calls).toEqual([])
+})
+
+test("OPTION : demande publiée avec son option, résultat d'option restitué à la fin", async () => {
+    const optionResult = { kind: "OPTION", option: { call: { price: 10.45 } } }
+    const { service, published } = setup(record({ kind: "OPTION", input: optionInput as never, status: "COMPLETED", result: optionResult as never }))
+
+    await service.create("u1", optionInput)
+    const view = await service.get("p1", "u1")
+
+    expect(published).toEqual([{ requestId: "p1", ...optionInput }])
+    expect(view).toMatchObject({ kind: "OPTION", status: "COMPLETED", result: optionResult })
 })
