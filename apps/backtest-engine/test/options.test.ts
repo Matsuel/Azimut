@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { pricingResultSchema, type OptionInput } from "@azimut/contracts"
 import { round } from "@azimut/utils"
-import { normalCdf, payoff, priceOption } from "../engine/options"
+import { ImpliedVolatilityError, impliedVolatility, normalCdf, optionGreeks, optionSidePrice, payoff, priceOption } from "../engine/options"
 
 const reference: OptionInput = { spot: 100, strike: 100, maturityYears: 1, rate: 0.05, dividendYield: 0, volatility: 0.2 }
 
@@ -86,4 +86,60 @@ test("paramètres hors plage numérique : erreur claire", () => {
     expect(() => priceOption({ spot: 100, strike: 100, maturityYears: 1, rate: 0.05, dividendYield: 0, volatility: 1e-320 })).toThrow(
         "Option parameters out of numeric range",
     )
+})
+
+test("volatilité implicite : l'inversion redonne la volatilité d'origine à 1e-6 près (call et put)", () => {
+    const { volatility: _, ...terms } = { ...reference, spot: 224.4, strike: 230, maturityYears: 182 / 365, rate: 0.04, dividendYield: 0.005 }
+
+    for (const volatility of [0.05, 0.2, 0.243, 0.9, 2.5]) {
+        for (const side of ["CALL", "PUT"] as const) {
+            const price = optionSidePrice(side, { ...terms, volatility })
+            expect(Math.abs(impliedVolatility(side, price, terms) - volatility)).toBeLessThan(1e-4)
+        }
+    }
+})
+
+test("volatilité implicite : un prix hors des bornes lève ImpliedVolatilityError", () => {
+    const { volatility: _, ...terms } = reference
+
+    // Un call ne peut pas coûter plus que le spot ; sous la valeur intrinsèque, il n'y a pas de volatilité
+    expect(() => impliedVolatility("CALL", 150, terms)).toThrow(ImpliedVolatilityError)
+    expect(() => impliedVolatility("PUT", 0, terms)).toThrow(ImpliedVolatilityError)
+    expect(() => impliedVolatility("CALL", Number.NaN, terms)).toThrow(ImpliedVolatilityError)
+})
+
+test("grecques : valeurs de référence S=K=100, r=5 %, σ=20 %, T=1 an", () => {
+    const call = optionGreeks("CALL", reference)
+    const put = optionGreeks("PUT", reference)
+
+    expect(call.delta).toBeCloseTo(0.6368, 4)
+    expect(put.delta).toBeCloseTo(-0.3632, 4)
+    expect(call.gamma).toBeCloseTo(put.gamma, 12)
+    expect(call.gamma).toBeCloseTo(0.018762, 5)
+    expect(call.vega).toBeCloseTo(0.37524, 4)
+    expect(call.theta).toBeCloseTo(-0.017573, 5)
+    expect(call.rho).toBeCloseTo(0.53232, 4)
+    expect(put.rho).toBeCloseTo(-0.41890, 4)
+})
+
+test("grecques : égales aux différences finies du prix à 1e-4 près, avec dividende", () => {
+    const option: OptionInput = { spot: 224.4, strike: 230, maturityYears: 182 / 365, rate: 0.04, dividendYield: 0.03, volatility: 0.243 }
+    const price = (side: "CALL" | "PUT", change: Partial<OptionInput>) => optionSidePrice(side, { ...option, ...change })
+    const shift = 1e-4
+
+    for (const side of ["CALL", "PUT"] as const) {
+        const greeks = optionGreeks(side, option)
+        const delta = (price(side, { spot: option.spot + shift }) - price(side, { spot: option.spot - shift })) / (2 * shift)
+        const gamma = (price(side, { spot: option.spot + 0.01 }) - 2 * price(side, {}) + price(side, { spot: option.spot - 0.01 })) / 0.01 ** 2
+        const vega = (price(side, { volatility: option.volatility + shift }) - price(side, { volatility: option.volatility - shift })) / (2 * shift) / 100
+        const rho = (price(side, { rate: option.rate + shift }) - price(side, { rate: option.rate - shift })) / (2 * shift) / 100
+        const theta = price(side, { maturityYears: option.maturityYears - 1 / 365 }) - price(side, {})
+
+        expect(Math.abs(greeks.delta - delta)).toBeLessThan(1e-4)
+        expect(Math.abs(greeks.gamma - gamma)).toBeLessThan(1e-4)
+        expect(Math.abs(greeks.vega - vega)).toBeLessThan(1e-4)
+        expect(Math.abs(greeks.rho - rho)).toBeLessThan(1e-4)
+        // Theta par jour : écart au prix d'un jour plus tard, au second ordre près
+        expect(Math.abs(greeks.theta - theta)).toBeLessThan(1e-3)
+    }
 })
