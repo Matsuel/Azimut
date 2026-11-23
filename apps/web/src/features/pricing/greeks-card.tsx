@@ -31,6 +31,49 @@ function nearestToSpot(rows: ChainRow[], spot: number) {
     )
 }
 
+// Tableau des cinq grecques d'un contrat : valeur, unité et lecture, avec l'aide du glossaire sur chaque nom
+function GreeksTable({ symbol, greeks }: { symbol: string; greeks: OptionGreeks }) {
+    const f = useFormatters()
+    const t = useTranslations("pages.optionChain.greeks")
+    const money = (value: number) => f.formatPrice(Math.abs(value), OPTION_DEFAULT_CURRENCY)
+    const readings = {
+        delta: t("reading.delta", { symbol, change: f.formatChange(greeks.delta) }),
+        gamma: t("reading.gamma", { value: f.formatDecimal3(greeks.gamma) }),
+        vega: t("reading.vega", { change: f.formatChange(greeks.vega) }),
+        theta: t(greeks.theta < 0 ? "reading.thetaLoss" : "reading.thetaGain", { value: money(greeks.theta) }),
+        rho: t("reading.rho", { change: f.formatChange(greeks.rho) }),
+    }
+
+    return (
+        <Table>
+            <TableHeader>
+                <TableRow variant="static">
+                    <TableHead variant="caption">{t("greek")}</TableHead>
+                    <TableHead variant="caption" className="text-right">
+                        {t("value")}
+                    </TableHead>
+                    <TableHead variant="caption">{t("unit")}</TableHead>
+                    <TableHead variant="caption">{t("readingTitle")}</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {GREEKS.map((greek) => (
+                    <TableRow key={greek} variant="static" className="h-11">
+                        <TableCell className="text-body-semibold">
+                            <InfoHint entry={GLOSSARY_ENTRIES[greek]}>{t(`names.${greek}`)}</InfoHint>
+                        </TableCell>
+                        <TableCell className="text-right">
+                            {greek === "gamma" ? f.formatDecimal3(greeks[greek]) : f.formatChange(greeks[greek])}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{t(`units.${greek}`)}</TableCell>
+                        <TableCell>{readings[greek]}</TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    )
+}
+
 /**
  * Carte « Grecques » (maquette 37) : un contrat retenu de l'échéance détaillée à choisir, sa volatilité implicite et ses cinq grecques
  * (valeur, unité, lecture) telles que calculées par le moteur.
@@ -51,15 +94,6 @@ export function GreeksCard({ chain }: { chain: OptionChainResult }) {
             expiration: f.formatDay(chain.chainExpiration),
         }),
     }))
-    const money = (value: number) => f.formatPrice(Math.abs(value), OPTION_DEFAULT_CURRENCY)
-    const readings = (greeks: OptionGreeks) => ({
-        delta: t("reading.delta", { symbol: chain.symbol, change: f.formatChange(greeks.delta) }),
-        gamma: t("reading.gamma", { value: f.formatDecimal3(greeks.gamma) }),
-        vega: t("reading.vega", { change: f.formatChange(greeks.vega) }),
-        theta: t(greeks.theta < 0 ? "reading.thetaLoss" : "reading.thetaGain", { value: money(greeks.theta) }),
-        rho: t("reading.rho", { change: f.formatChange(greeks.rho) }),
-    })
-
     return (
         <Card>
             <CardHeader>
@@ -83,36 +117,7 @@ export function GreeksCard({ chain }: { chain: OptionChainResult }) {
                         />
                     </div>
                 </div>
-                {row?.greeks && (
-                    <Table>
-                        <TableHeader>
-                            <TableRow variant="static">
-                                <TableHead variant="caption">{t("greek")}</TableHead>
-                                <TableHead variant="caption" className="text-right">
-                                    {t("value")}
-                                </TableHead>
-                                <TableHead variant="caption">{t("unit")}</TableHead>
-                                <TableHead variant="caption">{t("readingTitle")}</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {GREEKS.map((greek) => (
-                                <TableRow key={greek} variant="static" className="h-11">
-                                    <TableCell className="text-body-semibold">
-                                        <InfoHint entry={GLOSSARY_ENTRIES[greek]}>{t(`names.${greek}`)}</InfoHint>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {greek === "gamma"
-                                            ? f.formatDecimal3(row.greeks![greek])
-                                            : f.formatChange(row.greeks![greek])}
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground">{t(`units.${greek}`)}</TableCell>
-                                    <TableCell>{readings(row.greeks!)[greek]}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                )}
+                {row?.greeks && <GreeksTable symbol={chain.symbol} greeks={row.greeks} />}
                 <p className="text-small text-muted-foreground">{t("note")}</p>
             </CardContent>
         </Card>
