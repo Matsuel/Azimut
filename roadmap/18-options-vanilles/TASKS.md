@@ -102,8 +102,9 @@ Critères d’acceptation :
 ### T-07 · Calculateur d'option et diagramme de payoff
 
 - **US** : US-01, US-02 · **Priorité** : SHOULD · **Points** : 5 · **Dépend de** : T-05 · **Commits** : —
-- **Fichiers** : `apps/web/src/features/pricing/` (calculateur)
+- **Fichiers** : `apps/web/src/features/pricing/` (calculateur), `apps/web/src/app/app/options/page.tsx`, `apps/market-service/` (route `option-inputs`)
 
 Critères d’acceptation :
-- [ ] Pré-remplissage du spot et du dividende depuis la fiche ; volatilité historique 1 an et taux US 3 mois modifiables (D2, D4).
-- [ ] Diagramme de payoff tel que reçu du backend.
+- [x] Pré-remplissage du spot et du dividende depuis la fiche ; volatilité historique 1 an et taux US 3 mois modifiables (D2, D4).
+- [x] Diagramme de payoff tel que reçu du backend.
+- [x] Route `GET /api/market/option-inputs` de market-service (spot, dividende, volatilité), relayée par le proxy de core-backend ; page Options dans « Dérivés », bouton « Pricer une option » sur la fiche d'un symbole.
