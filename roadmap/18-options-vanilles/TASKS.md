@@ -11,7 +11,7 @@
 | T-04 | Contrat : demande et résultat d'option | US-01, US-02 | contracts | MUST | 3 | — | 8458e40 |
 | T-05 | Demande d'option par core-backend | US-01 | core-backend | MUST | 3 | T-04 | 8458e40 |
 | T-06 | Worker : pricing d'option | US-01 | backtest-engine | MUST | 2 | T-01, T-04 | c6b988d |
-| T-07 | Calculateur d'option et diagramme de payoff | US-01, US-02 | web | SHOULD | 5 | T-05 | — |
+| T-07 | Calculateur d'option et diagramme de payoff | US-01, US-02 | web | SHOULD | 5 | T-05 | daf3ef7, 7384e25 |
 
 **Total** : 21 points — MUST 16, SHOULD 5. T-03 (chaîne d'options) est déplacée en 19 (T-08), décision D5.
 
@@ -50,7 +50,7 @@ flowchart LR
 
 ### T-01 · Engine : Black-Scholes avec dividende continu
 
-- **US** : US-01, US-03 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : — · **Commits** : —
+- **US** : US-01, US-03 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : — · **Commits** : `35f0283`
 - **Fichiers** : `apps/backtest-engine/engine/options.ts`, `options.test.ts`
 
 Critères d’acceptation :
@@ -59,7 +59,7 @@ Critères d’acceptation :
 
 ### T-02 · Engine : payoffs et parité call-put
 
-- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01 · **Commits** : —
+- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01 · **Commits** : `35f0283`
 - **Fichiers** : `apps/backtest-engine/engine/options.ts`
 
 Critères d’acceptation :
@@ -70,7 +70,7 @@ Critères d’acceptation :
 
 ### T-04 · Contrat : demande et résultat d'option
 
-- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : —
+- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : `8458e40`
 - **Fichiers** : `packages/contracts/src/pricing.ts`
 
 Critères d’acceptation :
@@ -80,7 +80,7 @@ Critères d’acceptation :
 
 ### T-05 · Demande d'option par core-backend
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-04 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-04 · **Commits** : `8458e40`
 - **Fichiers** : `apps/core-backend/services/pricing.service.ts`, `interfaces/pricing.interface.ts`
 
 Critères d’acceptation :
@@ -91,7 +91,7 @@ Critères d’acceptation :
 
 ### T-06 · Worker : pricing d'option
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-01, T-04 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-01, T-04 · **Commits** : `c6b988d`
 - **Fichiers** : `apps/backtest-engine/consumers/pricing.consumer.ts`
 
 Critères d’acceptation :
@@ -101,7 +101,7 @@ Critères d’acceptation :
 
 ### T-07 · Calculateur d'option et diagramme de payoff
 
-- **US** : US-01, US-02 · **Priorité** : SHOULD · **Points** : 5 · **Dépend de** : T-05 · **Commits** : —
+- **US** : US-01, US-02 · **Priorité** : SHOULD · **Points** : 5 · **Dépend de** : T-05 · **Commits** : `daf3ef7`, `7384e25`
 - **Fichiers** : `apps/web/src/features/pricing/` (calculateur), `apps/web/src/app/app/options/page.tsx`, `apps/market-service/` (route `option-inputs`)
 
 Critères d’acceptation :
