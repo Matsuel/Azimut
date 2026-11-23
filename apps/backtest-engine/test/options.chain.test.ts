@@ -80,6 +80,11 @@ test("volatilité ATM : contrat retenu le plus proche du spot de la première é
     expect(analyseChain({ ...base, expirations: [{ expiration, calls: [quote(100, 0, 0)], puts: [] }] }).atmVolatility).toBeNull()
 })
 
+test("prime de volatilité : IV ATM − volatilité historique, null si l'une manque", () => {
+    expect(analyseChain(base).volatilityPremium).toBeCloseTo(0.2 - 0.152, 3)
+    expect(analyseChain({ ...base, historicalVolatility: null }).volatilityPremium).toBeNull()
+})
+
 test("plusieurs échéances : une courbe chacune, comptes cumulés, détail de la première", () => {
     const later = "2027-04-28"
     const result = analyseChain({ ...base, expirations: [...base.expirations, { expiration: later, calls: [quote(100, 0, 0)], puts: [] }] })

@@ -119,6 +119,9 @@ export function analyseChain(input: ChainInput): OptionChainResult {
         .filter((row) => row.status === "KEPT")
         .reduce<ChainRow | null>((best, row) => (best === null || Math.abs(row.strike - spot) < Math.abs(best.strike - spot) ? row : best), null);
 
+    const historical = historicalVolatility === null ? null : round(historicalVolatility, 6);
+    const atmVolatility = atm?.impliedVolatility ?? null;
+
     return {
         symbol,
         asOf,
@@ -128,8 +131,9 @@ export function analyseChain(input: ChainInput): OptionChainResult {
         contractsTotal: allRows.length,
         contractsKept: countOf("KEPT"),
         discarded: { noBidAsk: countOf("NO_BID_ASK"), noPrice: countOf("NO_PRICE"), ivOutOfBounds: countOf("IV_OUT_OF_BOUNDS") },
-        atmVolatility: atm?.impliedVolatility ?? null,
-        historicalVolatility: historicalVolatility === null ? null : round(historicalVolatility, 6),
+        atmVolatility,
+        historicalVolatility: historical,
+        volatilityPremium: atmVolatility === null || historical === null ? null : round(atmVolatility - historical, 6),
         smile: analysed.map(({ expiration, rows }) => smileOf(expiration, rows, spot)),
         chainExpiration: first.expiration,
         chain,

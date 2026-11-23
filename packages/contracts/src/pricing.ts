@@ -247,6 +247,8 @@ export const optionChainResultSchema = z.object({
     atmVolatility: z.number().gt(0).nullable(),
     // Ratio annuel : écart-type des rendements logarithmiques des 30 derniers jours de bourse × √252 ; null sous 20 rendements ou série plate
     historicalVolatility: z.number().gt(0).nullable(),
+    // Ratio (0.032 = +3,2 points de volatilité) : atmVolatility − historicalVolatility ; positif si le marché anticipe plus que le passé, null si l'une des deux manque
+    volatilityPremium: z.number().nullable(),
     // Une courbe par échéance, de la plus proche à la plus lointaine
     smile: z.array(smileCurveSchema),
     // Échéance détaillée dans `chain`, YYYY-MM-DD (la première du smile)
