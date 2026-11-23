@@ -1,6 +1,6 @@
 import { afterEach, expect, spyOn, test } from "bun:test"
 import { NotFoundError } from "@azimut/http"
-import { API_ERROR_CODES, optionInputsSchema } from "@azimut/contracts"
+import { API_ERROR_CODES, optionChainSchema, optionInputsSchema } from "@azimut/contracts"
 import MarketRepository from "../repositories/market.repository"
 import MarketService from "../services/market.service"
 import { trailingDividendYield } from "../utils/option-inputs"
@@ -13,7 +13,7 @@ test("trailingDividendYield rapporte les dividendes au cours, 0 sans dividende",
     expect(trailingDividendYield([], 200)).toBe(0)
 })
 
-type Yahoo = Record<"chart" | "quote", (...args: unknown[]) => Promise<unknown>>
+type Yahoo = Record<"chart" | "quote" | "options", (...args: unknown[]) => Promise<unknown>>
 const yahoo = (MarketRepository as unknown as { yahooFinance: Yahoo }).yahooFinance
 const spies: ReturnType<typeof spyOn>[] = []
 afterEach(() => spies.splice(0).forEach((spy) => spy.mockRestore()))
@@ -94,4 +94,33 @@ test("les entrées d'une option ne sont jamais gardées en cache", async () => {
     await service.getOptionInputs("AAPL")
 
     expect(calls).toBe(2)
+})
+
+test("getOptionChain : cotations brutes conformes au contrat, valeurs absentes ramenées à 0 ou null", async () => {
+    const contract = { strike: 580, bid: 15.7, ask: 16, lastPrice: 15.85, volume: 120, impliedVolatility: 0.184 }
+    spies.push(
+        spyOn(yahoo, "options").mockResolvedValue({
+            quote: { regularMarketPrice: 582 },
+            expirationDates: [new Date("2026-12-19T00:00:00Z"), new Date("2026-11-21T00:00:00Z")],
+            options: [{ expirationDate: new Date("2026-11-21T00:00:00Z"), calls: [contract, { strike: 590 }], puts: [] }],
+        }),
+    )
+
+    const chain = await new MarketRepository().getOptionChain("SPY")
+
+    expect(optionChainSchema.parse(chain)).toEqual(chain)
+    expect(chain).toMatchObject({ spot: 582, expiration: "2026-11-21", expirations: ["2026-11-21", "2026-12-19"] })
+    expect(chain.calls[0]).toEqual({ strike: 580, bid: 15.7, ask: 16, lastPrice: 15.85, volume: 120, yahooVolatility: 0.184 })
+    expect(chain.calls[1]).toEqual({ strike: 590, bid: 0, ask: 0, lastPrice: 0, volume: null, yahooVolatility: null })
+})
+
+test("getOptionChain : échéance demandée transmise à Yahoo ; symbole sans chaîne → SYMBOL_NOT_FOUND", async () => {
+    const options = spyOn(yahoo, "options").mockResolvedValue({ quote: { regularMarketPrice: 582 }, expirationDates: [], options: [] })
+    spies.push(options)
+
+    const error = await new MarketRepository().getOptionChain("ZZZZ", "2026-12-19").catch((e) => e)
+
+    expect(options).toHaveBeenCalledWith("ZZZZ", { date: new Date("2026-12-19T00:00:00Z") })
+    expect(error).toBeInstanceOf(NotFoundError)
+    expect(error.code).toBe(API_ERROR_CODES.SYMBOL_NOT_FOUND)
 })

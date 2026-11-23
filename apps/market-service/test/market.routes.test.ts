@@ -10,6 +10,7 @@ const closes = spyOn(MarketService.prototype, "getDailyCloses").mockResolvedValu
 const dividends = spyOn(MarketService.prototype, "getDividends").mockResolvedValue({ AAPL: { currency: "USD", dividends: [] } })
 const rates = spyOn(MarketService.prototype, "getRateCurve").mockResolvedValue({ currency: "USD", points: [{ symbol: "^TNX", maturityYears: 10, rate: 0.0421, date: "2026-10-28" }] })
 const optionInputs = spyOn(MarketService.prototype, "getOptionInputs").mockResolvedValue({ symbol: "AAPL", currency: "USD", spot: 224.4, dividendYield: 0.005, volatility: 0.243 })
+const optionChain = spyOn(MarketService.prototype, "getOptionChain").mockResolvedValue({ symbol: "SPY", spot: 582, expirations: ["2026-12-19"], expiration: "2026-12-19", calls: [], puts: [] })
 const search = spyOn(MarketService.prototype, "searchMarket").mockResolvedValue([])
 const details = spyOn(MarketService.prototype, "getMarketDetails").mockResolvedValue([])
 const defaults = spyOn(MarketService.prototype, "getDefaultsMarketAssets").mockResolvedValue({ data: [], count: 0, page: 1, pageSize: 10 } as never)
@@ -25,6 +26,7 @@ afterAll(async () => {
     dividends.mockRestore()
     rates.mockRestore()
     optionInputs.mockRestore()
+    optionChain.mockRestore()
     search.mockRestore()
     details.mockRestore()
     defaults.mockRestore()
@@ -112,4 +114,19 @@ test("GET /api/market/option-inputs : 200 avec les entrées, 400 sans symbole", 
     const invalid = await app.request("/api/market/option-inputs", { headers: withKey })
     expect(invalid.status).toBe(400)
     expect(await invalid.json()).toMatchObject({ code: "INVALID_QUERY" })
+})
+
+test("GET /options : transmet symbole et échéance, 400 INVALID_QUERY sans symbole ou avec une échéance mal formée", async () => {
+    const ok = await app.request("/api/market/options?symbol=SPY&expiration=2026-12-19", { headers: withKey })
+    expect(ok.status).toBe(200)
+    expect(optionChain).toHaveBeenLastCalledWith("SPY", "2026-12-19")
+
+    await app.request("/api/market/options?symbol=SPY", { headers: withKey })
+    expect(optionChain).toHaveBeenLastCalledWith("SPY", undefined)
+
+    for (const query of ["", "symbol=SPY&expiration=19/12/2026"]) {
+        const response = await app.request(`/api/market/options?${query}`, { headers: withKey })
+        expect(response.status).toBe(400)
+        expect(((await response.json()) as { code: string }).code).toBe("INVALID_QUERY")
+    }
 })

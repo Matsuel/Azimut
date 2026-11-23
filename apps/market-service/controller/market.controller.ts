@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import MarketService from "../services/market.service";
 import { BadRequestError } from "@azimut/http";
-import { dailyClosesQuerySchema, marketIdSchema, optionInputsQuerySchema, searchMarketSchema } from "../interfaces/market.interface";
+import { dailyClosesQuerySchema, marketIdSchema, optionChainQuerySchema, optionInputsQuerySchema, searchMarketSchema } from "../interfaces/market.interface";
 import { API_ERROR_CODES, paginationQuerySchema, periodSchema } from "@azimut/contracts";
 import { Logger } from "@azimut/utils";
 
@@ -69,6 +69,15 @@ class MarketController {
         if (!parsed.success) throw new BadRequestError(API_ERROR_CODES.INVALID_QUERY, { issues: parsed.error.issues })
 
         res.json(await this.marketService.getOptionInputs(parsed.data.symbol))
+    }
+
+    getOptionChain = async(req: Request, res: Response) => {
+        logger.info(`Handling option chain request ${req.method} ${req.originalUrl}`)
+
+        const parsed = optionChainQuerySchema.safeParse(req.query)
+        if (!parsed.success) throw new BadRequestError(API_ERROR_CODES.INVALID_QUERY, { issues: parsed.error.issues })
+
+        res.json(await this.marketService.getOptionChain(parsed.data.symbol, parsed.data.expiration))
     }
 
     getDefaultsAssets = async(req: Request, res: Response) => {

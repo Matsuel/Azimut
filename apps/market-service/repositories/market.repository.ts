@@ -1,6 +1,6 @@
 import YahooFinance from "yahoo-finance2";
 import type { ChartOptions } from "yahoo-finance2/modules/chart";
-import { API_ERROR_CODES, type DailyCloses, type Dividends, type MarketAsset, type MarketData, type MarketDetails, type OptionInputs, type Period, type RateCurve } from "@azimut/contracts";
+import { API_ERROR_CODES, type DailyCloses, type Dividends, type MarketAsset, type MarketData, type MarketDetails, type OptionChain, type OptionInputs, type OptionQuote, type Period, type RateCurve } from "@azimut/contracts";
 import { BadGatewayError, NotFoundError } from "@azimut/http";
 import { env } from "../env";
 import { addYears, DAY_MS, historicalVolatility, Logger, round } from "@azimut/utils";
@@ -18,6 +18,7 @@ export interface IMarketRepository {
     getDividends(symbols: string[], start: Date, end: Date): Promise<Dividends>;
     getRateCurve(): Promise<RateCurve>;
     getOptionInputs(symbol: string): Promise<OptionInputs>;
+    getOptionChain(symbol: string, expiration?: string): Promise<OptionChain>;
     ping(symbol: string): Promise<void>;
 }
 
@@ -203,6 +204,39 @@ class MarketRepository implements IMarketRepository {
             spot: round(spot, 4),
             dividendYield: round(trailingDividendYield(dividends, spot), 6),
             volatility: volatility == null ? null : round(volatility, 6),
+        }
+    }
+
+    /**
+     * Chaîne d'options du jour (19, D5) : cotations brutes de Yahoo (`options`) d'une échéance, `YYYY-MM-DD` (UTC, comme Yahoo), la plus
+     * proche si `expiration` est absente ; `expirations` liste toutes les échéances disponibles. Les valeurs sont dans la devise de
+     * cotation du sous-jacent, sans conversion : le filtre et le calcul sont ceux de backtest-engine. Un symbole sans chaîne
+     * (inconnu, sans options, échéance absente) lève `NotFoundError` (`SYMBOL_NOT_FOUND`).
+     */
+    async getOptionChain(symbol: string, expiration?: string): Promise<OptionChain> {
+        const result = await MarketRepository.yahooFinance.options(symbol, expiration ? { date: new Date(`${expiration}T00:00:00Z`) } : {})
+        const spot = result?.quote?.regularMarketPrice
+        const chain = result?.options?.[0]
+        if (!chain || spot == null || spot <= 0) throw new NotFoundError(API_ERROR_CODES.SYMBOL_NOT_FOUND)
+
+        const quotes = (contracts: typeof chain.calls): OptionQuote[] =>
+            contracts.map((contract) => ({
+                strike: contract.strike,
+                bid: contract.bid ?? 0,
+                ask: contract.ask ?? 0,
+                lastPrice: contract.lastPrice ?? 0,
+                volume: contract.volume ?? null,
+                yahooVolatility: contract.impliedVolatility ?? null,
+            }))
+        const toDay = (date: Date) => date.toISOString().slice(0, 10)
+
+        return {
+            symbol,
+            spot: round(spot, 4),
+            expirations: result.expirationDates.map(toDay).sort(),
+            expiration: toDay(chain.expirationDate),
+            calls: quotes(chain.calls),
+            puts: quotes(chain.puts),
         }
     }
 
