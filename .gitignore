@@ -3,6 +3,3 @@
 node_modules/
 graphify-out/
 .claude/worktrees/
-_bmad/
-.claude/skills/bmad-*/
-_bmad-output/
