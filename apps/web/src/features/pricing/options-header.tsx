@@ -45,6 +45,14 @@ export function OptionsHeader({ symbol, input, currency, onReset }: OptionsHeade
                             {t("impliedVolatility")}
                         </Button>
                     )}
+                    <Button
+                        nativeButton={false}
+                        render={
+                            <Link href={symbol ? routes.symbolOptionsMonteCarlo(symbol) : routes.optionsMonteCarlo} />
+                        }
+                    >
+                        {t("tabs.monteCarlo")}
+                    </Button>
                 </>
             }
         />

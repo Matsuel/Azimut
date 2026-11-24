@@ -142,11 +142,65 @@ Pages Taux et obligations (feature 17, maquette `35 · Taux et obligations`) et 
 ### OptionsTabs
 
 - **Import** : `import { OptionsTabs } from "@/features/pricing/options-tabs"`.
-- **Rôle** : onglets des pages Options, « Calculateur » (maquette 36) et « Grecques et smile » (maquette 37), en liens qui gardent le symbole.
+- **Rôle** : onglets des pages Options, « Calculateur » (maquette 36), « Grecques et smile » (maquette 37) et « Pricing Monte Carlo » (maquette 38), en liens qui gardent le symbole.
 - **Props** :
-  - `active` : `calculator` ou `chain`.
+  - `active` : `calculator`, `chain` ou `monteCarlo`.
   - `symbol` : symbole de l'URL, ou `null`.
 - **Source** : `src/features/pricing/options-tabs.tsx`.
+
+### MonteCarloPage
+
+- **Import** : `import { MonteCarloPage } from "@/features/pricing/monte-carlo-page"`.
+- **Rôle** : écran « Pricing Monte Carlo » (maquette 38, route `routes.optionsMonteCarlo`, `?symbol=AAPL` par `routes.symbolOptionsMonteCarlo`, bouton « Pricing Monte Carlo » de `OptionsHeader`). Formulaire prérempli comme le calculateur (`monteCarloDefaults`), puis résultat d'une demande `OPTION_MC` : `MonteCarloCards`, `MonteCarloForm` à côté de `TrajectoriesChart`, puis `ConvergenceChart` et `MethodsTable`. Avant un résultat, la zone du graphique n'affiche qu'un état : rien demandé, calcul en cours, échec (cause reçue) ou lecture impossible. Instancie `useCreatePricing` et `usePricing` ; « Réinitialiser » oublie la demande et remonte le formulaire.
+- **Props** :
+  - `symbol` : symbole de l'URL, ou `null` (saisie manuelle).
+- **Source** : `src/features/pricing/monte-carlo-page.tsx`.
+
+### MonteCarloHeader
+
+- **Import** : `import { MonteCarloHeader } from "@/features/pricing/monte-carlo-header"`.
+- **Rôle** : `PageHeader` de la page Monte Carlo : titre avec symbole, badge « GBM neutre au risque », description de la demande terminée (strike, maturité, trajectoires, seed) ou phrase générale, « Réinitialiser ».
+- **Props** : `symbol` ; `input` (`strike`, `maturityYears` de la demande, ou `null`) ; `result` (`OptionMonteCarloResult` ou `null`) ; `currency` ; `onReset`.
+- **Source** : `src/features/pricing/monte-carlo-header.tsx`.
+
+### MonteCarloForm
+
+- **Import** : `import { MonteCarloForm } from "@/features/pricing/monte-carlo-form"`.
+- **Rôle** : carte « Paramètres » : spot, strike, maturité en jours, volatilité (`InfoHint`), taux, dividende q, barrière (`InfoHint`, surveillée à chaque clôture), trajectoires (`InfoHint`, 10 000 à 1 000 000, 100 000 au départ) ; la graine est fixe et n'est pas un champ. Validation par `createMonteCarloSchema` (barrière différente du spot).
+- **Props** :
+  - `defaults` : `Partial<MonteCarloFormValues>`, issus de `monteCarloDefaults`.
+  - `onSubmit(values)` : `MonteCarloFormValues` validées ; l'écran les convertit par `toMonteCarloPricingInput`.
+  - `pending` : désactive « Lancer la simulation ».
+  - `notice`, `error` : messages de préremplissage impossible et d'erreur de l'API, non requis.
+- **Source** : `src/features/pricing/monte-carlo-form.tsx`.
+
+### MonteCarloCards
+
+- **Import** : `import { MonteCarloCards } from "@/features/pricing/monte-carlo-cards"`.
+- **Rôle** : quatre `StatCard` d'un résultat : prix Monte Carlo du call vanille avec son erreur standard, prix Black-Scholes avec l'écart en erreurs standard (badge vert si `validated`), knock-out et knock-in avec leur erreur standard et la barrière (basse ou haute selon `barrierDirection`). Aides `InfoHint` `monteCarloPrice`, `standardError`, `barrierOption`.
+- **Props** : `result` : `OptionMonteCarloResult` reçu ; `currency` : devise du sous-jacent.
+- **Source** : `src/features/pricing/monte-carlo-cards.tsx`.
+
+### TrajectoriesChart
+
+- **Import** : `import { TrajectoriesChart } from "@/features/pricing/trajectories-chart"`.
+- **Rôle** : carte « Trajectoires simulées » : une ligne par trajectoire d'illustration (`sample`), rouge si `touched`, bleue sinon, barrière et strike en pointillés, légende et phrase « N trajectoires sur M touchent la barrière » (`sampleTouched` reçu).
+- **Props** : `result` : `OptionMonteCarloResult` reçu ; `strike` : strike de la demande ; `currency`.
+- **Source** : `src/features/pricing/trajectories-chart.tsx`.
+
+### ConvergenceChart
+
+- **Import** : `import { ConvergenceChart } from "@/features/pricing/convergence-chart"`.
+- **Rôle** : carte « Convergence du prix » : prix du call vanille selon le nombre de trajectoires (`convergence`), bande ± 2 erreurs standard (`ComposedChart`), repère du prix Black-Scholes.
+- **Props** : `result` : `OptionMonteCarloResult` reçu ; `currency`.
+- **Source** : `src/features/pricing/convergence-chart.tsx`.
+
+### MethodsTable
+
+- **Import** : `import { MethodsTable } from "@/features/pricing/methods-table"`.
+- **Rôle** : carte « Comparaison des méthodes » : tableau produit / formule / Monte Carlo / ES / statut pour la vanille (« Validé · N ES » selon `validated`), le knock-out et le knock-in (« Sans formule »), et la ligne KO + KI (« = vanille » si `parityGap` est nul).
+- **Props** : `result` : `OptionMonteCarloResult` reçu ; `currency`.
+- **Source** : `src/features/pricing/methods-table.tsx`.
 
 ### ChainStats
 
@@ -205,12 +259,13 @@ Pages Taux et obligations (feature 17, maquette `35 · Taux et obligations`) et 
 
 ### `features/pricing/schema.ts`
 
-- **Import** : `import { createBondSchema, createOptionSchema, type BondFormValues, type OptionFormValues } from "@/features/pricing/schema"`.
+- **Import** : `import { createBondSchema, createMonteCarloSchema, createOptionSchema, type BondFormValues, type MonteCarloFormValues, type OptionFormValues } from "@/features/pricing/schema"`.
 
 | Export | Rôle |
 | --- | --- |
 | `createBondSchema(t)` | Schéma zod traduit du formulaire : nominal > 0, coupon et taux plat en pourcent de 0 à 100, maturité entière de 1 à 30, taux plat exigé seulement s'il est choisi. |
 | `BondFormValues` | Type de la saisie, dérivé du schéma. |
+| `createMonteCarloSchema(t)` | Schéma zod traduit du formulaire Monte Carlo : champs de l'option (maturité de 1 à 365 jours), barrière > 0 et différente du spot, trajectoires entières de 10 000 à 1 000 000. |
 | `createOptionSchema(t)` | Schéma zod traduit du formulaire d'option : spot et strike > 0, maturité entière de 1 à 10 950 jours, taux de −10 à 100 %, q de 0 à 100 %, volatilité > 0 et ≤ 500 %. |
 | `OptionFormValues` | Type de la saisie d'option, dérivé du schéma. |
 
@@ -224,6 +279,8 @@ Pages Taux et obligations (feature 17, maquette `35 · Taux et obligations`) et 
 | `groupFlows(flows)` | Regroupe les échéances consécutives sans flux en une ligne (`from`, `to`, `flow`). |
 | `toOptionPricingInput(values)` | Saisie d'option → corps de `POST /api/pricing` : pourcentages en ratios, jours en années de 365 jours. |
 | `optionDefaults(inputs, curve)` | Valeurs de départ du formulaire d'option : spot, strike (spot arrondi), 182 jours, taux `^IRX`, q et volatilité en pourcentages ; un champ sans source reste absent. |
+| `toMonteCarloPricingInput(values)` | Saisie Monte Carlo → corps de `POST /api/pricing` (`OPTION_MC`) : pourcentages en ratios, jours en années de 365 jours, sans graine. |
+| `monteCarloDefaults(inputs, curve)` | Valeurs de départ du formulaire Monte Carlo : celles de `optionDefaults`, barrière à 90 % du spot arrondi, 100 000 trajectoires. |
 | `toMaturityDays(years)` | Années de la demande → jours entiers (× 365). |
 
 ### `features/pricing/constants.ts`
@@ -244,10 +301,13 @@ Pages Taux et obligations (feature 17, maquette `35 · Taux et obligations`) et 
 | `DEFAULT_OPTION_MATURITY_DAYS` | Maturité de départ (182 jours). |
 | `RISK_FREE_SYMBOL` | Indice de la courbe lu comme taux sans risque (`^IRX`). |
 | `OPTION_DEFAULT_CURRENCY` | Devise d'une option saisie sans symbole (`USD`). |
+| `MONTE_CARLO_PATHS`, `MONTE_CARLO_MATURITY_MAX_DAYS` | Bornes de la saisie Monte Carlo (10 000 à 1 000 000 trajectoires, 100 000 au départ ; 365 jours), miroir du contrat. |
+| `DEFAULT_BARRIER_RATIO` | Barrière de départ : 90 % du spot. |
+| `PATH_COLORS` | Couleur d'une trajectoire active ou désactivée. |
 | `SMILE_COLORS` | Couleur de la courbe de chaque échéance du smile. |
 | `QUOTE_STATUS_BADGES` | Statut d'une cotation → clé de libellé et variant de `Badge`. |
 
 ### `features/pricing/types.ts`
 
 - **Import** : `import type { PricingView, RateCurve, … } from "@/features/pricing/types"`.
-- Réexports des types du contrat : `BondFlow`, `BondInput`, `BondResult`, `ChainRow`, `OptionChainResult`, `OptionGreeks`, `OptionInput`, `OptionInputs`, `OptionPrice`, `OptionResult`, `PayoffPoint`, `PricingInput`, `PricingResult`, `PricingStatus`, `PricingView`, `QuoteStatus`, `RateCurve`, `RateCurvePoint`, `SmileCurve`.
+- Réexports des types du contrat : `BondFlow`, `BondInput`, `BondResult`, `ChainRow`, `OptionChainResult`, `OptionGreeks`, `OptionInput`, `OptionInputs`, `OptionMonteCarloResult`, `OptionPrice`, `OptionResult`, `PayoffPoint`, `PricingInput`, `PricingResult`, `PricingStatus`, `PricingView`, `QuoteStatus`, `RateCurve`, `RateCurvePoint`, `SmileCurve`.

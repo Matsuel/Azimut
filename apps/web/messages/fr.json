@@ -1241,6 +1241,35 @@
             "unit": "Nombre de contrats.",
             "readingTip": "Un grand nombre de contrats écartés signale une chaîne peu liquide, pas une erreur du moteur."
         },
+        "monteCarloPrice": {
+            "title": "Prix Monte Carlo",
+            "purpose": "Le prix de l’option obtenu par simulation, là où aucune formule n’existe.",
+            "computation": "Des milliers de trajectoires du cours sont tirées (mouvement brownien géométrique, dérive r − q) ; le prix est la moyenne des gains à l’échéance, actualisée au taux sans risque.",
+            "unit": "Devise du sous-jacent, par action.",
+            "readingTip": "Même seed : même prix. Le prix est un estimateur : lisez-le avec son erreur standard."
+        },
+        "standardError": {
+            "title": "Erreur standard (ES)",
+            "purpose": "La précision du prix simulé : plus elle est petite, plus le prix est fiable.",
+            "computation": "Écart-type des gains actualisés divisé par la racine du nombre de trajectoires.",
+            "formula": "ES = σ(gains) ÷ √N",
+            "unit": "Devise du sous-jacent.",
+            "readingTip": "Quatre fois plus de trajectoires divisent l’erreur par deux. Un prix à moins de 3 ES de la formule est validé."
+        },
+        "barrierOption": {
+            "title": "Option à barrière",
+            "purpose": "Une option qui disparaît (knock-out) ou n’existe que (knock-in) si le cours touche un seuil.",
+            "computation": "La barrière est surveillée à chaque clôture quotidienne de chaque trajectoire. Sur les mêmes trajectoires, knock-out + knock-in = option vanille.",
+            "unit": "Devise du sous-jacent.",
+            "readingTip": "Un knock-out est moins cher que la vanille : il peut disparaître. C’est la brique des produits structurés."
+        },
+        "monteCarloPaths": {
+            "title": "Trajectoires",
+            "purpose": "Le nombre de scénarios de cours simulés pour estimer le prix.",
+            "computation": "Entier de 10 000 à 1 000 000 ; la graine du tirage est fixe, donc le résultat se rejoue.",
+            "unit": "Nombre de trajectoires.",
+            "readingTip": "Plus il est grand, plus l’erreur standard baisse, au prix d’un calcul plus long."
+        },
         "greekDelta": {
             "title": "Delta",
             "purpose": "De combien le prix de l’option bouge quand le sous-jacent bouge de 1.",
@@ -1590,7 +1619,8 @@
             },
             "tabs": {
                 "calculator": "Calculateur",
-                "chain": "Grecques et smile"
+                "chain": "Grecques et smile",
+                "monteCarlo": "Pricing Monte Carlo"
             },
             "impliedVolatility": "Volatilité implicite"
         },
@@ -1608,6 +1638,97 @@
         },
         "referenceData": {
             "description": "Instruments importés, historiques de cours et versions du jeu de données."
+        },
+        "optionMonteCarlo": {
+            "title": "Pricing Monte Carlo",
+            "titleSymbol": "Pricing Monte Carlo · {symbol}",
+            "badge": "GBM neutre au risque",
+            "description": "Call strike {strike} · {maturity} · {paths} trajectoires · pas journalier · seed {seed} · barrière surveillée à chaque clôture",
+            "descriptionEmpty": "Prix d’un call par simulation, avec ses versions à barrière · données indicatives",
+            "reset": "Réinitialiser",
+            "cards": {
+                "monteCarlo": "Prix Monte Carlo",
+                "standardError": "± {value}",
+                "vanillaCaption": "Call vanille · erreur standard",
+                "blackScholes": "Black-Scholes",
+                "gap": "{gap} ES",
+                "validatedCaption": "Écart < 3 erreurs standard",
+                "notValidatedCaption": "Écart ≥ 3 erreurs standard",
+                "knockOut": "Knock-out",
+                "knockIn": "Knock-in",
+                "barrierDown": "Barrière basse {barrier}",
+                "barrierUp": "Barrière haute {barrier}",
+                "parityCaption": "KO + KI = {value} = vanille",
+                "parityGapCaption": "KO + KI : écart {gap}"
+            },
+            "form": {
+                "title": "Paramètres",
+                "description": "Mêmes hypothèses que les autres calculateurs",
+                "spot": "Spot",
+                "strike": "Strike",
+                "maturity": "Maturité (jours)",
+                "volatility": "Volatilité (%)",
+                "rate": "Taux sans risque (%)",
+                "dividendYield": "Dividende continu (q) (%)",
+                "barrier": "Barrière",
+                "barrierHint": "Surveillée à chaque clôture.",
+                "paths": "Trajectoires",
+                "seedNote": "Graine fixe : mêmes paramètres, même prix, au centime près.",
+                "submit": "Lancer la simulation",
+                "validation": {
+                    "spot": "Le spot doit être supérieur à 0.",
+                    "strike": "Le strike doit être supérieur à 0.",
+                    "maturity": "La maturité est un nombre entier de jours, de 1 à {max}.",
+                    "rate": "Le taux est compris entre −10 et 100 %.",
+                    "dividendYield": "Le dividende est compris entre 0 et 100 %.",
+                    "volatility": "La volatilité est supérieure à 0 et au plus 500 %.",
+                    "barrier": "La barrière est supérieure à 0 et différente du spot.",
+                    "paths": "Le nombre de trajectoires est un entier de {min} à {max}."
+                }
+            },
+            "trajectories": {
+                "title": "Trajectoires simulées",
+                "subtitle": "{shown} trajectoires sur {total} · dérive r − q",
+                "active": "Active",
+                "deactivated": "Désactivée",
+                "barrier": "Barrière",
+                "day": "{day} j",
+                "note": "{touched} trajectoires sur {shown} touchent la barrière : le knock-out les annule, le knock-in les active. Pointillé gris : strike {strike}."
+            },
+            "convergence": {
+                "title": "Convergence du prix",
+                "subtitle": "Call vanille, selon N",
+                "monteCarlo": "Monte Carlo",
+                "band": "± 2 ES",
+                "blackScholes": "Black-Scholes",
+                "note": "L’erreur standard baisse comme 1/√N : 4 fois plus de trajectoires pour 2 fois moins d’erreur."
+            },
+            "methods": {
+                "title": "Comparaison des méthodes",
+                "subtitle": "Validation : écart inférieur à 3 erreurs standard",
+                "product": "Produit",
+                "formula": "Formule",
+                "monteCarlo": "Monte Carlo",
+                "standardError": "ES",
+                "status": "Statut",
+                "vanilla": "Call vanille",
+                "knockOut": "Knock-out {barrier}",
+                "knockIn": "Knock-in {barrier}",
+                "parity": "KO + KI",
+                "validated": "Validé · {gap} ES",
+                "notValidated": "Écart · {gap} ES",
+                "noFormula": "Sans formule",
+                "equalsVanilla": "= vanille",
+                "parityGap": "Écart {gap}",
+                "note": "Sur une option sans formule fermée, seule la simulation donne un prix ; l’erreur standard dit jusqu’où il est fiable."
+            },
+            "states": {
+                "empty": "Saisissez les paramètres d’une option, puis lancez la simulation.",
+                "pending": "Simulation en cours…",
+                "failed": "La simulation a échoué : {reason}",
+                "readError": "Le résultat n’a pas pu être chargé.",
+                "prefillError": "Les valeurs de {symbol} n’ont pas pu être préremplies : saisissez-les à la main."
+            }
         },
         "optionChain": {
             "title": "Grecques et smile",

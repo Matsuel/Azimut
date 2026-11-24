@@ -13,7 +13,7 @@ const PAYOFF_GRID_HIGH = 1.3;
 const IV_PRICE_TOLERANCE = 1e-6;
 const IV_MAX_ITERATIONS = 100;
 // Jours calendaires par an : theta est publié par jour
-const DAYS_PER_YEAR = 365;
+export const DAYS_PER_YEAR = 365;
 // Un point de volatilité ou de taux, en ratio : vega et rho sont publiés pour +1 point
 const ONE_POINT = 0.01;
 
@@ -66,7 +66,7 @@ export function normalCdf(x: number): number {
 }
 
 /** Prix non arrondis du call et du put européens de Black-Scholes avec dividende continu q (D1). */
-function blackScholes({ spot, strike, maturityYears, rate, dividendYield, volatility }: OptionInput) {
+export function blackScholes({ spot, strike, maturityYears, rate, dividendYield, volatility }: OptionInput) {
     const spread = volatility * Math.sqrt(maturityYears);
     const d1 = (Math.log(spot / strike) + (rate - dividendYield + (volatility * volatility) / 2) * maturityYears) / spread;
     const d2 = d1 - spread;

@@ -20,6 +20,7 @@ enum PricingKind {
   BOND
   OPTION
   OPTION_CHAIN
+  OPTION_MC
 }
 
 enum PricingStatus {

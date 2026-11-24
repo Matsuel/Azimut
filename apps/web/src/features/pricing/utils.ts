@@ -1,5 +1,11 @@
-import { DAYS_PER_YEAR, DEFAULT_OPTION_MATURITY_DAYS, RISK_FREE_SYMBOL } from "./constants"
-import type { BondFormValues, OptionFormValues } from "./schema"
+import {
+    DAYS_PER_YEAR,
+    DEFAULT_BARRIER_RATIO,
+    DEFAULT_OPTION_MATURITY_DAYS,
+    MONTE_CARLO_PATHS,
+    RISK_FREE_SYMBOL,
+} from "./constants"
+import type { BondFormValues, MonteCarloFormValues, OptionFormValues } from "./schema"
 import type { BondFlow, OptionInputs, PricingInput, RateCurve } from "./types"
 
 // Jour local `YYYY-MM-DD` (pas `toISOString`, qui décalerait d'un jour après minuit hors UTC)
@@ -75,5 +81,35 @@ export function optionDefaults(
         rate: rate == null ? undefined : toPercent(rate),
         dividendYield: inputs ? toPercent(inputs.dividendYield) : undefined,
         volatility: inputs?.volatility == null ? undefined : toPercent(inputs.volatility),
+    }
+}
+
+/** Saisie du pricing Monte Carlo → corps de `POST /api/pricing` : pourcentages en ratios, jours en années de 365 jours. */
+export function toMonteCarloPricingInput(values: MonteCarloFormValues): PricingInput {
+    return {
+        kind: "OPTION_MC",
+        monteCarlo: {
+            spot: values.spot,
+            strike: values.strike,
+            maturityYears: values.maturityDays / DAYS_PER_YEAR,
+            rate: values.rate / 100,
+            dividendYield: values.dividendYield / 100,
+            volatility: values.volatility / 100,
+            barrier: values.barrier,
+            paths: values.paths,
+        },
+    }
+}
+
+/** Valeurs de départ du formulaire Monte Carlo : celles du calculateur, plus une barrière basse (10 % sous le spot) et 100 000 trajectoires. */
+export function monteCarloDefaults(
+    inputs: OptionInputs | undefined,
+    curve: RateCurve | undefined,
+): Partial<MonteCarloFormValues> {
+    const defaults = optionDefaults(inputs, curve)
+    return {
+        ...defaults,
+        barrier: inputs ? Math.round(inputs.spot * DEFAULT_BARRIER_RATIO) || undefined : undefined,
+        paths: MONTE_CARLO_PATHS.default,
     }
 }

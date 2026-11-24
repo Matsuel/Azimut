@@ -6,8 +6,8 @@
 
 | Couche | Existant | Manque |
 | --- | --- | --- |
-| `apps/backtest-engine/engine/` | Projection (14) : PRNG seedé, bootstrap, percentiles. | Trajectoires GBM, prix, barrière. |
-| `packages/contracts/src/pricing.ts` | Créé en 17 ; union `BOND` / `OPTION`. | Champ `method`. |
+| `apps/backtest-engine/engine/` | Projection (14, dans risk-engine) : PRNG seedé, bootstrap, percentiles. | Trajectoires GBM, prix, barrière. |
+| `packages/contracts/src/pricing.ts` | Créé en 17 ; union `BOND` / `OPTION` / `OPTION_CHAIN`. | Kind `OPTION_MC` (D5). |
 | `apps/web/src/features/pricing/` | Calculateur (16, 17). | Méthode et erreur standard. |
 
 ## Hors périmètre

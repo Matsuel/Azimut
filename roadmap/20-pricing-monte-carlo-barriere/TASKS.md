@@ -6,13 +6,13 @@
 
 | Tâche | Titre | US | Couche | Priorité | Points | Dépend de | Commits |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T-01 | Engine : trajectoires GBM réutilisant le PRNG seedé | US-01 | backtest-engine | MUST | 5 | — | — |
-| T-02 | Engine : prix Monte Carlo et erreur standard | US-01 | backtest-engine | MUST | 3 | T-01 | — |
-| T-03 | Engine : option à barrière (knock-out et knock-in) | US-02 | backtest-engine | MUST | 5 | T-02 | — |
-| T-04 | Test de convergence vers Black-Scholes | US-01 | backtest-engine | MUST | 2 | T-02 | — |
-| T-05 | Contrat et choix de méthode | US-01, US-02 | contracts | MUST | 2 | — | — |
-| T-06 | Demande Monte Carlo et barrière par core-backend | US-01, US-02 | core-backend | MUST | 2 | T-05 | — |
-| T-07 | Affichage de la méthode et de l'erreur standard | US-01 | web | SHOULD | 3 | T-06 | — |
+| T-01 | Engine : trajectoires GBM réutilisant le PRNG seedé | US-01 | backtest-engine | MUST | 5 | — | `4098ebc`, `27773c6` |
+| T-02 | Engine : prix Monte Carlo et erreur standard | US-01 | backtest-engine | MUST | 3 | T-01 | `27773c6` |
+| T-03 | Engine : option à barrière (knock-out et knock-in) | US-02 | backtest-engine | MUST | 5 | T-02 | `27773c6` |
+| T-04 | Test de convergence vers Black-Scholes | US-01 | backtest-engine | MUST | 2 | T-02 | `27773c6` |
+| T-05 | Contrat et choix de méthode | US-01, US-02 | contracts | MUST | 2 | — | `f681b58` |
+| T-06 | Demande Monte Carlo et barrière par core-backend | US-01, US-02 | core-backend | MUST | 2 | T-05 | `f681b58`, `27773c6` |
+| T-07 | Affichage de la méthode et de l'erreur standard | US-01 | web | SHOULD | 3 | T-06 | `ca021ba` |
 
 **Total** : 22 points — MUST 19, SHOULD 3.
 
@@ -51,8 +51,8 @@ flowchart LR
 
 ### T-01 · Engine : trajectoires GBM réutilisant le PRNG seedé
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : — · **Commits** : —
-- **Fichiers** : `apps/backtest-engine/engine/pricing-mc.ts`, tests
+- **US** : US-01 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : — · **Commits** : `4098ebc`, `27773c6`
+- **Fichiers** : `packages/utils/src/random.ts` (le PRNG de 14 y est déplacé : un import entre apps est interdit), `apps/backtest-engine/engine/options.mc.ts`, tests
 
 Critères d’acceptation :
 - [ ] Trajectoires géométriques browniennes sous la mesure neutre au risque (dérive r − q).
@@ -60,16 +60,16 @@ Critères d’acceptation :
 
 ### T-02 · Engine : prix Monte Carlo et erreur standard
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01 · **Commits** : —
-- **Fichiers** : `apps/backtest-engine/engine/pricing-mc.ts`
+- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-01 · **Commits** : `27773c6`
+- **Fichiers** : `apps/backtest-engine/engine/options.mc.ts`
 
 Critères d’acceptation :
 - [ ] Prix = moyenne actualisée des payoffs ; erreur standard renvoyée avec le prix.
 
 ### T-03 · Engine : option à barrière (knock-out et knock-in)
 
-- **US** : US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-02 · **Commits** : —
-- **Fichiers** : `apps/backtest-engine/engine/pricing-mc.ts`
+- **US** : US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-02 · **Commits** : `27773c6`
+- **Fichiers** : `apps/backtest-engine/engine/options.mc.ts`
 
 Critères d’acceptation :
 - [ ] Surveillance quotidienne de la barrière (D2).
@@ -78,8 +78,8 @@ Critères d’acceptation :
 
 ### T-04 · Test de convergence vers Black-Scholes
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-02 · **Commits** : —
-- **Fichiers** : `apps/backtest-engine/engine/pricing-mc.test.ts`
+- **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-02 · **Commits** : `27773c6`
+- **Fichiers** : `apps/backtest-engine/test/options.mc.test.ts`
 
 Critères d’acceptation :
 - [ ] Sur une option européenne, |prix MC − BS| < 3 erreurs standard (D3).
@@ -88,18 +88,18 @@ Critères d’acceptation :
 
 ### T-05 · Contrat et choix de méthode
 
-- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : —
+- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : — · **Commits** : `f681b58`
 - **Fichiers** : `packages/contracts/src/pricing.ts`
 
 Critères d’acceptation :
-- [ ] Champ `method` : `BLACK_SCHOLES` ou `MONTE_CARLO`, ajout sans rupture.
+- [ ] Kind `OPTION_MC` du pipeline `pricing.*` (D5), ajout sans rupture ; migration de l'enum `PricingKind`.
 
 ## Lot 3 — Service
 
 ### T-06 · Demande Monte Carlo et barrière par core-backend
 
-- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-05 · **Commits** : —
-- **Fichiers** : `apps/core-backend/services/pricing.service.ts`
+- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-05 · **Commits** : `f681b58`, `27773c6`
+- **Fichiers** : `packages/contracts/src/pricing.ts` (bornes), `apps/core-backend/test/pricing.routes.test.ts`
 
 Critères d’acceptation :
 - [ ] Validation zod ; nombre de trajectoires borné à [10 000 ; 1 000 000], 100 000 par défaut (D4) ; seed absente de l'API, fixe et stockée avec le résultat.
@@ -108,7 +108,7 @@ Critères d’acceptation :
 
 ### T-07 · Affichage de la méthode et de l'erreur standard
 
-- **US** : US-01 · **Priorité** : SHOULD · **Points** : 3 · **Dépend de** : T-06 · **Commits** : —
+- **US** : US-01 · **Priorité** : SHOULD · **Points** : 3 · **Dépend de** : T-06 · **Commits** : `ca021ba`
 - **Fichiers** : `apps/web/src/features/pricing/`
 
 Critères d’acceptation :

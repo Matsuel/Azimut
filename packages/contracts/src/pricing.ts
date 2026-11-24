@@ -7,8 +7,8 @@ export const PRICING_TOPICS = {
     failed: "pricing.failed",
 } as const;
 
-// Produits pricés par le pipeline `pricing.*` ; le Monte Carlo (20) s'ajoute ici
-export const PRICING_KINDS = ["BOND", "OPTION", "OPTION_CHAIN"] as const;
+// Produits pricés par le pipeline `pricing.*` : OPTION_MC est le pricing par simulation (20), à la place d'un champ `method` : son résultat n'a pas la forme de OPTION
+export const PRICING_KINDS = ["BOND", "OPTION", "OPTION_CHAIN", "OPTION_MC"] as const;
 
 // Statuts d'une demande de pricing : créée puis publiée, calculée, ou en échec
 export const PRICING_STATUSES = ["PENDING", "COMPLETED", "FAILED"] as const;
@@ -85,17 +85,39 @@ export const optionChainInputSchema = z.object({
     symbol: z.string().trim().min(1),
 });
 
+// Bornes du nombre de trajectoires d'un pricing Monte Carlo et valeur par défaut (20, D4)
+export const MONTE_CARLO_PATHS = { min: 10_000, max: 1_000_000, default: 100_000 } as const;
+
+// Maturité maximale d'un pricing Monte Carlo, en années : une trajectoire a un pas par jour calendaire, le coût croît avec trajectoires × jours : 1 million de trajectoires sur 1 an durent ~16 s de calcul bloquant, sous le délai de session Kafka (20)
+export const MONTE_CARLO_MATURITY_MAX_YEARS = 1;
+
+// Option pricée par simulation (20) : mêmes paramètres que l'option européenne (call), plus une barrière et un nombre de trajectoires.
+// La graine n'est pas saisie : fixe côté worker, elle est publiée dans le résultat (D4)
+export const optionMonteCarloInputSchema = optionInputSchema.extend({
+    maturityYears: z.number().gt(0).max(MONTE_CARLO_MATURITY_MAX_YEARS),
+    // Devise du sous-jacent (> 0, différent du spot) : seuil surveillé à chaque jour ; sous le spot, la barrière est basse (down), au-dessus elle est haute (up)
+    barrier: z.number().gt(0),
+    paths: z.number().int().min(MONTE_CARLO_PATHS.min).max(MONTE_CARLO_PATHS.max).default(MONTE_CARLO_PATHS.default),
+});
+
 const bondPricingInputSchema = z.object({ kind: z.literal("BOND"), bond: bondInputSchema });
 const optionPricingInputSchema = z.object({ kind: z.literal("OPTION"), option: optionInputSchema });
 const optionChainPricingInputSchema = z.object({ kind: z.literal("OPTION_CHAIN"), chain: optionChainInputSchema });
+const optionMonteCarloPricingInputSchema = z.object({ kind: z.literal("OPTION_MC"), monteCarlo: optionMonteCarloInputSchema });
 
 // Demande saisie par l'utilisateur (POST /api/pricing) : un produit à la fois, discriminé par `kind`
-export const pricingInputSchema = z.discriminatedUnion("kind", [bondPricingInputSchema, optionPricingInputSchema, optionChainPricingInputSchema]);
+export const pricingInputSchema = z.discriminatedUnion("kind", [
+    bondPricingInputSchema,
+    optionPricingInputSchema,
+    optionChainPricingInputSchema,
+    optionMonteCarloPricingInputSchema,
+]);
 
 export const pricingRequestedPayloadSchema = z.discriminatedUnion("kind", [
     bondPricingInputSchema.extend({ requestId: z.string().min(1) }),
     optionPricingInputSchema.extend({ requestId: z.string().min(1) }),
     optionChainPricingInputSchema.extend({ requestId: z.string().min(1) }),
+    optionMonteCarloPricingInputSchema.extend({ requestId: z.string().min(1) }),
 ]);
 
 export const pricingRequestedEventSchema = kafkaEventSchema(pricingRequestedPayloadSchema);
@@ -260,12 +282,70 @@ export const optionChainResultSchema = z.object({
     chain: z.array(chainRowSchema),
 });
 
+// Prix simulé : moyenne actualisée des payoffs et son erreur standard
+export const monteCarloEstimateSchema = z.object({
+    // Devise du sous-jacent : moyenne des payoffs actualisés au taux sans risque
+    price: z.number(),
+    // Devise du sous-jacent : écart-type des payoffs actualisés / √trajectoires
+    standardError: z.number().min(0),
+});
+
+// Un point de la courbe de convergence : le prix de la vanille sur les `paths` premières trajectoires
+export const monteCarloConvergencePointSchema = monteCarloEstimateSchema.extend({
+    paths: z.number().int().gt(0),
+});
+
+// Une trajectoire d'illustration : cours de clôture de chaque jour
+export const monteCarloSamplePathSchema = z.object({
+    // Booléen : la barrière a été touchée un jour de clôture (knock-out annulé, knock-in activé)
+    touched: z.boolean(),
+    // Devise du sous-jacent : cours du jour 0 (le spot) au dernier jour, `steps + 1` valeurs
+    prices: z.array(z.number()).min(2),
+});
+
+export const optionMonteCarloResultSchema = z.object({
+    // Graine du générateur : même graine et mêmes paramètres, même prix
+    seed: z.number().int(),
+    // Trajectoires simulées
+    paths: z.number().int().gt(0),
+    // Jours de surveillance (un pas par jour calendaire) : round(maturité × 365)
+    steps: z.number().int().gt(0),
+    // Devise du sous-jacent : barrière demandée
+    barrier: z.number().gt(0),
+    // DOWN : barrière sous le spot ; UP : au-dessus
+    barrierDirection: z.enum(["DOWN", "UP"]),
+    // Call vanille, mêmes trajectoires que les deux produits à barrière
+    vanilla: monteCarloEstimateSchema,
+    // Devise du sous-jacent : prix Black-Scholes du call, sans arrondi (référence de la validation)
+    blackScholesPrice: z.number(),
+    // Erreurs standard : |prix vanille − Black-Scholes| / erreur standard de la vanille
+    blackScholesGap: z.number().min(0),
+    // Booléen : écart sous 3 erreurs standard (D3) ; décidé par le moteur seul
+    validated: z.boolean(),
+    knockOut: monteCarloEstimateSchema,
+    knockIn: monteCarloEstimateSchema,
+    // Devise du sous-jacent : knockOut + knockIn − vanille, nul à l'arrondi près (mêmes trajectoires)
+    parityGap: z.number(),
+    // Du plus petit au plus grand nombre de trajectoires ; la dernière est `paths`
+    convergence: z.array(monteCarloConvergencePointSchema).min(1),
+    // Trajectoires d'illustration (les premières du tirage) : leur nombre touchant la barrière est `sampleTouched`
+    sample: z.array(monteCarloSamplePathSchema).min(1),
+    sampleTouched: z.number().int().min(0),
+});
+
 const bondPricingResultSchema = z.object({ kind: z.literal("BOND"), bond: bondResultSchema });
 const optionPricingResultSchema = z.object({ kind: z.literal("OPTION"), option: optionResultSchema });
 
 const optionChainPricingResultSchema = z.object({ kind: z.literal("OPTION_CHAIN"), chain: optionChainResultSchema });
 
-export const pricingResultSchema = z.discriminatedUnion("kind", [bondPricingResultSchema, optionPricingResultSchema, optionChainPricingResultSchema]);
+const optionMonteCarloPricingResultSchema = z.object({ kind: z.literal("OPTION_MC"), monteCarlo: optionMonteCarloResultSchema });
+
+export const pricingResultSchema = z.discriminatedUnion("kind", [
+    bondPricingResultSchema,
+    optionPricingResultSchema,
+    optionChainPricingResultSchema,
+    optionMonteCarloPricingResultSchema,
+]);
 
 export const pricingCompletedPayloadSchema = z.object({
     requestId: z.string().min(1),
@@ -289,6 +369,7 @@ export type RateCurve = z.infer<typeof rateCurveSchema>;
 export type BondDiscount = z.infer<typeof bondDiscountSchema>;
 export type BondInput = z.infer<typeof bondInputSchema>;
 export type OptionInput = z.infer<typeof optionInputSchema>;
+export type OptionMonteCarloInput = z.infer<typeof optionMonteCarloInputSchema>;
 export type PricingInput = z.infer<typeof pricingInputSchema>;
 export type PricingRequestedPayload = z.infer<typeof pricingRequestedPayloadSchema>;
 export type BondFlow = z.infer<typeof bondFlowSchema>;
@@ -300,6 +381,10 @@ export type ChainRow = z.infer<typeof chainRowSchema>;
 export type SmileCurve = z.infer<typeof smileCurveSchema>;
 export type OptionChainResult = z.infer<typeof optionChainResultSchema>;
 export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
+export type MonteCarloEstimate = z.infer<typeof monteCarloEstimateSchema>;
+export type MonteCarloConvergencePoint = z.infer<typeof monteCarloConvergencePointSchema>;
+export type MonteCarloSamplePath = z.infer<typeof monteCarloSamplePathSchema>;
+export type OptionMonteCarloResult = z.infer<typeof optionMonteCarloResultSchema>;
 export type OptionResult = z.infer<typeof optionResultSchema>;
 export type PricingResult = z.infer<typeof pricingResultSchema>;
 export type PricingCompletedPayload = z.infer<typeof pricingCompletedPayloadSchema>;

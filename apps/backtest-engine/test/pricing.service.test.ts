@@ -160,3 +160,24 @@ test("chaîne : symbole inconnu de market-service → pricing.failed", async () 
 
     expect(failed[0]!.reason).toContain("SYMBOL_NOT_FOUND")
 })
+
+test("option Monte Carlo : prix sur les seuls paramètres avec la graine fixe, courbe jamais lue", async () => {
+    const { service, completed, failed, curveReads } = setup()
+    const monteCarlo = { spot: 100, strike: 100, maturityYears: 0.25, rate: 0.05, dividendYield: 0, volatility: 0.2, barrier: 90, paths: 10_000 }
+
+    await service.run({ requestId: "p5", kind: "OPTION_MC", monteCarlo })
+
+    expect(failed).toEqual([])
+    const result = completed[0]!.result
+    expect(result.kind === "OPTION_MC" && result.monteCarlo).toMatchObject({ seed: 42, paths: 10_000, barrierDirection: "DOWN", validated: true })
+    expect(curveReads()).toBe(0)
+})
+
+test("option Monte Carlo avec barrière au spot : pricing.failed avec la cause", async () => {
+    const { service, completed, failed } = setup()
+
+    await service.run({ requestId: "p6", kind: "OPTION_MC", monteCarlo: { spot: 100, strike: 100, maturityYears: 0.25, rate: 0.05, dividendYield: 0, volatility: 0.2, barrier: 100, paths: 10_000 } })
+
+    expect(completed).toEqual([])
+    expect(failed[0]!.reason).toContain("Barrier must differ")
+})
