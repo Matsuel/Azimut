@@ -58,6 +58,12 @@ export const GLOSSARY = {
     greekVega: { source: `${OPTIONS} · optionGreeks (vega)` },
     greekTheta: { source: `${OPTIONS} · optionGreeks (theta)` },
     greekRho: { source: `${OPTIONS} · optionGreeks (rho)` },
+    optionFinalSpot: { source: `${OPTIONS} · priceOption (payoffGrid.spot)` },
+    optionPayoff: { source: `${OPTIONS} · payoff (payoffGrid.callPayoff, putPayoff)` },
+    optionNet: { source: `${OPTIONS} · priceOption (payoffGrid.callNet, putNet)` },
+    quoteBidAsk: { source: `${OPTION_CHAIN} · analyseChain (chain.bid, ask)` },
+    midPrice: { source: `${OPTION_CHAIN} · analyseChain (chain.mid)` },
+    yahooVolatility: { source: `${OPTION_CHAIN} · analyseChain (chain.yahooVolatility)` },
     // Résultat d'un backtest
     finalValue: { source: `${ENGINE} · simulate (finalValue)` },
     profit: { source: `${ENGINE} · simulate (profit)` },

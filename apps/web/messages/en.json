@@ -1276,6 +1276,48 @@
             "computation": "Derivative of the price with respect to the rate, expressed for +1 point.",
             "unit": "Underlying currency per rate point.",
             "readingTip": "Positive for a call, negative for a put."
+        },
+        "optionFinalSpot": {
+            "title": "Final price",
+            "purpose": "The underlying price assumed at expiry, for which the row computes the option's outcome.",
+            "computation": "Grid of 21 evenly spaced points, from 70% of the lower of spot and strike to 130% of the higher.",
+            "unit": "Underlying currency, per share."
+        },
+        "optionPayoff": {
+            "title": "Payoff at expiry",
+            "purpose": "What the option pays at expiry for this final price, before deducting the premium paid.",
+            "computation": "Call: max(final price − strike, 0). Put: max(strike − final price, 0).",
+            "formula": "Call = max(S − K, 0) · Put = max(K − S, 0)",
+            "unit": "Underlying currency, per share.",
+            "readingTip": "Never negative: an option buyer loses at worst the premium."
+        },
+        "optionNet": {
+            "title": "Net result",
+            "purpose": "Gain or loss of buying the option, premium included, if the final price is the row's.",
+            "computation": "Payoff at expiry minus the Black-Scholes model premium, undiscounted.",
+            "unit": "Underlying currency, per share. Green: gain, red: loss.",
+            "readingTip": "Negative while the payoff does not cover the premium; zero at the break-even."
+        },
+        "quoteBidAsk": {
+            "title": "Bid and ask",
+            "purpose": "Quoted market prices: the bid is the highest price a buyer offers, the ask the lowest a seller wants.",
+            "computation": "Read as quoted by Yahoo Finance, no calculation.",
+            "unit": "Underlying currency, per share.",
+            "readingTip": "A wide bid-ask spread points to an illiquid contract."
+        },
+        "midPrice": {
+            "title": "Mid price",
+            "purpose": "The price kept for the contract: the starting point of the implied volatility and Greeks calculation.",
+            "computation": "Average of bid and ask. Zero, the quote is discarded.",
+            "formula": "(bid + ask) / 2",
+            "unit": "Underlying currency, per share."
+        },
+        "yahooVolatility": {
+            "title": "Yahoo implied volatility",
+            "purpose": "The implied volatility supplied with the quote, shown to compare with the engine's.",
+            "computation": "Read as received from Yahoo Finance, never used in a calculation.",
+            "unit": "Annual ratio, shown as a percentage.",
+            "readingTip": "A gap with the engine IV comes from the mid price and Black-Scholes assumptions, not from an error."
         }
     },
     "pages": {

@@ -48,6 +48,22 @@ function numberFormatters(number: NumberFormat) {
     }
 }
 
+// Durées en unités longues (`182 jours`, `4,85 ans`, `14 mois`)
+function durationFormatters(number: (options?: Intl.NumberFormatOptions) => (value: number) => string) {
+    return {
+        formatDays: number({ style: "unit", unit: "day", unitDisplay: "long" }),
+        formatYears: number({ style: "unit", unit: "year", unitDisplay: "long", maximumFractionDigits: 1 }),
+        formatYears2: number({
+            style: "unit",
+            unit: "year",
+            unitDisplay: "long",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }),
+        formatMonths: number({ style: "unit", unit: "month", unitDisplay: "long", maximumFractionDigits: 0 }),
+    }
+}
+
 function createFormatters(locale: string) {
     const number = (options?: Intl.NumberFormatOptions) => new Intl.NumberFormat(locale, options).format
     const date = (options: Intl.DateTimeFormatOptions) => {
@@ -64,16 +80,7 @@ function createFormatters(locale: string) {
     }
 
     const formatDay = date({ day: "2-digit", month: "2-digit", year: "numeric" })
-    const formatDays = number({ style: "unit", unit: "day", unitDisplay: "long" })
-    const formatYears = number({ style: "unit", unit: "year", unitDisplay: "long", maximumFractionDigits: 1 })
-    const formatYears2 = number({
-        style: "unit",
-        unit: "year",
-        unitDisplay: "long",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })
-    const formatMonths = number({ style: "unit", unit: "month", unitDisplay: "long", maximumFractionDigits: 0 })
+    const { formatDays, formatMonths, ...durations } = durationFormatters(number)
 
     const formatAxisSmall = number({ maximumFractionDigits: 2 })
     const formatAxisLarge = number({ maximumFractionDigits: 0 })
@@ -106,10 +113,8 @@ function createFormatters(locale: string) {
             days < 2 * DAYS_PER_MONTH ? formatDays(days) : formatMonths(days / DAYS_PER_MONTH),
         /** Nombre de jours tel quel, sans passage en mois (`182 jours`) : maturité saisie d'une option. */
         formatDays,
-        /** Durée en années, 1 décimale au plus (`10,5 ans`). */
-        formatYears,
-        /** Durée en années, 2 décimales fixes (`4,85 ans`) : durations d'une obligation. */
-        formatYears2,
+        /** Durées en années : `formatYears` (1 décimale, `10,5 ans`), `formatYears2` (2 décimales fixes, `4,85 ans`, durations d'une obligation). */
+        ...durations,
         /** Symbole d'une devise ISO pour un libellé : `currencySymbol("EUR")` → « € ». */
         currencySymbol: (currency: string) =>
             currencyFormat(currency)

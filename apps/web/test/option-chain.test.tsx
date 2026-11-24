@@ -13,6 +13,7 @@ const getOptionInputs = mock()
 mock.module("../src/features/pricing/api", () => ({ getRateCurve, createPricing, getPricing, getOptionInputs }))
 
 const { OptionChainPage } = await import("../src/features/pricing/chain-page")
+const { ChainTable } = await import("../src/features/pricing/chain-table")
 
 afterEach(cleanup)
 beforeEach(() => {
@@ -115,4 +116,18 @@ test("sans symbole : invitation, aucun calcul lancé", () => {
 
     expect(screen.getByText(/Ouvrez cette page depuis un symbole/)).toBeTruthy()
     expect(createPricing).not.toHaveBeenCalled()
+})
+
+test("la chaîne est paginée par 10 lignes", () => {
+    const rows = Array.from({ length: 12 }, (_, i) => row(500 + i, "CALL", "KEPT"))
+    const wrapper = ({ children }: { children: ReactNode }) => (
+        <NextIntlClientProvider locale="fr" messages={fr}>
+            {children}
+        </NextIntlClientProvider>
+    )
+    render(<ChainTable chain={{ ...chain, chain: rows }} />, { wrapper })
+
+    expect(screen.getAllByRole("row")).toHaveLength(11) // en-tête + 10 lignes
+    fireEvent.click(screen.getByRole("button", { name: "2" }))
+    expect(screen.getAllByRole("row")).toHaveLength(3) // en-tête + 2 lignes
 })

@@ -1276,6 +1276,48 @@
             "computation": "Dérivée du prix par rapport au taux, rapportée à +1 point.",
             "unit": "Devise du sous-jacent par point de taux.",
             "readingTip": "Positif pour un call, négatif pour un put."
+        },
+        "optionFinalSpot": {
+            "title": "Cours final",
+            "purpose": "Le cours du sous-jacent supposé à l’échéance, pour lequel la ligne calcule le gain de l’option.",
+            "computation": "Grille de 21 points régulièrement espacés, de 70 % du plus bas de spot et strike à 130 % du plus haut.",
+            "unit": "Devise du sous-jacent, par action."
+        },
+        "optionPayoff": {
+            "title": "Payoff à l’échéance",
+            "purpose": "Ce que rapporte l’option à l’échéance pour ce cours final, avant de déduire la prime payée.",
+            "computation": "Call : max(cours final − strike, 0). Put : max(strike − cours final, 0).",
+            "formula": "Call = max(S − K, 0) · Put = max(K − S, 0)",
+            "unit": "Devise du sous-jacent, par action.",
+            "readingTip": "Jamais négatif : l’acheteur d’une option ne perd au pire que sa prime."
+        },
+        "optionNet": {
+            "title": "Résultat net",
+            "purpose": "Gain ou perte de l’achat de l’option, prime comprise, si le cours final est celui de la ligne.",
+            "computation": "Payoff à l’échéance moins la prime du modèle de Black-Scholes, sans actualisation.",
+            "unit": "Devise du sous-jacent, par action. Vert : gain, rouge : perte.",
+            "readingTip": "Négatif tant que le payoff ne couvre pas la prime ; il s’annule au point mort."
+        },
+        "quoteBidAsk": {
+            "title": "Bid et ask",
+            "purpose": "Les prix cotés sur le marché : le bid est le plus haut prix proposé par un acheteur, l’ask le plus bas demandé par un vendeur.",
+            "computation": "Lus tels que cotés par Yahoo Finance, sans calcul.",
+            "unit": "Devise du sous-jacent, par action.",
+            "readingTip": "Un écart bid-ask large signale un contrat peu liquide."
+        },
+        "midPrice": {
+            "title": "Prix milieu",
+            "purpose": "Le prix retenu pour le contrat : celui dont part le calcul de la volatilité implicite et des grecques.",
+            "computation": "Moyenne du bid et de l’ask. Nul, la cotation est écartée.",
+            "formula": "(bid + ask) / 2",
+            "unit": "Devise du sous-jacent, par action."
+        },
+        "yahooVolatility": {
+            "title": "Volatilité implicite de Yahoo",
+            "purpose": "La volatilité implicite fournie avec la cotation, affichée pour comparer avec celle du moteur.",
+            "computation": "Lue telle que reçue de Yahoo Finance, jamais utilisée dans un calcul.",
+            "unit": "Ratio annuel, affiché en pourcentage.",
+            "readingTip": "Un écart avec l’IV moteur vient du prix milieu et des hypothèses de Black-Scholes, pas d’une erreur."
         }
     },
     "pages": {

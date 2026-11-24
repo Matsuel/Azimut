@@ -127,7 +127,7 @@ Pages Taux et obligations (feature 17, maquette `35 · Taux et obligations`) et 
 ### PayoffGrid
 
 - **Import** : `import { PayoffGrid } from "@/features/pricing/payoff-grid"`.
-- **Rôle** : tableau « Grille de payoff » : cours final, payoff call et put, résultat net call et put (coloré gain ou perte) pour chaque point de `payoffGrid`.
+- **Rôle** : tableau « Grille de payoff » : cours final, payoff call et put, résultat net call et put (coloré gain ou perte) pour chaque point de `payoffGrid`, paginé côté client (`OPTION_TABLE_PAGE_SIZE`, 10 lignes, `TablePagination`), en-têtes avec `InfoHint`.
 - **Props** : `result` : `OptionResult` reçu ; `currency` : devise du sous-jacent.
 - **Source** : `src/features/pricing/payoff-grid.tsx`.
 
@@ -175,7 +175,7 @@ Pages Taux et obligations (feature 17, maquette `35 · Taux et obligations`) et 
 ### ChainTable
 
 - **Import** : `import { ChainTable } from "@/features/pricing/chain-table"`.
-- **Rôle** : carte « Chaîne » : toutes les cotations de l'échéance détaillée (strike, type, bid, ask, prix milieu, IV du moteur en gras, IV Yahoo grisée, badge de statut `QUOTE_STATUS_BADGES`) et le décompte des contrats écartés par cause.
+- **Rôle** : carte « Chaîne » : toutes les cotations de l'échéance détaillée (strike, type, bid, ask, prix milieu, IV du moteur en gras, IV Yahoo grisée, badge de statut `QUOTE_STATUS_BADGES`) et le décompte des contrats écartés par cause. Paginé côté client (`OPTION_TABLE_PAGE_SIZE`, 10 lignes), en-têtes avec `InfoHint`.
 - **Props** :
   - `chain` : `OptionChainResult`.
 - **Source** : `src/features/pricing/chain-table.tsx`.

@@ -51,3 +51,6 @@ export const QUOTE_STATUS_BADGES = {
     NO_PRICE: { key: "noPrice", variant: "outline" },
     IV_OUT_OF_BOUNDS: { key: "ivOutOfBounds", variant: "outline" },
 } as const
+
+// Lignes par page de la grille de payoff et de la chaîne : plus courtes que `PAGE_SIZE`, les cartes sont étroites
+export const OPTION_TABLE_PAGE_SIZE = 10
