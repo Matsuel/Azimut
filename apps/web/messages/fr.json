@@ -145,9 +145,25 @@
     },
     "settings": {
         "title": "Paramètres",
-        "description": "Gérez votre profil et votre portefeuille virtuel.",
+        "description": "Gérez votre profil, vos notifications et l’apparence.",
         "tabs": {
+            "profile": "Profil",
+            "wallet": "Portefeuille",
             "appearance": "Apparence"
+        },
+        "profile": {
+            "title": "Profil",
+            "description": "Ces informations sont visibles uniquement par vous.",
+            "name": "Nom complet",
+            "email": "E-mail",
+            "emailNote": "Non modifiable : le changement d’e-mail n’est pas proposé.",
+            "save": "Enregistrer",
+            "saved": "Profil enregistré.",
+            "failed": "L’enregistrement du profil a échoué.",
+            "validation": {
+                "nameRequired": "Le nom est obligatoire.",
+                "nameMaxLength": "Le nom ne peut pas dépasser {count} caractères."
+            }
         },
         "theme": {
             "title": "Thème",

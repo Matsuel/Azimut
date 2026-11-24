@@ -145,9 +145,25 @@
     },
     "settings": {
         "title": "Settings",
-        "description": "Manage your profile and your virtual portfolio.",
+        "description": "Manage your profile, your notifications and appearance.",
         "tabs": {
+            "profile": "Profile",
+            "wallet": "Portfolio",
             "appearance": "Appearance"
+        },
+        "profile": {
+            "title": "Profile",
+            "description": "This information is only visible to you.",
+            "name": "Full name",
+            "email": "Email",
+            "emailNote": "Read-only: changing your email is not supported.",
+            "save": "Save",
+            "saved": "Profile saved.",
+            "failed": "Saving your profile failed.",
+            "validation": {
+                "nameRequired": "Name is required.",
+                "nameMaxLength": "Name cannot exceed {count} characters."
+            }
         },
         "theme": {
             "title": "Theme",

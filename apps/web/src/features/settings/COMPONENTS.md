@@ -1,16 +1,16 @@
 # Catalogue web : `features/settings`
 
-Écran Paramètres (maquette `06.2`, onglet Apparence seul). Préférences d'affichage : ni route API ni base. Gabarits d'entrée et catalogue des composants partagés : [`COMPONENTS.md`](../../../COMPONENTS.md#gabarits). Toute création, modification ou suppression d'un export catalogué met à jour son entrée dans le même diff que le code.
+Écran Paramètres (maquettes `06`, `06.2`). Profil via better-auth (`updateUser`, pas de route ajoutée) ; préférences d'affichage sans route API ni base. Gabarits d'entrée et catalogue des composants partagés : [`COMPONENTS.md`](../../../COMPONENTS.md#gabarits). Toute création, modification ou suppression d'un export catalogué met à jour son entrée dans le même diff que le code.
 
 
 ### SettingsTabs
 
 - **Import** : `import { SettingsTabs } from "@/features/settings/settings-tabs"`.
-- **Rôle** : barre d'onglets des paramètres (`ui/tabs`) ; l'onglet « Apparence » empile `ThemeCard` et `LanguageCard`. Un nouvel onglet = un `TabsTrigger` et son `TabsContent` ici.
-- **Props** : aucune.
+- **Rôle** : barre d'onglets des paramètres (`ui/tabs`) : Profil (défaut, `ProfileCard`), Portefeuille (`TabsTrigger` `disabled`, sans contenu : paper trading à venir), Apparence (`ThemeCard` puis `LanguageCard`). Un nouvel onglet = un `TabsTrigger` et son `TabsContent` ici.
+- **Props** : `user` (`{ name, email }`, identité de la session lue par la page).
 - **Exemple** (tiré de `src/app/app/settings/page.tsx`) :
   ```tsx
-  <SettingsTabs />
+  <SettingsTabs user={user} />
   ```
 - **Source** : `src/features/settings/settings-tabs.tsx`.
 
@@ -34,3 +34,18 @@
 - **Rôle** : carte « Langue et région » : `OptionSelect` des langues de `i18n/config.ts` (nom de chaque langue dans sa propre langue). Le choix appelle `setLocale` : cookie `locale` écrit, page rendue dans la nouvelle langue sans perdre la session.
 - **Props** : aucune.
 - **Source** : `src/features/settings/language-card.tsx`.
+
+### ProfileCard
+
+- **Import** : `import { ProfileCard } from "@/features/settings/profile-card"`.
+- **Rôle** : carte « Profil » (maquette `06`) : avatar à initiales, nom modifiable (1 à 100 caractères, schéma `createProfileSchema`) et e-mail en lecture seule avec sa note. « Enregistrer » est désactivé sans changement ; succès : `updateUser` puis session relue sans cache de cookie, toast, `router.refresh()` (la sidebar change aussitôt) ; erreur serveur affichée, saisie conservée.
+- **Props** : `user` (`{ name, email }`), requis.
+- **Source** : `src/features/settings/profile-card.tsx`.
+
+### Fichiers de la feature
+
+- `api.ts` : `updateProfile(values)` (better-auth, relance `AuthError`).
+- `hook.ts` : `useUpdateProfile()`.
+- `schema.ts` : `createProfileSchema(t)`, type `ProfileValues`.
+- `constants.ts` : `NAME_MAX_LENGTH` (100).
+- `utils.ts` : `initials(name)`.
