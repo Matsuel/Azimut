@@ -196,7 +196,9 @@ export const chainRowSchema = z.object({
     // Devise du sous-jacent
     strike: z.number().gt(0),
     side: z.enum(["CALL", "PUT"]),
+    // Devise du sous-jacent : meilleure offre d'achat ; 0 sans offre
     bid: z.number().min(0),
+    // Devise du sous-jacent : meilleure offre de vente ; 0 sans offre
     ask: z.number().min(0),
     // Devise du sous-jacent : (bid + ask) / 2 ; null si bid ou ask est nul
     mid: z.number().gt(0).nullable(),
@@ -211,6 +213,7 @@ export const chainRowSchema = z.object({
 
 // Un point du smile : un strike hors de la monnaie (put sous le spot, call au-dessus) retenu par le filtre
 export const smilePointSchema = z.object({
+    // Devise du sous-jacent
     strike: z.number().gt(0),
     // Ratio annuel : volatilité implicite du contrat retenu
     impliedVolatility: z.number().gt(0),
