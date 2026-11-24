@@ -101,7 +101,7 @@ Catalogue des routes internes de notification-service (port 8002, base PostgreSQ
 - **Auth** : clé interne + `x-user-id`.
 - **Entrée** : body JSON `notificationPreferencesUpdateSchema` (`@azimut/contracts`) : `BACKTESTS` et/ou `RISK` (booléens), au moins un ; une catégorie absente garde sa valeur. `userId` vient de `x-user-id` seulement.
 - **Réponse** : `200`, `NotificationPreferences` résultantes.
-- **Erreurs** : `400 { "code": "INVALID_QUERY", "issues": [ZodIssue] }` → body vide, clé inconnue de type invalide ou valeur non booléenne.
+- **Erreurs** : `400 { "code": "INVALID_BODY", "issues": [ZodIssue] }` → body vide, clé inconnue de type invalide ou valeur non booléenne.
 - **Effets** : upsert de la ligne `NotificationPreference` de l'utilisateur (base `notifications`).
 - **Appelant** : aucun encore (web : paramètres, préférences de notification).
 - **Source** : `controller/notification.controller.ts` (`updatePreferences`), `services/notification.service.ts` (`updatePreferences`), `repositories/notification.repository.ts` (`upsertPreferences`).

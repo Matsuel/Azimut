@@ -13,6 +13,7 @@
         "SERVICE_UNAVAILABLE": "The service is temporarily unavailable. Try again later.",
         "INTERNAL_ERROR": "Internal server error. Try again later.",
         "INVALID_QUERY": "The request parameters are invalid.",
+        "INVALID_BODY": "The submitted data is invalid.",
         "INVALID_BACKTEST": "The backtest parameters are invalid.",
         "NAME_REQUIRED": "The name is required.",
         "PORTFOLIO_NOT_FOUND": "Portfolio not found.",

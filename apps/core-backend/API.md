@@ -57,6 +57,7 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
   | `SERVICE_UNAVAILABLE` | 502 | market-service ou notification-service injoignable |
   | `INTERNAL_ERROR` | 500 | exception inattendue |
   | `INVALID_QUERY` | 400 | query invalide |
+  | `INVALID_BODY` | 400 | body invalide (préférences de notification) |
   | `INVALID_BACKTEST` | 400 | body de backtest invalide |
   | `NAME_REQUIRED` | 400 | `name` de portefeuille absent ou vide |
   | `PORTFOLIO_NOT_FOUND` | 404 | portefeuille inexistant |
@@ -450,8 +451,8 @@ Calcul de prix demandé à backtest-engine par `pricing.requested`, résultat re
 - **Auth** : session requise ; l'utilisateur est celui de la session (`req.userId`), jamais le corps.
 - **Entrée** : aucune (pas de body).
 - **Réponse** : `204`, sans corps.
-- **Erreurs** : `401` → pas de session ; `500` → la transaction a échoué, rien n'est supprimé ni publié.
-- **Effets** : **irréversible**. En une transaction, supprime les backtests (allocations, exécutions et résultats en cascade), les portefeuilles (comptes de trading en cascade) et les demandes de pricing de l'utilisateur ; `User`, `Account` et `Session` restent. Après le succès, publie `user.data.reset` `{ userId }` (clé Kafka = `userId`) : notification-service purge les notifications de l'utilisateur. Un échec de publication est loggué sans faire échouer l'appel. Un résultat d'engine arrivé après la suppression (`backtest.completed`, `risk.completed`, `projection.completed`) est ignoré (ligne absente, aucune erreur).
+- **Erreurs** : `401` → pas de session ; `500` → la transaction a échoué (rien n'est supprimé ni publié) ou la publication de `user.data.reset` a échoué (données `trading` déjà supprimées : relancer l'appel, la suppression est idempotente).
+- **Effets** : **irréversible**. En une transaction, supprime les backtests (allocations, exécutions et résultats en cascade), les portefeuilles (comptes de trading en cascade) et les demandes de pricing de l'utilisateur ; `User`, `Account` et `Session` restent. Après le succès, publie `user.data.reset` `{ userId }` (clé Kafka = `userId`) : notification-service purge les notifications et préférences de l'utilisateur. Un échec de publication fait échouer l'appel. Un résultat d'engine arrivé après la suppression (`backtest.completed`, `risk.completed`, `projection.completed`) est ignoré (ligne absente, aucune erreur).
 - **Appelant** : `apps/web/src/features/settings`.
 - **Source** : `routes/account/account.routes.ts`, `controller/account.controller.ts`, `services/account.service.ts`, `repositories/account.repository.ts`.
 

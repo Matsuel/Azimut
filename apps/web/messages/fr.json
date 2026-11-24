@@ -13,6 +13,7 @@
         "SERVICE_UNAVAILABLE": "Le service est momentanément indisponible. Réessayez plus tard.",
         "INTERNAL_ERROR": "Erreur interne du serveur. Réessayez plus tard.",
         "INVALID_QUERY": "Les paramètres de la requête sont invalides.",
+        "INVALID_BODY": "Les données envoyées sont invalides.",
         "INVALID_BACKTEST": "Les paramètres du backtest sont invalides.",
         "NAME_REQUIRED": "Le nom est obligatoire.",
         "PORTFOLIO_NOT_FOUND": "Portefeuille introuvable.",

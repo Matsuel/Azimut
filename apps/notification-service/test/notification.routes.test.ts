@@ -107,7 +107,7 @@ test("PUT /api/notifications/preferences : mise à jour partielle, userId jamais
     spy.mockRestore()
 })
 
-test("PUT /api/notifications/preferences : corps vide ou invalide → 400", async () => {
+test("PUT /api/notifications/preferences : corps vide ou invalide → 400 INVALID_BODY", async () => {
     for (const body of [{}, { RISK: "oui" }]) {
         const response = await app.request("/api/notifications/preferences", {
             method: "PUT",
@@ -115,5 +115,6 @@ test("PUT /api/notifications/preferences : corps vide ou invalide → 400", asyn
             body: JSON.stringify(body),
         })
         expect(response.status).toBe(400)
+        expect(((await response.json()) as { code: string }).code).toBe("INVALID_BODY")
     }
 })

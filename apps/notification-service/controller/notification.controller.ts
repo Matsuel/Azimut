@@ -50,7 +50,7 @@ class NotificationController {
         logger.info(`Handling update notification preferences request ${req.method} ${req.originalUrl}`)
 
         const parsed = notificationPreferencesUpdateSchema.safeParse(req.body)
-        if (!parsed.success) throw new BadRequestError(API_ERROR_CODES.INVALID_QUERY, { issues: parsed.error.issues })
+        if (!parsed.success) throw new BadRequestError(API_ERROR_CODES.INVALID_BODY, { issues: parsed.error.issues })
 
         res.json(await this.notificationService.updatePreferences(res.locals.userId, parsed.data))
     }
