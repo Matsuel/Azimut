@@ -82,3 +82,20 @@ describeWithDb("NotificationRepository (base de test)", () => {
         expect((await repo.list("u1", {}, page)).data.map((n) => n.dedupKey)).toEqual(["new"])
     })
 })
+
+describeWithDb("NotificationRepository : préférences (base de test)", () => {
+    beforeEach(resetDatabase)
+
+    test("findPreferences : null sans ligne", async () => {
+        expect(await repo.findPreferences("u1")).toBeNull()
+    })
+
+    test("upsertPreferences : crée avec le reste activé, puis ne modifie que la colonne fournie", async () => {
+        const created = await repo.upsertPreferences("u1", { risk: false })
+        expect(created).toMatchObject({ userId: "u1", backtests: true, risk: false })
+
+        const updated = await repo.upsertPreferences("u1", { backtests: false })
+        expect(updated).toMatchObject({ backtests: false, risk: false })
+        expect(await repo.findPreferences("u2")).toBeNull()
+    })
+})

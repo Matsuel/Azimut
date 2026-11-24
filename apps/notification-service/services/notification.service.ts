@@ -1,11 +1,11 @@
-import { API_ERROR_CODES, NOTIFICATION_CATEGORY_BY_TYPE, type NotificationList, type NotificationRequestedPayload, type NotificationView, type PaginationQuery } from "@azimut/contracts"
+import { API_ERROR_CODES, DEFAULT_NOTIFICATION_PREFERENCES, NOTIFICATION_CATEGORY_BY_TYPE, type NotificationList, type NotificationPreferences, type NotificationPreferencesUpdate, type NotificationRequestedPayload, type NotificationView, type PaginationQuery } from "@azimut/contracts"
 import { NotFoundError } from "@azimut/http"
 import { DAY_MS, Logger } from "@azimut/utils"
 import NotificationRepository, { type INotificationRepository } from "../repositories/notification.repository"
 import type { NotificationListFilters } from "../interfaces/notification.interface"
 import { NOTIFICATION_PURGE_INTERVAL_MS, NOTIFICATION_RETENTION_DAYS } from "../constants/notification.constants"
 import NotificationStreamService, { notificationStream } from "./notification-stream.service"
-import { toNotificationView } from "../utils/notification.mapper"
+import { toNotificationView, toPreferenceColumns, toPreferences } from "../utils/notification.mapper"
 
 const logger = Logger.here()
 
@@ -34,6 +34,17 @@ class NotificationService {
         // Diffusée seulement à la création : un rejeu ne repousse rien
         this.stream.publish(payload.userId, view)
         return view
+    }
+
+    /** Préférences de l'utilisateur ; sans ligne, tout est activé (rien n'est écrit). */
+    async getPreferences(userId: string): Promise<NotificationPreferences> {
+        const row = await this.repo.findPreferences(userId)
+        return row ? toPreferences(row) : { ...DEFAULT_NOTIFICATION_PREFERENCES }
+    }
+
+    /** Mise à jour partielle : les catégories absentes de `update` gardent leur valeur. Renvoie les préférences résultantes. */
+    async updatePreferences(userId: string, update: NotificationPreferencesUpdate): Promise<NotificationPreferences> {
+        return toPreferences(await this.repo.upsertPreferences(userId, toPreferenceColumns(update)))
     }
 
     /** Liste paginée de l'utilisateur, avec les nombres des onglets (indépendants du filtre) et la durée de conservation. */

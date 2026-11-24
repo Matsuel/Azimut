@@ -79,3 +79,41 @@ test("POST /api/notifications/read-all : 204", async () => {
     expect(response.status).toBe(204)
     expect(readAllSpy.mock.calls.at(-1)).toEqual(["u1"])
 })
+
+test("GET /api/notifications/preferences : 200, userId de l'en-tête, pas capturée par /:id/read", async () => {
+    const spy = spyOn(NotificationService.prototype, "getPreferences").mockResolvedValue({ BACKTESTS: true, RISK: false })
+
+    const response = await app.request("/api/notifications/preferences", { headers })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ BACKTESTS: true, RISK: false })
+    expect(spy.mock.calls.at(-1)).toEqual(["u1"])
+    spy.mockRestore()
+})
+
+test("PUT /api/notifications/preferences : mise à jour partielle, userId jamais du corps", async () => {
+    const spy = spyOn(NotificationService.prototype, "updatePreferences").mockResolvedValue({ BACKTESTS: false, RISK: true })
+
+    const response = await app.request("/api/notifications/preferences", {
+        method: "PUT",
+        headers: { ...headers, "content-type": "application/json" },
+        body: JSON.stringify({ BACKTESTS: false, userId: "intrus" }),
+    })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ BACKTESTS: false, RISK: true })
+    expect(spy.mock.calls.at(-1)?.[0]).toBe("u1")
+    expect(spy.mock.calls.at(-1)?.[1]).toEqual({ BACKTESTS: false })
+    spy.mockRestore()
+})
+
+test("PUT /api/notifications/preferences : corps vide ou invalide → 400", async () => {
+    for (const body of [{}, { RISK: "oui" }]) {
+        const response = await app.request("/api/notifications/preferences", {
+            method: "PUT",
+            headers: { ...headers, "content-type": "application/json" },
+            body: JSON.stringify(body),
+        })
+        expect(response.status).toBe(400)
+    }
+})

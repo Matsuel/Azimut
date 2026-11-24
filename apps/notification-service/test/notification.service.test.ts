@@ -142,3 +142,33 @@ test("startPurge : purge tout de suite, une erreur de base ne lève pas, l'arrê
 
     expect(runs).toBe(1)
 })
+
+test("getPreferences : sans ligne, tout activé et rien n'est écrit", async () => {
+    let writes = 0
+    const service = new NotificationService()
+    service.repo = {
+        findPreferences: async () => null,
+        upsertPreferences: async () => void writes++,
+    } as unknown as INotificationRepository
+
+    expect(await service.getPreferences("u1")).toEqual({ BACKTESTS: true, RISK: true })
+    expect(writes).toBe(0)
+})
+
+test("getPreferences : mappe la ligne par catégorie", async () => {
+    const service = new NotificationService()
+    service.repo = { findPreferences: async () => ({ userId: "u1", backtests: false, risk: true }) } as unknown as INotificationRepository
+
+    expect(await service.getPreferences("u1")).toEqual({ BACKTESTS: false, RISK: true })
+})
+
+test("updatePreferences : transmet seulement les colonnes fournies et renvoie le résultat", async () => {
+    const calls: unknown[] = []
+    const service = new NotificationService()
+    service.repo = {
+        upsertPreferences: async (userId: string, update: unknown) => (calls.push([userId, update]), { userId, backtests: true, risk: false }),
+    } as unknown as INotificationRepository
+
+    expect(await service.updatePreferences("u1", { RISK: false })).toEqual({ BACKTESTS: true, RISK: false })
+    expect(calls).toEqual([["u1", { risk: false }]])
+})
