@@ -16,6 +16,7 @@ Pour toute revue (`/code-review`, relecture d'une PR vers `develop`), les règle
 10. **Engine** : I/O, horloge ou aléa hors paramètre dans `engine/` ; arrondi appliqué à un cumul (apps/backtest-engine/AGENTS.md).
 11. **Résultats stockés** : champ ajouté non nullable et sans `@default` côté Prisma, ou obligatoire côté web (AGENTS.md racine, « Conventions communes »).
 12. **Périmètre** : refactor, renommage, nouvelle dépendance ou code mort hors de la demande (AGENTS.md racine, « Règle d'or »).
+13. **Aide sur les données** : donnée calculée ou interprétée affichée (métrique, taux, écart, frais, paramètre qui change le calcul) sans `InfoHint`, sans entrée dans `constants/glossary.ts` ou sans textes `glossary.<clé>` dans `messages/fr.json` **et** `en.json` dans le même diff (apps/web/AGENTS.md, « Aide sur les données »).
 
 # Outils
 
