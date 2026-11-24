@@ -60,9 +60,9 @@ flowchart LR
 - **Fichiers** : `apps/backtest-engine/engine/options.ts` (`impliedVolatility`), tests
 
 Critères d’acceptation :
-- [ ] Bisection entre 1 % et 300 %, tolérance 1e-6 sur le prix.
-- [ ] Aller-retour : IV(prix(σ)) = σ à 1e-6 près (test).
-- [ ] Prix hors bornes d'arbitrage : erreur explicite, pas de valeur inventée.
+- [x] Bisection entre 1 % et 300 %, tolérance 1e-6 sur le prix.
+- [x] Aller-retour : IV(prix(σ)) = σ à 1e-6 près (test).
+- [x] Prix hors bornes d'arbitrage : erreur explicite, pas de valeur inventée.
 
 ### T-02 · Engine : grecques delta, gamma, vega, theta, rho
 
@@ -70,8 +70,8 @@ Critères d’acceptation :
 - **Fichiers** : `apps/backtest-engine/engine/options.ts`
 
 Critères d’acceptation :
-- [ ] Formules fermées ; unités documentées (vega pour 1 point de volatilité, theta par jour).
-- [ ] Test contre différences finies (écart < 1e-4).
+- [x] Formules fermées ; unités documentées (vega pour 1 point de volatilité, theta par jour).
+- [x] Test contre différences finies (écart < 1e-4).
 
 ### T-03 · Engine : filtre de qualité des cotations
 
@@ -79,8 +79,8 @@ Critères d’acceptation :
 - **Fichiers** : `apps/backtest-engine/engine/options.ts`
 
 Critères d’acceptation :
-- [ ] Écarte : prix nul, bid et ask nuls, IV hors [1 %, 300 %].
-- [ ] Le nombre de contrats écartés est renvoyé avec le résultat (D2).
+- [x] Écarte : prix nul, bid et ask nuls, IV hors [1 %, 300 %].
+- [x] Le nombre de contrats écartés est renvoyé avec le résultat (D2).
 
 ## Lot 2 — Contrat
 
@@ -90,8 +90,8 @@ Critères d’acceptation :
 - **Fichiers** : `packages/contracts/src/pricing.ts`
 
 Critères d’acceptation :
-- [ ] Un point de smile : strike, IV, nombre de contrats retenus.
-- [ ] Grecques documentées en unité.
+- [x] Un point de smile : strike, IV, nombre de contrats retenus.
+- [x] Grecques documentées en unité.
 
 ## Lot 3 — Service
 
@@ -101,8 +101,8 @@ Critères d’acceptation :
 - **Fichiers** : `apps/core-backend/services/pricing.service.ts`, `prisma/schema.prisma`
 
 Critères d’acceptation :
-- [ ] Une demande calcule IV, grecques et smile pour une échéance.
-- [ ] Résultat stocké avec le nombre de contrats écartés.
+- [x] Une demande calcule IV, grecques et smile pour une échéance.
+- [x] Résultat stocké avec le nombre de contrats écartés.
 
 ## Lot 4 — Écrans
 
@@ -112,8 +112,8 @@ Critères d’acceptation :
 - **Fichiers** : `apps/market-service/routes/market/`, `repositories/market.repository.ts`, `API.md`
 
 Critères d’acceptation :
-- [ ] `GET /api/market/options/:symbol?expiration=` renvoie strikes, bid, ask, dernier prix, volume et volatilité Yahoo, à titre indicatif (le filtre de qualité est en T-03).
-- [ ] Dates d'échéance à la forme `YYYY-MM-DD`.
+- [x] `GET /api/market/options/:symbol?expiration=` renvoie strikes, bid, ask, dernier prix, volume et volatilité Yahoo, à titre indicatif (le filtre de qualité est en T-03).
+- [x] Dates d'échéance à la forme `YYYY-MM-DD`.
 
 ### T-06 · Smile par échéance dans le calculateur
 
@@ -121,7 +121,7 @@ Critères d’acceptation :
 - **Fichiers** : `apps/web/src/features/pricing/`
 
 Critères d’acceptation :
-- [ ] Courbe IV par strike, une par échéance, telle que reçue.
+- [x] Courbe IV par strike, une par échéance, telle que reçue.
 
 ### T-07 · Grecques affichées dans le calculateur
 
@@ -129,4 +129,4 @@ Critères d’acceptation :
 - **Fichiers** : `apps/web/src/features/pricing/`
 
 Critères d’acceptation :
-- [ ] Delta, gamma, vega, theta, rho affichés avec leur unité.
+- [x] Delta, gamma, vega, theta, rho affichés avec leur unité.
