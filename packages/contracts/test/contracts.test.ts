@@ -7,6 +7,11 @@ import {
     readinessResponseSchema,
     backtestCompletedEventSchema,
     notificationRequestedPayloadSchema,
+    notificationPreferencesSchema,
+    notificationPreferencesUpdateSchema,
+    NOTIFICATION_CATEGORIES,
+    userDataResetPayloadSchema,
+    ACCOUNT_TOPICS,
     riskCompletedEventSchema,
     optionInputsSchema,
     riskConstraintInputSchema,
@@ -79,4 +84,20 @@ test("optionInputsSchema : volatilité null acceptée (historique trop court), s
     expect(optionInputsSchema.safeParse({ ...base, volatility: null }).success).toBe(true)
     expect(optionInputsSchema.safeParse({ ...base, spot: 0 }).success).toBe(false)
     expect(optionInputsSchema.safeParse({ ...base, volatility: 0 }).success).toBe(false)
+})
+
+test("préférences de notification : une clé booléenne par catégorie, mise à jour partielle non vide", () => {
+    expect(Object.keys(notificationPreferencesSchema.shape).sort()).toEqual([...NOTIFICATION_CATEGORIES].sort())
+    expect(notificationPreferencesSchema.safeParse({ BACKTESTS: true, RISK: false }).success).toBe(true)
+    expect(notificationPreferencesSchema.safeParse({ BACKTESTS: true }).success).toBe(false)
+    expect(notificationPreferencesUpdateSchema.safeParse({ RISK: false }).success).toBe(true)
+    expect(notificationPreferencesUpdateSchema.safeParse({}).success).toBe(false)
+    expect(notificationPreferencesUpdateSchema.safeParse({ RISK: "no" }).success).toBe(false)
+})
+
+test("user.data.reset : userId obligatoire", () => {
+    expect(ACCOUNT_TOPICS.dataReset).toBe("user.data.reset")
+    expect(userDataResetPayloadSchema.safeParse({ userId: "u1" }).success).toBe(true)
+    expect(userDataResetPayloadSchema.safeParse({ userId: "" }).success).toBe(false)
+    expect(userDataResetPayloadSchema.safeParse({}).success).toBe(false)
 })
