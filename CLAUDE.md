@@ -20,6 +20,7 @@ Pour toute revue (`/code-review`, relecture d'une PR vers `develop`), les règle
 # Outils
 
 - Dépôt GitHub : `gh` (pas de MCP GitHub). Recherche de code : `rg`.
+- Attente d'une PR (revue, merge, fermeture) : ne pas boucler sur `gh pr view` / `gh pr checks`. Utiliser `gh event listen --resource <url-PR> --event com.github.pull_request.review.submitted.v1,com.github.pull_request.state.changed.v1` : affiche le premier événement en JSON puis s'arrête. Ajouter `--timeout 30m` (sortie 8 si délai dépassé). L'événement ne porte aucun détail : relire la PR ensuite. Les changements antérieurs au lancement sont manqués : relire la PR une fois l'écoute démarrée. Fonction en préversion : si indisponible, interroger la PR avec `gh pr view`.
 - Gestionnaire de paquets : `bun` uniquement (`bun.lock`).
 - Scripts : `bun run dev`, `bun run verify`, `bun run e2e` (racine) ; `bun test` dans l'app.
 - `docker` : lecture seule (`ps`, `logs`), sauf la stack E2E jetable (`bun run e2e`, qui lance `docker compose` sur `apps/web/e2e/docker-compose.yml`) : autorisée. `kubectl`, `argocd` : lecture seule (`get`, `describe`, `logs`).
