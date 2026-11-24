@@ -1,10 +1,10 @@
 # 19 · Grecques, volatilité implicite et smile
 
-- **Statut** : En cours (backend, écran et E2E codés ; clôture à faire)
+- **Statut** : Livrée
 - **Roadmap** : Mois 9 — Mois 9 — Options (grecques, volatilité implicite, smile et surface)
-- **Période** : 2026-11-23 →
-- **Branche / PR** : `feat/grecques-volatilite-implicite` — PR à ouvrir
-- **Points** : 27 (MUST 22, SHOULD 5) — prévus
+- **Période** : 2026-11-23 → 2026-11-24
+- **Branche / PR** : `feat/grecques-volatilite-implicite` — PR vers `develop`
+- **Points** : 27 (MUST 22, SHOULD 5) — réalisés = prévus
 - **Maquettes** : `37 · Grecques et smile` (créée, node `461:12922`)
 - **Écrans modifiés** : `36 · Calculateur d’option` (node `459:12719`) : bouton « Volatilité implicite » vers la page 37 — dessiné dans la copie `à modifier (F19)` ; l’original est mis à jour au codage
 - **Dépend de** : 18 (options vanilles).
@@ -31,11 +31,13 @@ Moteur : inversion de Black-Scholes et grecques (fonctions pures). Filtre de qua
 
 ## Écarts au plan
 
-Aucun : feature planifiée, rien de livré.
+D6 et D7 ajoutées en cours de route (volatilité historique 30 j de la maquette 37 ; demande de chaîne `OPTION_CHAIN`). Pagination (10 lignes) et infobulles `InfoHint` ajoutées à la grille de payoff et à la chaîne.
 
 ## Bilan
 
-À écrire à la clôture de la feature.
+- **Livré** : les 8 tâches (27 points). Engine (`impliedVolatility` par bisection, grecques, filtre de qualité, smile, prime de volatilité), route `GET /api/market/options` de market-service, `MarketClient`, kind `OPTION_CHAIN` (migration de `PricingKind`), page `37 · Grecques et smile`, onglets Options, glossaire, catalogues, E2E avec faux market-service d'options.
+- **Écarts** : voir « Écarts au plan ».
+- **Dette** : TD-63 ouverte (taux unique, devise USD supposée, pas de sélecteur d'échéance, maquette 37 non validée explicitement). Mesure visuelle contre la maquette 37 (`verifier-rendu`) et exécution des E2E non faites dans cette passe. Services à redémarrer : core-backend (migration `PricingKind` à appliquer), market-service, backtest-engine.
 
 ## Fichiers
 
