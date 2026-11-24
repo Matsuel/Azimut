@@ -36,12 +36,13 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
 - [Risque](#risque) : `GET /api/risk/:backtestId`, `PUT /api/risk/:backtestId/constraint`
 - [Projection](#projection) : `GET /api/projection/:backtestId`
 - [Pricing](#pricing) : `POST /api/pricing`, `GET /api/pricing/:id`
+- [Compte](#compte) : `POST /api/account/reset`
 - [Monitoring (admin)](#monitoring-admin) : `GET /api/admin/monitoring/services`
 
 ## Conventions communes
 
 - **Base** : `http://localhost:8000`. Le web appelle via `apiFetch(path)` (`apps/web/src/lib/api.ts`) avec `NEXT_PUBLIC_API_URL=http://localhost:8000/api` : `apiFetch("/backtest")` → `GET /api/backtest`. Cookies envoyés (`credentials: "include"`), CORS limité à `env.WEB_URL` (défaut `http://localhost:3000`, `env.ts`).
-- **Ordre d'enregistrement** (`index.ts`) : `GET /liveness` et `GET /readiness` (`registerProbes`), `helmet`, `cors`, limiteur `/api/auth` + `authRouter`, `marketRouter` et `notificationRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, limiteur `/api/pricing` + `pricingRouter`, `monitoringRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
+- **Ordre d'enregistrement** (`index.ts`) : `GET /liveness` et `GET /readiness` (`registerProbes`), `helmet`, `cors`, limiteur `/api/auth` + `authRouter`, `marketRouter` et `notificationRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, limiteur `/api/pricing` + `pricingRouter`, `accountRouter`, `monitoringRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
 - **Santé** (sans auth, hors `/api`, `registerProbes` et `kafkaCheck` de `@azimut/http`) :
   - `GET /liveness` → toujours `200 { "status": "ok" }`, sans toucher aucune dépendance.
   - `GET /readiness` → `200 { "status": "ok", "checks": { "database": "ok", "kafka": "ok" } }` ; `503 { "status": "unavailable", "checks": { … } }` dès qu'un contrôle vaut `"down"`. `database` : la base `trading` répond (`isDbConnected`) ; `kafka` : le consumer (groupe rejoint) et le producer (connecté) sont prêts (`isReady()`). Forme : `readinessResponseSchema` de `@azimut/contracts`.
@@ -441,6 +442,18 @@ Calcul de prix demandé à backtest-engine par `pricing.requested`, résultat re
 - **Effets** : aucun. Les transitions `PENDING` → `COMPLETED` / `FAILED` viennent de `pricing.completed` / `pricing.failed` (gardées par statut, un rejeu est ignoré).
 - **Appelant** : `getPricing` (`features/pricing/api.ts`), hook `usePricing()`.
 - **Source** : `routes/pricing/pricing.routes.ts`, `controller/pricing.controller.ts`, `services/pricing.service.ts`.
+
+## Compte
+
+### POST /api/account/reset
+
+- **Auth** : session requise ; l'utilisateur est celui de la session (`req.userId`), jamais le corps.
+- **Entrée** : aucune (pas de body).
+- **Réponse** : `204`, sans corps.
+- **Erreurs** : `401` → pas de session ; `500` → la transaction a échoué, rien n'est supprimé ni publié.
+- **Effets** : **irréversible**. En une transaction, supprime les backtests (allocations, exécutions et résultats en cascade), les portefeuilles (comptes de trading en cascade) et les demandes de pricing de l'utilisateur ; `User`, `Account` et `Session` restent. Après le succès, publie `user.data.reset` `{ userId }` (clé Kafka = `userId`) : notification-service purge les notifications de l'utilisateur. Un échec de publication est loggué sans faire échouer l'appel. Un résultat d'engine arrivé après la suppression (`backtest.completed`, `risk.completed`, `projection.completed`) est ignoré (ligne absente, aucune erreur).
+- **Appelant** : `apps/web/src/features/settings`.
+- **Source** : `routes/account/account.routes.ts`, `controller/account.controller.ts`, `services/account.service.ts`, `repositories/account.repository.ts`.
 
 ## Monitoring (admin)
 
