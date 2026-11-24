@@ -14,17 +14,13 @@ class AccountService {
 
     /**
      * Efface les données de l'utilisateur (irréversible), puis publie `user.data.reset` pour que notification-service purge les siennes.
-     * Une transaction en échec remonte son erreur sans rien publier. Un échec de publication est loggué sans lever :
-     * les données sont déjà effacées et l'appel ne doit pas paraître échoué (pas d'outbox, comme `notification.requested`).
+     * Une transaction en échec remonte son erreur sans rien publier. Un échec de publication remonte aussi : l'appel échoue
+     * et l'utilisateur le relance (la suppression est idempotente), sinon ses notifications resteraient en base sans trace.
      */
     async resetData(userId: string): Promise<void> {
         logger.info("Resetting user data", { userId })
         await this.repo.deleteUserData(userId)
-        try {
-            await this.publish({ userId })
-        } catch (error) {
-            logger.error("Failed to publish user data reset", { userId, error })
-        }
+        await this.publish({ userId })
         logger.info("User data reset", { userId })
     }
 }

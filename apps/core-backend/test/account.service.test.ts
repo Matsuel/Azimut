@@ -35,11 +35,12 @@ test("resetData : la transaction échoue, l'erreur remonte et rien n'est publié
     expect(published).toEqual([])
 })
 
-test("resetData : un échec de publication ne fait pas échouer l'appel", async () => {
-    const { service } = setup()
+test("resetData : un échec de publication fait échouer l'appel (relançable, la suppression est idempotente)", async () => {
+    const { service, calls } = setup()
     service.publish = async () => {
         throw new Error("kafka down")
     }
 
-    await expect(service.resetData("u1")).resolves.toBeUndefined()
+    await expect(service.resetData("u1")).rejects.toThrow("kafka down")
+    expect(calls).toEqual(["u1"])
 })
