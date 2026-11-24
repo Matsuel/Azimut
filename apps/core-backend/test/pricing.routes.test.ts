@@ -70,6 +70,21 @@ test("POST OPTION valide : 202 ; spot, strike, volatilité ou maturité <= 0 : 4
     expect(create).not.toHaveBeenCalled()
 })
 
+test("POST OPTION_MC : trajectoires par défaut 100 000, graine ignorée ; hors bornes : 400 INVALID_PRICING", async () => {
+    create.mockResolvedValue({ id: "p3" } as never)
+    const monteCarlo = { ...optionParams, barrier: 90 }
+
+    expect((await post({ kind: "OPTION_MC", monteCarlo: { ...monteCarlo, seed: 7 } })).status).toBe(202)
+    expect(create.mock.calls[0]).toEqual(["u1", { kind: "OPTION_MC", monteCarlo: { ...monteCarlo, paths: 100_000 } }])
+    create.mockClear()
+    for (const bad of [{ paths: 9_999 }, { paths: 1_000_001 }, { maturityYears: 2.5 }, { barrier: 0 }]) {
+        const response = await post({ kind: "OPTION_MC", monteCarlo: { ...monteCarlo, ...bad } })
+        expect(response.status).toBe(400)
+        expect(((await response.json()) as { code: string }).code).toBe("INVALID_PRICING")
+    }
+    expect(create).not.toHaveBeenCalled()
+})
+
 test("GET /api/pricing/:id : le service reçoit l'id et l'utilisateur ; autre propriétaire : 403", async () => {
     get.mockResolvedValueOnce({ id: "p1" } as never)
     expect((await app.request("/api/pricing/p1")).status).toBe(200)
