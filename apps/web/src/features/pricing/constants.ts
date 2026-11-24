@@ -54,3 +54,13 @@ export const QUOTE_STATUS_BADGES = {
 
 // Lignes par page de la grille de payoff et de la chaîne : plus courtes que `PAGE_SIZE`, les cartes sont étroites
 export const OPTION_TABLE_PAGE_SIZE = 10
+
+// Bornes du pricing Monte Carlo, miroir de MONTE_CARLO_PATHS et MONTE_CARLO_MATURITY_MAX_YEARS (contracts), que le web n'importe pas à l'exécution ; le backend reste juge
+export const MONTE_CARLO_PATHS = { min: 10_000, max: 1_000_000, default: 100_000 } as const
+export const MONTE_CARLO_MATURITY_MAX_DAYS = DAYS_PER_YEAR
+
+// Barrière proposée au départ : 10 % sous le spot (barrière basse)
+export const DEFAULT_BARRIER_RATIO = 0.9
+
+// Couleur d'une trajectoire du graphique : active (barrière non touchée) ou désactivée (touchée), et de la barrière
+export const PATH_COLORS = { active: "var(--chart-1)", deactivated: "var(--destructive)" } as const

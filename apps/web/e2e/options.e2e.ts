@@ -71,3 +71,24 @@ test("un symbole inconnu : le calcul de la chaîne échoue avec sa cause", async
 
     await expect(page.getByText(/Le calcul de la chaîne a échoué/)).toBeVisible()
 })
+
+test("« Pricing Monte Carlo » ouvre la simulation : prix, trajectoires, convergence et comparaison arrivent à l'écran", async ({
+    page,
+}) => {
+    await page.goto("/app/options?symbol=AAPL")
+
+    await page.getByRole("button", { name: "Pricing Monte Carlo" }).click()
+
+    await expect(page).toHaveURL(/\/app\/options\/monte-carlo\?symbol=AAPL/)
+    await expect(page.getByRole("heading", { name: "Pricing Monte Carlo · AAPL" })).toBeVisible()
+    await expect(page.getByRole("spinbutton", { name: "Barrière" })).not.toHaveValue("")
+
+    await page.getByRole("spinbutton", { name: "Trajectoires" }).fill("10000")
+    await page.getByRole("button", { name: "Lancer la simulation" }).click()
+
+    await expect(page.getByText("Prix Monte Carlo", { exact: true })).toBeVisible()
+    await expect(page.getByText("Trajectoires simulées")).toBeVisible()
+    await expect(page.getByText("Convergence du prix")).toBeVisible()
+    await expect(page.getByText("Comparaison des méthodes")).toBeVisible()
+    await expect(page.getByText("= vanille")).toBeVisible()
+})

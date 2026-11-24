@@ -18,6 +18,7 @@ const PROJECTION_ENGINE = "apps/risk-engine/engine/projection.engine.ts"
 const BONDS = "apps/backtest-engine/engine/bonds.ts"
 const OPTIONS = "apps/backtest-engine/engine/options.ts"
 const OPTION_CHAIN = "apps/backtest-engine/engine/options.chain.ts"
+const OPTIONS_MC = "apps/backtest-engine/engine/options.mc.ts"
 const OPTION_INPUTS = "apps/market-service/utils/option-inputs.ts"
 const MONITORING_SERVICE = "apps/core-backend/services/monitoring.service.ts"
 
@@ -53,6 +54,11 @@ export const GLOSSARY = {
     historicalVolatility30: { source: `${OPTION_CHAIN} · analyseChain (historicalVolatility, volatilityPremium)` },
     volatilitySmile: { source: `${OPTION_CHAIN} · analyseChain (smile)` },
     quoteFilter: { source: `${OPTION_CHAIN} · analyseChain (contractsKept, discarded)` },
+    // Pricing Monte Carlo (feature 20)
+    monteCarloPrice: { source: `${OPTIONS_MC} · priceOptionMonteCarlo (vanilla.price)` },
+    standardError: { source: `${OPTIONS_MC} · PayoffStats.estimate (standardError)` },
+    barrierOption: { source: `${OPTIONS_MC} · priceOptionMonteCarlo (knockOut, knockIn)` },
+    monteCarloPaths: { source: `${OPTIONS_MC} · priceOptionMonteCarlo (paths)` },
     greekDelta: { source: `${OPTIONS} · optionGreeks (delta)` },
     greekGamma: { source: `${OPTIONS} · optionGreeks (gamma)` },
     greekVega: { source: `${OPTIONS} · optionGreeks (vega)` },

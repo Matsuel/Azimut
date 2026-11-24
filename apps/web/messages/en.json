@@ -1241,6 +1241,35 @@
             "unit": "Number of contracts.",
             "readingTip": "Many discarded contracts point to an illiquid chain, not to an engine error."
         },
+        "monteCarloPrice": {
+            "title": "Monte Carlo price",
+            "purpose": "The price of the option obtained by simulation, where no formula exists.",
+            "computation": "Thousands of price paths are drawn (geometric Brownian motion, drift r − q); the price is the average payoff at maturity, discounted at the risk-free rate.",
+            "unit": "Underlying currency, per share.",
+            "readingTip": "Same seed: same price. The price is an estimator: read it with its standard error."
+        },
+        "standardError": {
+            "title": "Standard error (SE)",
+            "purpose": "The precision of the simulated price: the smaller it is, the more reliable the price.",
+            "computation": "Standard deviation of the discounted payoffs divided by the square root of the number of paths.",
+            "formula": "SE = σ(payoffs) ÷ √N",
+            "unit": "Underlying currency.",
+            "readingTip": "Four times more paths halve the error. A price within 3 SE of the formula is validated."
+        },
+        "barrierOption": {
+            "title": "Barrier option",
+            "purpose": "An option that disappears (knock-out) or only exists (knock-in) if the price touches a level.",
+            "computation": "The barrier is monitored at every daily close of every path. On the same paths, knock-out + knock-in = vanilla option.",
+            "unit": "Underlying currency.",
+            "readingTip": "A knock-out is cheaper than the vanilla: it can disappear. It is the building block of structured products."
+        },
+        "monteCarloPaths": {
+            "title": "Paths",
+            "purpose": "The number of simulated price scenarios used to estimate the price.",
+            "computation": "Integer from 10,000 to 1,000,000; the draw seed is fixed, so the result can be replayed.",
+            "unit": "Number of paths.",
+            "readingTip": "The larger it is, the lower the standard error, at the cost of a longer computation."
+        },
         "greekDelta": {
             "title": "Delta",
             "purpose": "How much the option price moves when the underlying moves by 1.",
@@ -1590,7 +1619,8 @@
             },
             "tabs": {
                 "calculator": "Calculator",
-                "chain": "Greeks and smile"
+                "chain": "Greeks and smile",
+                "monteCarlo": "Monte Carlo pricing"
             },
             "impliedVolatility": "Implied volatility"
         },
@@ -1608,6 +1638,97 @@
         },
         "referenceData": {
             "description": "Imported instruments, price histories and dataset versions."
+        },
+        "optionMonteCarlo": {
+            "title": "Monte Carlo pricing",
+            "titleSymbol": "Monte Carlo pricing · {symbol}",
+            "badge": "Risk-neutral GBM",
+            "description": "Call strike {strike} · {maturity} · {paths} paths · daily steps · seed {seed} · barrier monitored at every close",
+            "descriptionEmpty": "Price of a call by simulation, with its barrier versions · indicative data",
+            "reset": "Reset",
+            "cards": {
+                "monteCarlo": "Monte Carlo price",
+                "standardError": "± {value}",
+                "vanillaCaption": "Vanilla call · standard error",
+                "blackScholes": "Black-Scholes",
+                "gap": "{gap} SE",
+                "validatedCaption": "Gap < 3 standard errors",
+                "notValidatedCaption": "Gap ≥ 3 standard errors",
+                "knockOut": "Knock-out",
+                "knockIn": "Knock-in",
+                "barrierDown": "Lower barrier {barrier}",
+                "barrierUp": "Upper barrier {barrier}",
+                "parityCaption": "KO + KI = {value} = vanilla",
+                "parityGapCaption": "KO + KI: gap {gap}"
+            },
+            "form": {
+                "title": "Parameters",
+                "description": "Same assumptions as the other calculators",
+                "spot": "Spot",
+                "strike": "Strike",
+                "maturity": "Maturity (days)",
+                "volatility": "Volatility (%)",
+                "rate": "Risk-free rate (%)",
+                "dividendYield": "Continuous dividend (q) (%)",
+                "barrier": "Barrier",
+                "barrierHint": "Monitored at every close.",
+                "paths": "Paths",
+                "seedNote": "Fixed seed: same parameters, same price, to the cent.",
+                "submit": "Run the simulation",
+                "validation": {
+                    "spot": "The spot must be greater than 0.",
+                    "strike": "The strike must be greater than 0.",
+                    "maturity": "The maturity is a whole number of days, from 1 to {max}.",
+                    "rate": "The rate is between −10 and 100%.",
+                    "dividendYield": "The dividend is between 0 and 100%.",
+                    "volatility": "The volatility is greater than 0 and at most 500%.",
+                    "barrier": "The barrier is greater than 0 and different from the spot.",
+                    "paths": "The number of paths is a whole number from {min} to {max}."
+                }
+            },
+            "trajectories": {
+                "title": "Simulated paths",
+                "subtitle": "{shown} paths out of {total} · drift r − q",
+                "active": "Active",
+                "deactivated": "Deactivated",
+                "barrier": "Barrier",
+                "day": "day {day}",
+                "note": "{touched} paths out of {shown} touch the barrier: the knock-out cancels them, the knock-in activates them. Grey dashes: strike {strike}."
+            },
+            "convergence": {
+                "title": "Price convergence",
+                "subtitle": "Vanilla call, by N",
+                "monteCarlo": "Monte Carlo",
+                "band": "± 2 SE",
+                "blackScholes": "Black-Scholes",
+                "note": "The standard error falls as 1/√N: 4 times more paths for half the error."
+            },
+            "methods": {
+                "title": "Method comparison",
+                "subtitle": "Validation: gap below 3 standard errors",
+                "product": "Product",
+                "formula": "Formula",
+                "monteCarlo": "Monte Carlo",
+                "standardError": "SE",
+                "status": "Status",
+                "vanilla": "Vanilla call",
+                "knockOut": "Knock-out {barrier}",
+                "knockIn": "Knock-in {barrier}",
+                "parity": "KO + KI",
+                "validated": "Validated · {gap} SE",
+                "notValidated": "Gap · {gap} SE",
+                "noFormula": "No formula",
+                "equalsVanilla": "= vanilla",
+                "parityGap": "Gap {gap}",
+                "note": "On an option with no closed formula, only simulation gives a price; the standard error says how far it can be trusted."
+            },
+            "states": {
+                "empty": "Enter the parameters of an option, then run the simulation.",
+                "pending": "Simulation running…",
+                "failed": "The simulation failed: {reason}",
+                "readError": "The result could not be loaded.",
+                "prefillError": "The values for {symbol} could not be prefilled: enter them by hand."
+            }
         },
         "optionChain": {
             "title": "Greeks and smile",

@@ -186,7 +186,14 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [PricingMethod](src/features/pricing/COMPONENTS.md#pricingmethod) : méthode, source et taux utilisé
   - [OptionsPage](src/features/pricing/COMPONENTS.md#optionspage) : écran Options (maquette 36, route `routes.options`), prérempli depuis un symbole
   - [OptionChainPage](src/features/pricing/COMPONENTS.md#optionchainpage) : écran Grecques et smile (maquette 37, route `routes.optionsSmile`)
-  - [OptionsTabs](src/features/pricing/COMPONENTS.md#optionstabs) : onglets Calculateur / Grecques et smile
+  - [MonteCarloPage](src/features/pricing/COMPONENTS.md#montecarlopage) : écran Pricing Monte Carlo (maquette 38, route `routes.optionsMonteCarlo`)
+  - [MonteCarloHeader](src/features/pricing/COMPONENTS.md#montecarloheader) : en-tête de la page Monte Carlo
+  - [MonteCarloForm](src/features/pricing/COMPONENTS.md#montecarloform) : formulaire (option, barrière, trajectoires)
+  - [MonteCarloCards](src/features/pricing/COMPONENTS.md#montecarlocards) : prix Monte Carlo, Black-Scholes, knock-out et knock-in
+  - [TrajectoriesChart](src/features/pricing/COMPONENTS.md#trajectorieschart) : trajectoires simulées, barrière et strike
+  - [ConvergenceChart](src/features/pricing/COMPONENTS.md#convergencechart) : prix selon le nombre de trajectoires, bande ± 2 ES
+  - [MethodsTable](src/features/pricing/COMPONENTS.md#methodstable) : comparaison formule / simulation
+  - [OptionsTabs](src/features/pricing/COMPONENTS.md#optionstabs) : onglets Calculateur / Grecques et smile / Pricing Monte Carlo
   - [ChainStats](src/features/pricing/COMPONENTS.md#chainstats) : contrats retenus et écartés, IV ATM, volatilité historique
   - [SmileChart](src/features/pricing/COMPONENTS.md#smilechart) : volatilité implicite selon le strike, une courbe par échéance
   - [GreeksCard](src/features/pricing/COMPONENTS.md#greekscard) : contrat au choix, volatilité implicite et cinq grecques
