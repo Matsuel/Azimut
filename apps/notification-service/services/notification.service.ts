@@ -15,13 +15,20 @@ class NotificationService {
 
     /**
      * Enregistre la notification demandée. Idempotent : une `dedupKey` déjà connue (rejeu Kafka) n'insère rien et renvoie `null`.
-     * La diffuse en SSE à son propriétaire. Une base indisponible lève : kafkajs rejoue le message.
+     * La diffuse en SSE à son propriétaire. Une catégorie désactivée par l'utilisateur n'est ni enregistrée ni diffusée (`null`).
+     * Une base indisponible lève : kafkajs rejoue le message.
      */
     async record(payload: NotificationRequestedPayload): Promise<NotificationView | null> {
+        const category = NOTIFICATION_CATEGORY_BY_TYPE[payload.type]
+        const preferences = await this.getPreferences(payload.userId)
+        if (!preferences[category]) {
+            logger.info("Notification category disabled by user, skipped", { dedupKey: payload.dedupKey, category })
+            return null
+        }
         const row = await this.repo.create({
             userId: payload.userId,
             type: payload.type,
-            category: NOTIFICATION_CATEGORY_BY_TYPE[payload.type],
+            category,
             params: payload.params,
             dedupKey: payload.dedupKey,
             createdAt: new Date(payload.occurredAt),
