@@ -8,7 +8,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | T-01 | Maquettes Figma : Profil (06) et Notifications (06.1) | US-01 | design | MUST | 2 | — | |
 | T-02 | `ProfileCard` : schéma, mutation `updateUser`, messages FR/EN, tests | US-01 | web | MUST | 5 | T-01 | |
-| T-03 | Onglet Profil par défaut dans `SettingsTabs` | US-01 | web | MUST | 2 | T-02 | |
+| T-03 | Onglets Profil (défaut) et Portefeuille désactivé dans `SettingsTabs` | US-01 | web | MUST | 2 | T-02 | |
 | T-04 | Contrat des préférences de notification | US-02 | contracts | SHOULD | 2 | — | |
 | T-05 | notification-service : modèle, repository, service, routes, tests | US-02 | backend | SHOULD | 5 | T-04 | |
 | T-06 | Consumer : écarter les catégories désactivées, tests | US-02 | backend | SHOULD | 3 | T-05 | |
@@ -61,8 +61,8 @@ flowchart LR
 - **Fichiers** : Figma `Trading`, section `681:15865` : `06` (`681:15866`), `06.1` (`681:15933`), `06.2` (`681:16004`), `06.3` dialog (`681:16073`)
 
 Critères d'acceptation :
-- [x] 06 : onglet Profil sans « Changer la photo », e-mail atténué avec note, sans cartes Portefeuille ni Apparence, carte « Données » (« Réinitialiser mes données ») ; onglets Profil, Notifications, Apparence.
-- [x] 06.1 : deux interrupteurs (Backtests, Risque), sans carte « Canaux de réception » ; 06.2 : barre à trois onglets ; fil d'Ariane « Compte » seul (D5 de fix-09).
+- [x] 06 : onglet Profil sans « Changer la photo », e-mail atténué avec note, sans cartes Portefeuille ni Apparence, carte « Données » (« Réinitialiser mes données ») ; onglets Profil, Portefeuille (grisé), Notifications, Apparence.
+- [x] 06.1 : deux interrupteurs (Backtests, Risque), sans carte « Canaux de réception » ; 06.2 : même barre d'onglets ; fil d'Ariane « Compte » seul (D5 de fix-09).
 - [x] 06.3 : dialog de réinitialisation (récapitulatif, saisie `RÉINITIALISER`, bouton désactivé).
 - [ ] États erreur et enregistrement dessinés ; validation de l'utilisateur avant T-02, T-08 et T-15.
 
@@ -77,13 +77,14 @@ Critères d'acceptation :
 - [ ] Toast de succès ; erreur serveur affichée, saisie conservée.
 - [ ] Tests : validation, bouton désactivé sans changement, appel et erreur (`authClient` espionné).
 
-### T-03 · Onglet Profil par défaut dans `SettingsTabs`
+### T-03 · Onglets Profil (défaut) et Portefeuille désactivé dans `SettingsTabs`
 
 - **US** : US-01 · **Priorité** : MUST · **Points** : 2 · **Dépend de** : T-02
 - **Fichiers** : `features/settings/settings-tabs.tsx`, `COMPONENTS.md` (settings), `messages/*.json` (`settings.tabs.profile`), `test/`
 
 Critères d'acceptation :
-- [ ] Onglets Profil (défaut) puis Apparence ; JSDoc et catalogue à jour (le commentaire « seul Apparence existe » disparaît).
+- [ ] Onglets Profil (défaut), Portefeuille (`TabsTrigger` désactivé, aucun contenu), puis Apparence ; JSDoc et catalogue à jour (le commentaire « seul Apparence existe » disparaît).
+- [ ] Le clavier ne peut pas activer l'onglet grisé (`disabled`, pas seulement un style).
 - [ ] Test de rendu des onglets.
 
 ## Lot 2 — Préférences de notification
@@ -143,7 +144,7 @@ Critères d'acceptation :
 - **Fichiers** : `features/settings/settings-tabs.tsx`, `COMPONENTS.md` (settings), `messages/*.json`
 
 Critères d'acceptation :
-- [ ] Ordre : Profil, Notifications, Apparence ; entrées `COMPONENTS.md` des nouveaux composants.
+- [ ] Ordre : Profil, Portefeuille (grisé), Notifications, Apparence ; entrées `COMPONENTS.md` des nouveaux composants.
 
 ## Lot 3 — Réinitialisation des données
 
@@ -175,9 +176,9 @@ Critères d'acceptation :
 - **Fichiers** : `apps/notification-service/consumers/`, `services/`, `repositories/`, `test/`
 
 Critères d'acceptation :
-- [ ] Supprime les notifications de `userId` (préférences conservées) et ferme rien d'autre ; idempotent (rejeu = même état).
+- [ ] Supprime les notifications et la ligne de préférences de `userId`, rien d'autre ; idempotent (rejeu = même état) ; la ligne de préférences absente se lit « tout activé » (T-05).
 - [ ] Message invalide : `logger.warn` et retour ; base indisponible : l'exception repart à kafkajs.
-- [ ] Tests : suppression des seules notifications de l'utilisateur, rejeu, message invalide.
+- [ ] Tests : suppression des seules données de l'utilisateur, rejeu, message invalide.
 
 ### T-15 · `ResetDataCard` et dialog de confirmation, tests
 

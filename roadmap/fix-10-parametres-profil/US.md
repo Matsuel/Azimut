@@ -15,7 +15,7 @@
 
 ## Hors périmètre
 
-- Onglet « Portefeuille » et réinitialisation (maquettes 29, 29.1) : avec le paper trading.
+- Contenu de l'onglet « Portefeuille » (maquette 29) : avec le paper trading ; l'onglet reste grisé d'ici là.
 - Changement d'e-mail, de mot de passe, photo de profil.
 - Suppression du compte lui-même, export des données avant effacement.
 - Canaux e-mail et navigateur, résumé quotidien, alertes de prix, exécution d'ordres.
@@ -36,6 +36,7 @@ Voir `README.md` (D1 à D9).
 
 Critères d'acceptation :
 - [ ] Onglet « Profil » par défaut : carte avec nom (modifiable) et e-mail (lecture seule), bouton « Enregistrer » désactivé tant que rien n'a changé.
+- [ ] Onglet « Portefeuille » visible, grisé et non activable (clavier compris), sans route ni contenu.
 - [ ] Un nom vide ou de plus de 100 caractères est refusé avec un message traduit (FR et EN).
 - [ ] Après enregistrement, le nom de la sidebar (`nav-user`) change sans rechargement et un toast confirme ; une erreur du serveur s'affiche sans perdre la saisie.
 - [ ] Maquettes `06` et `06.1` mises à jour dans Figma avant le code.
@@ -65,8 +66,8 @@ Tâches : T-04 à T-09.
 
 Critères d'acceptation :
 - [ ] Onglet Profil, carte « Données » : bouton « Réinitialiser » ouvre le dialog `06.3` ; le bouton de confirmation reste désactivé tant que `RÉINITIALISER` n'est pas saisi.
-- [ ] Après confirmation : backtests (allocations et exécutions comprises), portefeuilles, calculs de pricing et notifications de l'utilisateur sont supprimés ; compte, session, rôle, préférences et données des autres utilisateurs sont intacts.
-- [ ] Suppression côté `trading` en une transaction (tout ou rien) ; événement `user.data.reset` publié seulement après son succès ; notification-service supprime ses notifications, un rejeu ne change rien.
+- [ ] Après confirmation : backtests (allocations, exécutions et résultats compris), portefeuilles, calculs de pricing, notifications et préférences de notification de l'utilisateur sont supprimés ; son identité (nom, e-mail, mot de passe, rôle), sa session et les données des autres utilisateurs sont intactes.
+- [ ] Suppression côté `trading` en une transaction (tout ou rien) ; événement `user.data.reset` publié seulement après son succès ; notification-service supprime ses notifications et ses préférences, un rejeu ne change rien.
 - [ ] Une exécution encore en cours ne fait pas planter le consumer à son retour : ligne absente, `logger.warn` et retour.
 - [ ] L'écran se vide sans rechargement (caches invalidés), toast de confirmation, erreur affichée sans fermer le dialog.
 - [ ] Contrat, producteur et consommateur dans le même diff ; services à redémarrer signalés.
@@ -80,7 +81,7 @@ Tâches : T-12 à T-15.
 **En tant que** développeur, **je veux** un E2E des onglets **afin de** garder la page terminée.
 
 Critères d'acceptation :
-- [ ] E2E : renommer l'utilisateur, voir le nouveau nom dans la sidebar ; désactiver une catégorie, recharger, la retrouver désactivée ; créer un backtest, réinitialiser, liste vide.
+- [ ] E2E : renommer l'utilisateur, voir le nouveau nom dans la sidebar ; désactiver une catégorie, recharger, la retrouver désactivée ; créer un backtest, réinitialiser, liste vide, interrupteurs revenus à « activé ».
 - [ ] Catalogues `COMPONENTS.md` (settings), `API.md` (core-backend et notification-service) à jour ; roadmap clôturée, dettes (Portefeuille, canaux) dans `TECH-DEBT.md`.
 
 Tâches : T-10, T-11.
