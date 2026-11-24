@@ -62,7 +62,7 @@ Les dossiers des features 02 à 08 citent les anciens numéros ; cette table les
 | 19 | [Grecques, volatilité implicite et smile](19-grecques-volatilite-implicite/) | 9 | 2026-11-23 → 2026-11-24 | #22 | Livrée | 27 |
 | 20 | [Pricing Monte Carlo et option à barrière](20-pricing-monte-carlo-barriere/) | 10 | 2026-11-24 | — | Livrée | 22 |
 | fix-08 | [Correctifs après les taux et obligations](fix-08-taux-pricing-et-ci/) | — | 2026-11-21 | — | Livrée | 8 ᵃ |
-| fix-10 | [Paramètres : profil, notifications et réinitialisation des données](fix-10-parametres-profil/) | — | 2026-11-24 → 2026-11-25 | — | Planifiée | 46 |
+| fix-10 | [Paramètres : profil, notifications et réinitialisation des données](fix-10-parametres-profil/) | — | 2026-11-24 | — | Livrée | 46 |
 
 ᵃ estimés a posteriori d’après les diffs.
 ᵇ hors « Roadmap annuelle » : demande du 2026-10-30, après le lot 3 de la feature 08.
