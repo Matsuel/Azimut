@@ -49,3 +49,25 @@ test("un spot vide est refusé dans le formulaire", async ({ page }) => {
 
     await expect(page.getByText("Le spot doit être supérieur à 0.")).toBeVisible()
 })
+
+test("« Volatilité implicite » ouvre Grecques et smile : la chaîne est calculée puis affichée, le filtre visible", async ({
+    page,
+}) => {
+    await page.goto("/app/options?symbol=AAPL")
+
+    await page.getByRole("button", { name: "Volatilité implicite" }).click()
+
+    await expect(page).toHaveURL(/\/app\/options\/smile\?symbol=AAPL/)
+    await expect(page.getByRole("heading", { name: "Grecques et smile · AAPL" })).toBeVisible()
+    await expect(page.getByText("Contrats exploitables")).toBeVisible()
+    await expect(page.getByText("Smile de volatilité")).toBeVisible()
+    await expect(page.getByText("Sensibilités du prix d’une option, calculées automatiquement")).toBeVisible()
+    await expect(page.getByText(/^Chaîne · échéance/)).toBeVisible()
+    await expect(page.getByText("Écarté · bid/ask nuls").first()).toBeVisible()
+})
+
+test("un symbole inconnu : le calcul de la chaîne échoue avec sa cause", async ({ page }) => {
+    await page.goto("/app/options/smile?symbol=ZZZZ")
+
+    await expect(page.getByText(/Le calcul de la chaîne a échoué/)).toBeVisible()
+})

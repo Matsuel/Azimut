@@ -94,3 +94,27 @@ test("courbe hors contrat : erreur", async () => {
 
     await expect(client().getRateCurve()).rejects.toThrow()
 })
+
+test("entrées d'option : symbole en query, réponse validée par le contrat", async () => {
+    const inputs = { symbol: "SPY", currency: "USD", spot: 582, dividendYield: 0.012, volatility: 0.15 }
+    const calls = stubFetch(() => Response.json(inputs))
+
+    expect(await client().getOptionInputs("SPY")).toEqual(inputs)
+    const url = new URL(calls[0]!.url)
+    expect(url.pathname).toBe("/api/market/option-inputs")
+    expect(url.searchParams.get("symbol")).toBe("SPY")
+})
+
+test("chaîne d'options : échéance transmise seulement si fournie, réponse hors contrat refusée", async () => {
+    const chain = { symbol: "SPY", spot: 582, expirations: ["2026-12-19"], expiration: "2026-12-19", calls: [], puts: [] }
+    const calls = stubFetch(() => Response.json(chain))
+
+    expect(await client().getOptionChain("SPY", "2026-12-19")).toEqual(chain)
+    await client().getOptionChain("SPY")
+    expect(new URL(calls[0]!.url).pathname).toBe("/api/market/options")
+    expect(new URL(calls[0]!.url).searchParams.get("expiration")).toBe("2026-12-19")
+    expect(new URL(calls[1]!.url).searchParams.has("expiration")).toBe(false)
+
+    stubFetch(() => Response.json({ ...chain, spot: 0 }))
+    await expect(client().getOptionChain("SPY")).rejects.toThrow()
+})

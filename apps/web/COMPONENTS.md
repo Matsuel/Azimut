@@ -185,6 +185,12 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [FlowsTable](src/features/pricing/COMPONENTS.md#flowstable) : tableau des flux actualisés
   - [PricingMethod](src/features/pricing/COMPONENTS.md#pricingmethod) : méthode, source et taux utilisé
   - [OptionsPage](src/features/pricing/COMPONENTS.md#optionspage) : écran Options (maquette 36, route `routes.options`), prérempli depuis un symbole
+  - [OptionChainPage](src/features/pricing/COMPONENTS.md#optionchainpage) : écran Grecques et smile (maquette 37, route `routes.optionsSmile`)
+  - [OptionsTabs](src/features/pricing/COMPONENTS.md#optionstabs) : onglets Calculateur / Grecques et smile
+  - [ChainStats](src/features/pricing/COMPONENTS.md#chainstats) : contrats retenus et écartés, IV ATM, volatilité historique
+  - [SmileChart](src/features/pricing/COMPONENTS.md#smilechart) : volatilité implicite selon le strike, une courbe par échéance
+  - [GreeksCard](src/features/pricing/COMPONENTS.md#greekscard) : contrat au choix, volatilité implicite et cinq grecques
+  - [ChainTable](src/features/pricing/COMPONENTS.md#chaintable) : cotations retenues et écartées d'une échéance
   - [OptionsHeader](src/features/pricing/COMPONENTS.md#optionsheader) : en-tête de la page Options
   - [OptionForm](src/features/pricing/COMPONENTS.md#optionform) : formulaire d'option (spot, strike, maturité en jours, taux, q, volatilité)
   - [OptionCards](src/features/pricing/COMPONENTS.md#optioncards) : prix du call, du put, parité et volatilité utilisée
@@ -932,6 +938,7 @@ Source : `src/components/form/form-issues.ts`.
 | `formatDays` | Nombre de jours tel quel : `182` → « 182 jours ». |
 | `formatDecimal2` | Nombre sans unité à 2 décimales fixes : `40` → « 40,00 ». |
 | `formatParityGap` | Écart de parité call-put, 6 décimales fixes : `0` → « 0,000000 ». |
+| `formatDecimal3` | Nombre sans unité à 3 décimales fixes, pour un gamma : `0,012` → « 0,012 ». |
 | `formatPercent1` | Taux en **fraction** → % non signé, 1 décimale : `0.132` → « 13,2 % », `-0.014` → « −1,4 % ». Volatilité, VaR, CVaR, drawdown mesuré. |
 | `formatDecimal1` | Nombre sans unité, 1 décimale au plus : `3.571` → « 3,6 » (actifs effectifs). |
 | `formatCorrelation` | Corrélation de −1 à 1, 2 décimales : `0.71` → « 0,71 » ; aussi HHI. |

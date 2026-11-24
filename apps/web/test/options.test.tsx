@@ -13,6 +13,7 @@ const getOptionInputs = mock<(symbol: string) => Promise<OptionInputs>>()
 mock.module("../src/features/pricing/api", () => ({ getRateCurve, createPricing, getPricing, getOptionInputs }))
 
 const { OptionsPage } = await import("../src/features/pricing/options-page")
+const { PayoffGrid } = await import("../src/features/pricing/payoff-grid")
 const { createOptionSchema } = await import("../src/features/pricing/schema")
 const { optionDefaults, toOptionPricingInput } = await import("../src/features/pricing/utils")
 
@@ -241,4 +242,22 @@ test("Réinitialiser efface le résultat, remet l'état vide et les valeurs pré
 
 test("le strike de départ reste strictement positif pour un spot sous 0,5", () => {
     expect(optionDefaults({ ...inputs, spot: 0.3 }, curve).strike).toBe(0.3)
+})
+
+test("la grille de payoff est paginée par 10 lignes", () => {
+    const points = Array.from({ length: 21 }, (_, i) => ({ ...grid[0]!, spot: 100 + i }))
+    const result = {
+        call: side(14.59, 238.59),
+        put: side(16.2, 207.8),
+        callMinusPut: -1.61,
+        parityRight: -1.61,
+        parityGap: 0,
+        parityVerified: true,
+        payoffGrid: points,
+    }
+    inFrench(<PayoffGrid result={result} currency="USD" />)
+
+    expect(screen.getAllByRole("row")).toHaveLength(11) // en-tête + 10 lignes
+    fireEvent.click(screen.getByRole("button", { name: "3" }))
+    expect(screen.getAllByRole("row")).toHaveLength(2) // en-tête + 1 ligne
 })

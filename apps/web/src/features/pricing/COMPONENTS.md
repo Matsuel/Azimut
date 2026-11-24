@@ -76,7 +76,7 @@ Pages Taux et obligations (feature 17, maquette `35 · Taux et obligations`) et 
 ### OptionsHeader
 
 - **Import** : `import { OptionsHeader } from "@/features/pricing/options-header"`.
-- **Rôle** : `PageHeader` de la page Options : titre « Calculateur d'option » (avec le symbole s'il y en a un), badge « Black-Scholes · européen », description (spot, strike et maturité en jours de la demande affichée, sinon une phrase générale) et bouton « Réinitialiser ».
+- **Rôle** : `PageHeader` de la page Options : titre « Calculateur d'option » (avec le symbole s'il y en a un), badge « Black-Scholes · européen », description (spot, strike et maturité en jours de la demande affichée, sinon une phrase générale) et boutons « Réinitialiser » et, avec un symbole, « Volatilité implicite » (vers `routes.symbolOptionsSmile`).
 - **Props** :
   - `symbol` : symbole de l'URL, ou `null`.
   - `input` : `OptionInput` de la demande affichée, ou `null`.
@@ -127,9 +127,58 @@ Pages Taux et obligations (feature 17, maquette `35 · Taux et obligations`) et 
 ### PayoffGrid
 
 - **Import** : `import { PayoffGrid } from "@/features/pricing/payoff-grid"`.
-- **Rôle** : tableau « Grille de payoff » : cours final, payoff call et put, résultat net call et put (coloré gain ou perte) pour chaque point de `payoffGrid`.
+- **Rôle** : tableau « Grille de payoff » : cours final, payoff call et put, résultat net call et put (coloré gain ou perte) pour chaque point de `payoffGrid`, paginé côté client (`OPTION_TABLE_PAGE_SIZE`, 10 lignes, `TablePagination`), en-têtes avec `InfoHint`.
 - **Props** : `result` : `OptionResult` reçu ; `currency` : devise du sous-jacent.
 - **Source** : `src/features/pricing/payoff-grid.tsx`.
+
+### OptionChainPage
+
+- **Import** : `import { OptionChainPage } from "@/features/pricing/chain-page"`.
+- **Rôle** : écran « Grecques et smile » (maquette 37, route `routes.optionsSmile`, `?symbol=SPY` par `routes.symbolOptionsSmile`). Lance à l'ouverture une demande `OPTION_CHAIN` (`useChainPricing`) puis affiche `ChainStats`, `SmileChart` à côté de `GreeksCard`, et `ChainTable`. En-tête : titre avec symbole, badge « Chaîne du JJ/MM/AAAA », « Changer de sous-jacent » (vers le marché) et « Recalculer ». Sans symbole : une invitation, aucun calcul. Calcul en cours, échec (cause reçue) ou lecture impossible : un état à la place du contenu. La page route `app/app/options/smile/page.tsx` la clé sur le symbole, pour relancer le calcul quand il change.
+- **Props** :
+  - `symbol` : symbole de l'URL, ou `null`.
+- **Source** : `src/features/pricing/chain-page.tsx`.
+
+### OptionsTabs
+
+- **Import** : `import { OptionsTabs } from "@/features/pricing/options-tabs"`.
+- **Rôle** : onglets des pages Options, « Calculateur » (maquette 36) et « Grecques et smile » (maquette 37), en liens qui gardent le symbole.
+- **Props** :
+  - `active` : `calculator` ou `chain`.
+  - `symbol` : symbole de l'URL, ou `null`.
+- **Source** : `src/features/pricing/options-tabs.tsx`.
+
+### ChainStats
+
+- **Import** : `import { ChainStats } from "@/features/pricing/chain-stats"`.
+- **Rôle** : quatre `StatCard` : contrats retenus sur le total, contrats écartés, volatilité implicite ATM (badge : échéance détaillée), volatilité historique 30 jours (badge : écart `volatilityPremium` en points). Valeurs du moteur, jamais recalculées ; `<Dash />` si absente.
+- **Props** :
+  - `chain` : `OptionChainResult`.
+- **Source** : `src/features/pricing/chain-stats.tsx`.
+
+### SmileChart
+
+- **Import** : `import { SmileChart } from "@/features/pricing/smile-chart"`.
+- **Rôle** : carte « Smile de volatilité » : volatilité implicite selon le strike, une courbe par échéance (couleurs `SMILE_COLORS`), repère pointillé du spot. Seuls les points reçus sont tracés.
+- **Props** :
+  - `chain` : `OptionChainResult`.
+- **Source** : `src/features/pricing/smile-chart.tsx`.
+
+### GreeksCard
+
+- **Import** : `import { GreeksCard } from "@/features/pricing/greeks-card"`.
+- **Rôle** : carte « Grecques » : liste des contrats retenus de l'échéance détaillée (par défaut le plus proche du spot), sa volatilité implicite en lecture seule, puis delta, gamma, vega, theta et rho avec valeur, unité, phrase de lecture et `InfoHint`. Tous les chiffres viennent du moteur.
+- **Props** :
+  - `chain` : `OptionChainResult`.
+- **Source** : `src/features/pricing/greeks-card.tsx`.
+
+### ChainTable
+
+- **Import** : `import { ChainTable } from "@/features/pricing/chain-table"`.
+- **Rôle** : carte « Chaîne » : toutes les cotations de l'échéance détaillée (strike, type, bid, ask, prix milieu, IV du moteur en gras, IV Yahoo grisée, badge de statut `QUOTE_STATUS_BADGES`) et le décompte des contrats écartés par cause. Paginé côté client (`OPTION_TABLE_PAGE_SIZE`, 10 lignes), en-têtes avec `InfoHint`.
+- **Props** :
+  - `chain` : `OptionChainResult`.
+- **Source** : `src/features/pricing/chain-table.tsx`.
 
 ### `features/pricing/api.ts`
 
@@ -144,13 +193,14 @@ Pages Taux et obligations (feature 17, maquette `35 · Taux et obligations`) et 
 
 ### `features/pricing/hook.ts`
 
-- **Import** : `import { useRateCurve, useCreatePricing, usePricing, useOptionInputs } from "@/features/pricing/hook"`.
+- **Import** : `import { useRateCurve, useCreatePricing, usePricing, useOptionInputs, useChainPricing } from "@/features/pricing/hook"`.
 
 | Export | Rôle |
 | --- | --- |
 | `useRateCurve()` | Courbe (clé `["pricing", "rates"]`), gardée `RATE_CURVE_STALE_MS`. |
 | `useCreatePricing()` | Mutation `createPricing` ; la vue `PENDING` renvoyée entre dans le cache de `usePricing`. |
 | `useOptionInputs(symbol)` | Préremplissage d'un symbole (clé `["pricing", "option-inputs", symbol]`), sans requête si `symbol` est `null`, sans nouvel essai. |
+| `useChainPricing(symbol)` | Lance `POST /api/pricing` (`OPTION_CHAIN`) une fois à l'ouverture, lit la demande ; renvoie `view`, `result` (chaîne si `COMPLETED`), `pending`, `readFailed`, `createError` et `recompute`. |
 | `usePricing(id)` | Demande (clé `["pricing", "detail", id]`), sans requête si `id` est `null`, rafraîchie toutes les `PRICING_POLL_MS` tant qu'elle est `PENDING`. |
 
 ### `features/pricing/schema.ts`
@@ -194,8 +244,10 @@ Pages Taux et obligations (feature 17, maquette `35 · Taux et obligations`) et 
 | `DEFAULT_OPTION_MATURITY_DAYS` | Maturité de départ (182 jours). |
 | `RISK_FREE_SYMBOL` | Indice de la courbe lu comme taux sans risque (`^IRX`). |
 | `OPTION_DEFAULT_CURRENCY` | Devise d'une option saisie sans symbole (`USD`). |
+| `SMILE_COLORS` | Couleur de la courbe de chaque échéance du smile. |
+| `QUOTE_STATUS_BADGES` | Statut d'une cotation → clé de libellé et variant de `Badge`. |
 
 ### `features/pricing/types.ts`
 
 - **Import** : `import type { PricingView, RateCurve, … } from "@/features/pricing/types"`.
-- Réexports des types du contrat : `BondFlow`, `BondInput`, `BondResult`, `OptionInput`, `OptionInputs`, `OptionPrice`, `OptionResult`, `PayoffPoint`, `PricingInput`, `PricingResult`, `PricingStatus`, `PricingView`, `RateCurve`, `RateCurvePoint`.
+- Réexports des types du contrat : `BondFlow`, `BondInput`, `BondResult`, `ChainRow`, `OptionChainResult`, `OptionGreeks`, `OptionInput`, `OptionInputs`, `OptionPrice`, `OptionResult`, `PayoffPoint`, `PricingInput`, `PricingResult`, `PricingStatus`, `PricingView`, `QuoteStatus`, `RateCurve`, `RateCurvePoint`, `SmileCurve`.

@@ -1,12 +1,16 @@
 import {
     dailyClosesSchema,
     dividendsSchema,
+    optionChainSchema,
+    optionInputsSchema,
     rateCurveSchema,
     INTERNAL_KEY_HEADER,
     PRICE_DATA_SOURCE,
     type DailyCloses,
     type DataSource,
     type Dividends,
+    type OptionChain,
+    type OptionInputs,
     type RateCurve,
 } from "@azimut/contracts";
 
@@ -74,8 +78,14 @@ export interface IRateCurveClient {
     getRateCurve(): Promise<RateCurve>;
 }
 
+// Lecture des entrées et de la chaîne d'options par le pricing de backtest-engine (19) ; séparée de IMarketClient comme IRateCurveClient
+export interface IOptionChainClient {
+    getOptionInputs(symbol: string): Promise<OptionInputs>;
+    getOptionChain(symbol: string, expiration?: string): Promise<OptionChain>;
+}
+
 /** Client de market-service des engines (backtest-engine, risk-engine) : réponses validées par les schémas du contrat. */
-export class MarketClient implements IMarketClient, IRateCurveClient {
+export class MarketClient implements IMarketClient, IRateCurveClient, IOptionChainClient {
     readonly source = PRICE_DATA_SOURCE;
 
     constructor(private readonly config: MarketServiceConfig) { }
@@ -103,5 +113,25 @@ export class MarketClient implements IMarketClient, IRateCurveClient {
      */
     async getRateCurve(): Promise<RateCurve> {
         return rateCurveSchema.parse(await fetchMarket(new URL("/api/market/rates", this.config.baseUrl), this.config.apiKey))
+    }
+
+    /**
+     * Spot, rendement du dividende et volatilité 1 an d'un symbole (`GET /api/market/option-inputs`). Lève une erreur si market-service
+     * est injoignable ou répond hors 2xx (symbole inconnu compris : `SYMBOL_NOT_FOUND`), ou si la réponse ne respecte pas le contrat.
+     */
+    async getOptionInputs(symbol: string): Promise<OptionInputs> {
+        const url = new URL("/api/market/option-inputs", this.config.baseUrl);
+        url.search = new URLSearchParams({ symbol }).toString();
+        return optionInputsSchema.parse(await fetchMarket(url, this.config.apiKey));
+    }
+
+    /**
+     * Chaîne d'options du jour d'un symbole pour une échéance `YYYY-MM-DD`, la plus proche sans `expiration` (`GET /api/market/options`).
+     * Mêmes erreurs que `getOptionInputs`.
+     */
+    async getOptionChain(symbol: string, expiration?: string): Promise<OptionChain> {
+        const url = new URL("/api/market/options", this.config.baseUrl);
+        url.search = new URLSearchParams(expiration ? { symbol, expiration } : { symbol }).toString();
+        return optionChainSchema.parse(await fetchMarket(url, this.config.apiKey));
     }
 }

@@ -32,6 +32,7 @@ Catalogue des routes internes de market-service (port 8001, données yahoo-finan
 - [`GET /api/market/dividends`](#get-apimarketdividends)
 - [`GET /api/market/rates`](#get-apimarketrates)
 - [`GET /api/market/option-inputs`](#get-apimarketoption-inputs)
+- [`GET /api/market/options`](#get-apimarketoptions)
 
 ## Conventions communes
 
@@ -153,4 +154,19 @@ Catalogue des routes internes de market-service (port 8001, données yahoo-finan
 - **Erreurs** : `400 { "code": "INVALID_QUERY", "issues": [ZodIssue] }` → `symbol` absent ; `404 { "code": "SYMBOL_NOT_FOUND" }` → symbole inconnu ou sans cours ; `500` → erreur yahoo-finance2.
 - **Effets** : aucun (lecture yahoo-finance2 : `quote` et `chart` 1 an avec `events: "div"`).
 - **Appelant** : `getOptionInputs(symbol)` de `apps/web/src/features/pricing/api.ts`, hook `useOptionInputs(symbol)`.
-- **Source** : `routes/market/market.routes.ts`, `controller/market.controller.ts` (`getOptionInputs`), `services/market.service.ts`, `repositories/market.repository.ts` (`getOptionInputs`), `utils/option-inputs.ts` (`historicalVolatility`, `trailingDividendYield`).
+- **Source** : `routes/market/market.routes.ts`, `controller/market.controller.ts` (`getOptionInputs`), `services/market.service.ts`, `repositories/market.repository.ts` (`getOptionInputs`), `utils/option-inputs.ts` (`trailingDividendYield`), `historicalVolatility` de `@azimut/utils`.
+
+### GET /api/market/options
+
+- **Auth** : `x-internal-key` (comme toute route). **Interne** : absente de la liste blanche du proxy de core-backend, le web ne la lit pas (les résultats passent par `POST /api/pricing`).
+- **Entrée** : query `optionChainQuerySchema` : `symbol` (string non vide après `trim`), `expiration` (optionnelle, `YYYY-MM-DD`) ; la plus proche sans `expiration`.
+- **Réponse** : `200`, `OptionChain` : chaîne du jour d'une échéance (19, D5). `spot` = dernier cours ; `expirations` = toutes les échéances disponibles, triées ; `expiration` = celle des cotations ; `calls` et `puts` = `OptionQuote` (`strike`, `bid`, `ask`, `lastPrice`, `volume`, `yahooVolatility`). Valeurs brutes de Yahoo, dans la devise de cotation, sans conversion ni filtre : un `bid` ou `ask` absent vaut `0`, `volume` et `yahooVolatility` absents valent `null`. `yahooVolatility` est indicative, jamais utilisée pour calculer. Jamais mis en cache.
+  ```json
+  // GET /api/market/options?symbol=SPY&expiration=2026-12-19
+  { "symbol": "SPY", "spot": 582, "expirations": ["2026-11-21", "2026-12-19"], "expiration": "2026-12-19",
+    "calls": [{ "strike": 580, "bid": 15.7, "ask": 16, "lastPrice": 15.85, "volume": 120, "yahooVolatility": 0.184 }], "puts": [] }
+  ```
+- **Erreurs** : `400 { "code": "INVALID_QUERY", "issues": [ZodIssue] }` → `symbol` absent ou `expiration` mal formée ; `404 { "code": "SYMBOL_NOT_FOUND" }` → symbole inconnu, sans options ou sans cours ; `500` → erreur yahoo-finance2.
+- **Effets** : aucun (lecture yahoo-finance2 : `options`).
+- **Appelant** : `MarketClient.getOptionChain` de `packages/market-client`, pour le pricing de chaîne de backtest-engine.
+- **Source** : `routes/market/market.routes.ts`, `controller/market.controller.ts` (`getOptionChain`), `services/market.service.ts`, `repositories/market.repository.ts` (`getOptionChain`).

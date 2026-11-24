@@ -21,6 +21,12 @@ export const dailyClosesQuerySchema = z
 
 export type DailyClosesQuery = z.infer<typeof dailyClosesQuerySchema>;
 
+// ?symbol=SPY&expiration=2026-12-19 : chaîne d'options du jour ; sans `expiration`, la plus proche
+export const optionChainQuerySchema = z.object({
+    symbol: z.string().trim().min(1),
+    expiration: z.iso.date().optional(),
+});
+
 // ?symbol=AAPL : symbole dont on préremplit le calculateur d'option
 export const optionInputsQuerySchema = z.object({
     symbol: z.string().trim().min(1),

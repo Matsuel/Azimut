@@ -9,6 +9,7 @@ import {
     marketAssetSchema,
     marketDataSchema,
     marketDetailsSchema,
+    optionChainSchema,
     optionInputsSchema,
     rateCurveSchema,
 } from "@azimut/contracts"
@@ -109,6 +110,46 @@ function route(url: URL): unknown {
         if (!ASSETS.some((asset) => asset.symbol === symbol)) return { notFound: true }
         const spot = closeOn(symbol, Math.floor(Date.now() / DAY_MS))
         return optionInputsSchema.parse({ symbol, currency: "USD", spot, dividendYield: 0.005, volatility: 0.243 })
+    }
+    if (path === "/options") {
+        // Chaîne synthétique d'un actif connu : 3 échéances à 30, 60 et 90 jours ; un symbole inconnu : 404 SYMBOL_NOT_FOUND
+        const symbol = params.get("symbol") ?? ""
+        if (!ASSETS.some((asset) => asset.symbol === symbol)) return { notFound: true }
+        const today = Math.floor(Date.now() / DAY_MS)
+        const spot = closeOn(symbol, today)
+        const expirations = [30, 60, 90].map((days) => isoDay(today + days))
+        const expiration = params.get("expiration") ?? expirations[0]!
+        const years = Math.max(1, (Date.parse(expiration) / DAY_MS - today) | 0) / 365
+        // Valeur temps en cloche autour de la monnaie, au-dessus de la valeur intrinsèque : l'inversion trouve une volatilité de l'ordre de 20 %
+        const quote = (strike: number, intrinsic: number) => {
+            const moneyness = (strike / spot - 1) / 0.12
+            const mid = intrinsic + 0.4 * spot * 0.2 * Math.sqrt(years) * Math.exp(-(moneyness ** 2))
+            return {
+                strike,
+                bid: Number((mid - 0.05).toFixed(2)),
+                ask: Number((mid + 0.05).toFixed(2)),
+                lastPrice: Number(mid.toFixed(2)),
+                volume: 10,
+                yahooVolatility: 0.2,
+            }
+        }
+        const strikes = [0.9, 0.95, 1, 1.05, 1.1].map((ratio) => Math.round(spot * ratio))
+        const empty = {
+            strike: Math.round(spot * 1.2),
+            bid: 0,
+            ask: 0,
+            lastPrice: 0,
+            volume: null,
+            yahooVolatility: null,
+        }
+        return optionChainSchema.parse({
+            symbol,
+            spot,
+            expirations,
+            expiration,
+            calls: [...strikes.map((strike) => quote(strike, Math.max(spot - strike, 0))), empty],
+            puts: strikes.map((strike) => quote(strike, Math.max(strike - spot, 0))),
+        })
     }
     if (path === "/search") {
         const query = (params.get("query") ?? "").toLowerCase()

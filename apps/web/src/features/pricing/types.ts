@@ -1,11 +1,15 @@
 // Courbe des taux (GET /api/market/rates) : taux en ratio annuel (0,0421 = 4,21 %), maturités en années
 // Demande de pricing (POST /api/pricing, GET /api/pricing/:id) : montants d'une obligation en EUR, durations en années ;
 // montants d'une option dans la devise du sous-jacent, ratios annuels
+// Chaîne d'options (POST /api/pricing, kind OPTION_CHAIN) : volatilités en ratio annuel, grecques en devise du sous-jacent (voir `optionGreeksSchema`)
 // Valeurs de préremplissage d'une option (GET /api/market/option-inputs) : spot en devise principale, ratios annuels
 export type {
     BondFlow,
     BondInput,
     BondResult,
+    ChainRow,
+    OptionChainResult,
+    OptionGreeks,
     OptionInput,
     OptionInputs,
     OptionPrice,
@@ -15,6 +19,8 @@ export type {
     PricingResult,
     PricingStatus,
     PricingView,
+    QuoteStatus,
     RateCurve,
     RateCurvePoint,
+    SmileCurve,
 } from "@azimut/contracts"

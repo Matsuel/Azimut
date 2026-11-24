@@ -1,35 +1,19 @@
 import { afterEach, expect, spyOn, test } from "bun:test"
 import { NotFoundError } from "@azimut/http"
-import { API_ERROR_CODES, optionInputsSchema } from "@azimut/contracts"
+import { API_ERROR_CODES, optionChainSchema, optionInputsSchema } from "@azimut/contracts"
 import MarketRepository from "../repositories/market.repository"
 import MarketService from "../services/market.service"
-import { historicalVolatility, trailingDividendYield } from "../utils/option-inputs"
+import { trailingDividendYield } from "../utils/option-inputs"
 
 // Clôtures qui alternent +1 % / -1 % : écart-type connu, indépendant du hasard
 const alternating = (days: number) => Array.from({ length: days }, (_, i) => 100 * (i % 2 === 0 ? 1 : 1.01))
-
-test("historicalVolatility annualise l'écart-type des rendements logarithmiques sur 252 jours", () => {
-    const closes = alternating(60)
-    const volatility = historicalVolatility(closes)!
-
-    const returns = closes.slice(1).map((close, i) => Math.log(close / closes[i]!))
-    const mean = returns.reduce((a, b) => a + b, 0) / returns.length
-    const sd = Math.sqrt(returns.reduce((a, r) => a + (r - mean) ** 2, 0) / (returns.length - 1))
-    expect(volatility).toBeCloseTo(sd * Math.sqrt(252), 10)
-})
-
-test("historicalVolatility vaut null sans historique suffisant ou sur une série plate", () => {
-    expect(historicalVolatility(alternating(10))).toBeNull()
-    expect(historicalVolatility([])).toBeNull()
-    expect(historicalVolatility(Array(60).fill(100))).toBeNull()
-})
 
 test("trailingDividendYield rapporte les dividendes au cours, 0 sans dividende", () => {
     expect(trailingDividendYield([0.5, 0.5, 0.5, 0.5], 200)).toBeCloseTo(0.01, 10)
     expect(trailingDividendYield([], 200)).toBe(0)
 })
 
-type Yahoo = Record<"chart" | "quote", (...args: unknown[]) => Promise<unknown>>
+type Yahoo = Record<"chart" | "quote" | "options", (...args: unknown[]) => Promise<unknown>>
 const yahoo = (MarketRepository as unknown as { yahooFinance: Yahoo }).yahooFinance
 const spies: ReturnType<typeof spyOn>[] = []
 afterEach(() => spies.splice(0).forEach((spy) => spy.mockRestore()))
@@ -110,4 +94,33 @@ test("les entrées d'une option ne sont jamais gardées en cache", async () => {
     await service.getOptionInputs("AAPL")
 
     expect(calls).toBe(2)
+})
+
+test("getOptionChain : cotations brutes conformes au contrat, valeurs absentes ramenées à 0 ou null", async () => {
+    const contract = { strike: 580, bid: 15.7, ask: 16, lastPrice: 15.85, volume: 120, impliedVolatility: 0.184 }
+    spies.push(
+        spyOn(yahoo, "options").mockResolvedValue({
+            quote: { regularMarketPrice: 582 },
+            expirationDates: [new Date("2026-12-19T00:00:00Z"), new Date("2026-11-21T00:00:00Z")],
+            options: [{ expirationDate: new Date("2026-11-21T00:00:00Z"), calls: [contract, { strike: 590 }], puts: [] }],
+        }),
+    )
+
+    const chain = await new MarketRepository().getOptionChain("SPY")
+
+    expect(optionChainSchema.parse(chain)).toEqual(chain)
+    expect(chain).toMatchObject({ spot: 582, expiration: "2026-11-21", expirations: ["2026-11-21", "2026-12-19"] })
+    expect(chain.calls[0]).toEqual({ strike: 580, bid: 15.7, ask: 16, lastPrice: 15.85, volume: 120, yahooVolatility: 0.184 })
+    expect(chain.calls[1]).toEqual({ strike: 590, bid: 0, ask: 0, lastPrice: 0, volume: null, yahooVolatility: null })
+})
+
+test("getOptionChain : échéance demandée transmise à Yahoo ; symbole sans chaîne → SYMBOL_NOT_FOUND", async () => {
+    const options = spyOn(yahoo, "options").mockResolvedValue({ quote: { regularMarketPrice: 582 }, expirationDates: [], options: [] })
+    spies.push(options)
+
+    const error = await new MarketRepository().getOptionChain("ZZZZ", "2026-12-19").catch((e) => e)
+
+    expect(options).toHaveBeenCalledWith("ZZZZ", { date: new Date("2026-12-19T00:00:00Z") })
+    expect(error).toBeInstanceOf(NotFoundError)
+    expect(error.code).toBe(API_ERROR_CODES.SYMBOL_NOT_FOUND)
 })

@@ -1,10 +1,12 @@
 "use client"
 
+import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { PageHeader } from "@/components/page-layout"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useFormatters } from "@/lib/format"
+import { routes } from "@/lib/routes"
 import type { OptionInput } from "./types"
 import { toMaturityDays } from "./utils"
 
@@ -34,9 +36,16 @@ export function OptionsHeader({ symbol, input, currency, onReset }: OptionsHeade
                     : t("descriptionEmpty")
             }
             actions={
-                <Button variant="outline" onClick={onReset}>
-                    {t("reset")}
-                </Button>
+                <>
+                    <Button variant="outline" onClick={onReset}>
+                        {t("reset")}
+                    </Button>
+                    {symbol && (
+                        <Button nativeButton={false} render={<Link href={routes.symbolOptionsSmile(symbol)} />}>
+                            {t("impliedVolatility")}
+                        </Button>
+                    )}
+                </>
             }
         />
     )

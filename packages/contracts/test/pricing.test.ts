@@ -67,3 +67,21 @@ test("optionResultSchema : grille de payoff d'au moins 2 points", () => {
     expect(optionResultSchema.safeParse(result).success).toBe(true)
     expect(optionResultSchema.safeParse({ ...result, payoffGrid: [point] }).success).toBe(false)
 })
+
+test("pricingInputSchema : OPTION_CHAIN porte un symbole non vide, pas d'option", () => {
+    expect(pricingInputSchema.safeParse({ kind: "OPTION_CHAIN", chain: { symbol: " SPY " } }).success).toBe(true)
+    expect(pricingInputSchema.safeParse({ kind: "OPTION_CHAIN", chain: { symbol: "  " } }).success).toBe(false)
+    expect(pricingInputSchema.safeParse({ kind: "OPTION_CHAIN", option }).success).toBe(false)
+})
+
+test("pricingResultSchema : une chaîne écartée n'a ni IV ni grecques", () => {
+    const row = { strike: 590, side: "CALL", bid: 0, ask: 0, mid: null, impliedVolatility: null, yahooVolatility: 0.125, status: "NO_BID_ASK", greeks: null }
+    const chain = {
+        symbol: "SPY", asOf: "2026-10-28", spot: 582, rate: 0.04, dividendYield: 0.012, contractsTotal: 1, contractsKept: 0,
+        discarded: { noBidAsk: 1, noPrice: 0, ivOutOfBounds: 0 }, atmVolatility: null, historicalVolatility: null, volatilityPremium: null,
+        smile: [{ expiration: "2026-12-19", points: [] }], chainExpiration: "2026-12-19", chain: [row],
+    }
+
+    expect(pricingResultSchema.safeParse({ kind: "OPTION_CHAIN", chain }).success).toBe(true)
+    expect(pricingResultSchema.safeParse({ kind: "OPTION_CHAIN", chain: { ...chain, chain: [{ ...row, status: "BAD" }] } }).success).toBe(false)
+})

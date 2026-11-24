@@ -17,6 +17,7 @@ const RISK_UTILS = "apps/risk-engine/engine/risk.utils.ts"
 const PROJECTION_ENGINE = "apps/risk-engine/engine/projection.engine.ts"
 const BONDS = "apps/backtest-engine/engine/bonds.ts"
 const OPTIONS = "apps/backtest-engine/engine/options.ts"
+const OPTION_CHAIN = "apps/backtest-engine/engine/options.chain.ts"
 const OPTION_INPUTS = "apps/market-service/utils/option-inputs.ts"
 const MONITORING_SERVICE = "apps/core-backend/services/monitoring.service.ts"
 
@@ -47,6 +48,22 @@ export const GLOSSARY = {
     optionBreakEven: { source: `${OPTIONS} · priceOption (breakEven)` },
     callPutParity: { source: `${OPTIONS} · priceOption (callMinusPut, parityRight, parityGap)` },
     optionVolatility: { source: `${OPTION_INPUTS} · historicalVolatility` },
+    // Grecques, volatilité implicite et smile (feature 19)
+    impliedVolatility: { source: `${OPTIONS} · impliedVolatility` },
+    historicalVolatility30: { source: `${OPTION_CHAIN} · analyseChain (historicalVolatility, volatilityPremium)` },
+    volatilitySmile: { source: `${OPTION_CHAIN} · analyseChain (smile)` },
+    quoteFilter: { source: `${OPTION_CHAIN} · analyseChain (contractsKept, discarded)` },
+    greekDelta: { source: `${OPTIONS} · optionGreeks (delta)` },
+    greekGamma: { source: `${OPTIONS} · optionGreeks (gamma)` },
+    greekVega: { source: `${OPTIONS} · optionGreeks (vega)` },
+    greekTheta: { source: `${OPTIONS} · optionGreeks (theta)` },
+    greekRho: { source: `${OPTIONS} · optionGreeks (rho)` },
+    optionFinalSpot: { source: `${OPTIONS} · priceOption (payoffGrid.spot)` },
+    optionPayoff: { source: `${OPTIONS} · payoff (payoffGrid.callPayoff, putPayoff)` },
+    optionNet: { source: `${OPTIONS} · priceOption (payoffGrid.callNet, putNet)` },
+    quoteBidAsk: { source: `${OPTION_CHAIN} · analyseChain (chain.bid, ask)` },
+    midPrice: { source: `${OPTION_CHAIN} · analyseChain (chain.mid)` },
+    yahooVolatility: { source: `${OPTION_CHAIN} · analyseChain (chain.yahooVolatility)` },
     // Résultat d'un backtest
     finalValue: { source: `${ENGINE} · simulate (finalValue)` },
     profit: { source: `${ENGINE} · simulate (profit)` },

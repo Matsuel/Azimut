@@ -78,3 +78,16 @@ test("GET /api/pricing/:id : le service reçoit l'id et l'utilisateur ; autre pr
     get.mockRejectedValueOnce(new ForbiddenError())
     expect((await app.request("/api/pricing/p1")).status).toBe(403)
 })
+
+test("POST OPTION_CHAIN valide : 202, symbole nettoyé ; symbole vide : 400 INVALID_PRICING", async () => {
+    create.mockResolvedValue({ id: "p3" } as never)
+
+    expect((await post({ kind: "OPTION_CHAIN", chain: { symbol: " SPY " } })).status).toBe(202)
+    expect(create.mock.calls[0]).toEqual(["u1", { kind: "OPTION_CHAIN", chain: { symbol: "SPY" } }])
+    create.mockClear()
+
+    const response = await post({ kind: "OPTION_CHAIN", chain: { symbol: " " } })
+    expect(response.status).toBe(400)
+    expect(((await response.json()) as { code: string }).code).toBe("INVALID_PRICING")
+    expect(create).not.toHaveBeenCalled()
+})

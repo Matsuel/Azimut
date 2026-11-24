@@ -38,8 +38,8 @@
 **En tant que** utilisateur, **je veux** voir la volatilité implicite d'une option à partir de son prix **afin de** comparer ce que le marché anticipe à ce qui s'est passé..
 
 Critères d’acceptation :
-- [ ] La volatilité implicite est calculée par le moteur, pas copiée de Yahoo.
-- [ ] Les contrats sans prix exploitable sont écartés et leur nombre est affiché.
+- [x] La volatilité implicite est calculée par le moteur, pas copiée de Yahoo.
+- [x] Les contrats sans prix exploitable sont écartés et leur nombre est affiché.
 
 Tâches : T-01, T-03, T-05, T-08 (détail dans `TASKS.md`).
 
@@ -50,7 +50,7 @@ Tâches : T-01, T-03, T-05, T-08 (détail dans `TASKS.md`).
 **En tant que** utilisateur, **je veux** voir les grecques d'une option **afin de** savoir quel paramètre fait bouger le prix..
 
 Critères d’acceptation :
-- [ ] Delta, gamma, vega, theta, rho sont affichés avec leur unité et une phrase d'explication (glossaire, feature 10).
+- [x] Delta, gamma, vega, theta, rho sont affichés avec leur unité et une phrase d'explication (glossaire, feature 10).
 
 Tâches : T-02, T-04, T-07 (détail dans `TASKS.md`).
 
@@ -63,7 +63,7 @@ Tâches : T-02, T-04, T-07 (détail dans `TASKS.md`).
 **En tant que** utilisateur, **je veux** voir la volatilité implicite selon le strike **afin de** comprendre que Black-Scholes suppose à tort une volatilité constante..
 
 Critères d’acceptation :
-- [ ] Une courbe par échéance montre la volatilité implicite selon le strike.
+- [x] Une courbe par échéance montre la volatilité implicite selon le strike.
 
 Tâches : T-04, T-05, T-06 (détail dans `TASKS.md`).
 

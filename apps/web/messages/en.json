@@ -1212,6 +1212,112 @@
             "formula": "σ = stdev(ln(Pt ÷ Pt−1)) × √252",
             "unit": "Annual percentage.",
             "readingTip": "It is a past volatility, not an implied one: the options market may expect another."
+        },
+        "impliedVolatility": {
+            "title": "Implied volatility",
+            "purpose": "The volatility the market “pays”: the one that, plugged into Black-Scholes, gives back the option’s quoted price.",
+            "computation": "Black-Scholes inversion by bisection between 1% and 300% on the mid price (bid + ask) / 2, within 1e-6 on the price. Never copied from Yahoo.",
+            "unit": "Annual ratio, shown as a percentage.",
+            "readingTip": "The higher it is, the more movement the market expects; compare it with historical volatility."
+        },
+        "historicalVolatility30": {
+            "title": "30-day historical volatility",
+            "purpose": "What actually happened recently, to compare with what the market expects.",
+            "computation": "Standard deviation of daily log returns over the last 30 trading days, annualised by √252.",
+            "unit": "Annual ratio, shown as a percentage; the gap to ATM IV is in points.",
+            "readingTip": "ATM IV above it: the market expects more movement than the recent past."
+        },
+        "volatilitySmile": {
+            "title": "Volatility smile",
+            "purpose": "Shows that implied volatility depends on the strike, while Black-Scholes assumes it constant.",
+            "computation": "For each expiry, implied volatility of the kept out-of-the-money contracts: puts below spot, calls above.",
+            "unit": "Annual ratio by strike.",
+            "readingTip": "A curve rising toward low strikes: the market pays more for downside protection."
+        },
+        "quoteFilter": {
+            "title": "Quote quality filter",
+            "purpose": "Drops unusable quotes before any calculation, and counts them.",
+            "computation": "Dropped: empty bid and ask, no mid price (only one of the two at zero), implied volatility outside [1%, 300%].",
+            "unit": "Number of contracts.",
+            "readingTip": "Many discarded contracts point to an illiquid chain, not to an engine error."
+        },
+        "greekDelta": {
+            "title": "Delta",
+            "purpose": "How much the option price moves when the underlying moves by 1.",
+            "computation": "Derivative of the Black-Scholes price with respect to spot, at the mid price.",
+            "formula": "Call: e^(−qT)·N(d1)",
+            "unit": "No unit (call between 0 and 1, put between −1 and 0).",
+            "readingTip": "A delta of 0.5: the option gains about 0.5 for +1 on the underlying."
+        },
+        "greekGamma": {
+            "title": "Gamma",
+            "purpose": "How fast delta changes with spot.",
+            "computation": "Second derivative of the price with respect to spot.",
+            "unit": "Per unit of spot.",
+            "readingTip": "High near the money and near expiry."
+        },
+        "greekVega": {
+            "title": "Vega",
+            "purpose": "Sensitivity of the price to volatility.",
+            "computation": "Derivative of the price with respect to volatility, expressed for +1 point.",
+            "unit": "Underlying currency per volatility point.",
+            "readingTip": "A vega of 0.9: +1 volatility point adds about 0.9 to the price."
+        },
+        "greekTheta": {
+            "title": "Theta",
+            "purpose": "What the passing of time costs the buyer.",
+            "computation": "Derivative of the price with respect to time, per calendar day.",
+            "unit": "Underlying currency per day.",
+            "readingTip": "Negative for a purchase: the option loses value every day."
+        },
+        "greekRho": {
+            "title": "Rho",
+            "purpose": "Sensitivity of the price to the risk-free rate.",
+            "computation": "Derivative of the price with respect to the rate, expressed for +1 point.",
+            "unit": "Underlying currency per rate point.",
+            "readingTip": "Positive for a call, negative for a put."
+        },
+        "optionFinalSpot": {
+            "title": "Final price",
+            "purpose": "The underlying price assumed at expiry, for which the row computes the option's outcome.",
+            "computation": "Grid of 21 evenly spaced points, from 70% of the lower of spot and strike to 130% of the higher.",
+            "unit": "Underlying currency, per share."
+        },
+        "optionPayoff": {
+            "title": "Payoff at expiry",
+            "purpose": "What the option pays at expiry for this final price, before deducting the premium paid.",
+            "computation": "Call: max(final price − strike, 0). Put: max(strike − final price, 0).",
+            "formula": "Call = max(S − K, 0) · Put = max(K − S, 0)",
+            "unit": "Underlying currency, per share.",
+            "readingTip": "Never negative: an option buyer loses at worst the premium."
+        },
+        "optionNet": {
+            "title": "Net result",
+            "purpose": "Gain or loss of buying the option, premium included, if the final price is the row's.",
+            "computation": "Payoff at expiry minus the Black-Scholes model premium, undiscounted.",
+            "unit": "Underlying currency, per share. Green: gain, red: loss.",
+            "readingTip": "Negative while the payoff does not cover the premium; zero at the break-even."
+        },
+        "quoteBidAsk": {
+            "title": "Bid and ask",
+            "purpose": "Quoted market prices: the bid is the highest price a buyer offers, the ask the lowest a seller wants.",
+            "computation": "Read as quoted by Yahoo Finance, no calculation.",
+            "unit": "Underlying currency, per share.",
+            "readingTip": "A wide bid-ask spread points to an illiquid contract."
+        },
+        "midPrice": {
+            "title": "Mid price",
+            "purpose": "The price kept for the contract: the starting point of the implied volatility and Greeks calculation.",
+            "computation": "Average of bid and ask. Zero, the quote is discarded.",
+            "formula": "(bid + ask) / 2",
+            "unit": "Underlying currency, per share."
+        },
+        "yahooVolatility": {
+            "title": "Yahoo implied volatility",
+            "purpose": "The implied volatility supplied with the quote, shown to compare with the engine's.",
+            "computation": "Read as received from Yahoo Finance, never used in a calculation.",
+            "unit": "Annual ratio, shown as a percentage.",
+            "readingTip": "A gap with the engine IV comes from the mid price and Black-Scholes assumptions, not from an error."
         }
     },
     "pages": {
@@ -1481,7 +1587,12 @@
                 "failed": "The calculation failed: {reason}",
                 "readError": "The result could not be loaded.",
                 "prefillError": "The values for {symbol} could not be prefilled: enter them by hand."
-            }
+            },
+            "tabs": {
+                "calculator": "Calculator",
+                "chain": "Greeks and smile"
+            },
+            "impliedVolatility": "Implied volatility"
         },
         "optimization": {
             "description": "Allocation explorer and efficient frontier."
@@ -1497,6 +1608,98 @@
         },
         "referenceData": {
             "description": "Imported instruments, price histories and dataset versions."
+        },
+        "optionChain": {
+            "title": "Greeks and smile",
+            "titleSymbol": "Greeks and smile · {symbol}",
+            "badge": "Chain of {date}",
+            "description": "Implied volatility recomputed automatically (bisection) · indicative Yahoo data, today’s chain only",
+            "changeSymbol": "Change underlying",
+            "recompute": "Recompute",
+            "states": {
+                "noSymbol": "Open this page from a market symbol: an option chain belongs to one underlying.",
+                "readError": "The result could not be read.",
+                "failed": "The chain calculation failed: {reason}"
+            },
+            "stats": {
+                "kept": "Usable contracts",
+                "keptBadge": "kept",
+                "keptCaption": "After the quality filter",
+                "discarded": "Discarded contracts",
+                "discardedBadge": "counted",
+                "discardedCaption": "No price, empty bid/ask, IV out of bounds",
+                "atm": "ATM implied vol.",
+                "atmCaption": "Computed automatically",
+                "historical": "30-day historical vol.",
+                "historicalCaption": "Annualised standard deviation of returns",
+                "premium": "{points} pts",
+                "marketAnticipatesMore": "The market expects more"
+            },
+            "smile": {
+                "title": "Volatility smile",
+                "subtitle": "IV by strike, per expiry",
+                "spot": "Spot {spot}",
+                "strike": "Strike {strike}",
+                "note": "Black-Scholes assumes a constant volatility: every curve would be flat. The smile shows the market pays more for downside protection. Puts below spot, calls above."
+            },
+            "greeks": {
+                "title": "Greeks",
+                "subtitle": "Sensitivities of an option’s price, computed automatically",
+                "contractLabel": "Contract",
+                "contract": "{side} {strike} · {expiration}",
+                "CALL": "Call",
+                "PUT": "Put",
+                "impliedVolatility": "Computed implied vol.",
+                "greek": "Greek",
+                "value": "Value",
+                "unit": "Unit",
+                "readingTitle": "Reading",
+                "names": {
+                    "delta": "Delta",
+                    "gamma": "Gamma",
+                    "vega": "Vega",
+                    "theta": "Theta",
+                    "rho": "Rho"
+                },
+                "units": {
+                    "delta": "per unit of spot",
+                    "gamma": "per unit of spot",
+                    "vega": "per vol point",
+                    "theta": "per day",
+                    "rho": "per rate point"
+                },
+                "reading": {
+                    "delta": "+1 of {symbol} ≈ {change}",
+                    "gamma": "Delta moves by {value}",
+                    "vega": "+1 vol pt ≈ {change}",
+                    "thetaLoss": "Loses {value} per day",
+                    "thetaGain": "Gains {value} per day",
+                    "rho": "+1 rate pt ≈ {change}"
+                },
+                "note": "Each greek links to its definition in the glossary (contextual help)."
+            },
+            "chain": {
+                "title": "Chain · expiry {expiration}",
+                "subtitle": "Kept and discarded contracts · the filter is visible, not silent",
+                "strike": "Strike",
+                "type": "Type",
+                "CALL": "Call",
+                "PUT": "Put",
+                "bid": "Bid",
+                "ask": "Ask",
+                "mid": "Mid price",
+                "engineVolatility": "Engine IV",
+                "yahooVolatility": "Yahoo IV",
+                "status": "Status",
+                "empty": "No quote for this expiry.",
+                "footnote": "{discarded} contracts discarded out of {total}, counted: {noBidAsk} empty bid/ask, {noPrice} no price, {ivOutOfBounds} IV outside [1%, 300%]. Yahoo IV is shown for comparison, never used."
+            },
+            "status": {
+                "kept": "Kept",
+                "noBidAsk": "Discarded · empty bid/ask",
+                "noPrice": "Discarded · no price",
+                "ivOutOfBounds": "Discarded · IV out of bounds"
+            }
         }
     },
     "home": {

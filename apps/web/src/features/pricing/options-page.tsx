@@ -4,13 +4,13 @@ import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { LoadingState } from "@/components/query-status"
 import { StateCard } from "@/components/state-card"
-import { Button } from "@/components/ui/button"
 import { useApiErrorMessages } from "@/lib/api-error"
 import { OPTION_DEFAULT_CURRENCY } from "./constants"
 import { useCreatePricing, useOptionInputs, usePricing, useRateCurve } from "./hook"
 import { OptionCards } from "./option-cards"
 import { OptionForm } from "./option-form"
 import { OptionsHeader } from "./options-header"
+import { OptionsTabs } from "./options-tabs"
 import { ParityCard } from "./parity-card"
 import { PayoffChart } from "./payoff-chart"
 import { PayoffGrid } from "./payoff-grid"
@@ -69,6 +69,7 @@ export function OptionsPage({ symbol }: { symbol: string | null }) {
     return (
         <>
             <OptionsHeader symbol={symbol} input={input} currency={currency} onReset={pricing.reset} />
+            <OptionsTabs active="calculator" symbol={symbol} />
             {loading ? (
                 <LoadingState className="h-64" />
             ) : (
