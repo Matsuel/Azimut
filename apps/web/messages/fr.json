@@ -145,9 +145,65 @@
     },
     "settings": {
         "title": "Paramètres",
-        "description": "Gérez votre profil et votre portefeuille virtuel.",
+        "description": "Gérez votre profil, vos notifications et l’apparence.",
         "tabs": {
+            "profile": "Profil",
+            "wallet": "Portefeuille",
+            "notifications": "Notifications",
             "appearance": "Apparence"
+        },
+        "profile": {
+            "title": "Profil",
+            "description": "Ces informations sont visibles uniquement par vous.",
+            "name": "Nom complet",
+            "email": "E-mail",
+            "emailNote": "Non modifiable : le changement d’e-mail n’est pas proposé.",
+            "save": "Enregistrer",
+            "saved": "Profil enregistré.",
+            "failed": "L’enregistrement du profil a échoué.",
+            "validation": {
+                "nameRequired": "Le nom est obligatoire.",
+                "nameMaxLength": "Le nom ne peut pas dépasser {count} caractères."
+            }
+        },
+        "notifications": {
+            "title": "Notifications",
+            "description": "Choisissez les catégories de notification qui vous concernent.",
+            "loadFailed": "Impossible de charger vos préférences.",
+            "saveFailed": "La préférence n’a pas pu être enregistrée.",
+            "categories": {
+                "BACKTESTS": {
+                    "label": "Backtests",
+                    "description": "Quand un backtest est terminé ou a échoué."
+                },
+                "RISK": {
+                    "label": "Risque",
+                    "description": "Quand une contrainte de risque est violée."
+                }
+            }
+        },
+        "reset": {
+            "title": "Données",
+            "description": "Gérez les données de votre compte.",
+            "action": "Réinitialiser mes données",
+            "warning": "Supprime tous vos backtests, portefeuilles, calculs de pricing et notifications. Action irréversible.",
+            "button": "Réinitialiser",
+            "dialog": {
+                "title": "Réinitialiser mes données ?",
+                "description": "Cette action est irréversible. Tout ce que vous avez créé dans l’application sera définitivement supprimé.",
+                "families": {
+                    "backtests": "Backtests et leurs exécutions",
+                    "portfolios": "Portefeuilles",
+                    "pricing": "Calculs de pricing",
+                    "notifications": "Notifications et préférences"
+                },
+                "deleted": "Supprimés",
+                "confirmWord": "RÉINITIALISER",
+                "prompt": "Saisissez {word} pour confirmer",
+                "cancel": "Annuler",
+                "confirm": "Réinitialiser mes données",
+                "done": "Vos données ont été réinitialisées."
+            }
         },
         "theme": {
             "title": "Thème",
