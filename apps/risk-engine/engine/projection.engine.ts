@@ -1,8 +1,8 @@
 import type { Allocation, DailyCloses, Projection, ProjectionPoint, ProjectionYear } from "@azimut/contracts";
 import { PROJECTION_PARAMS } from "@azimut/contracts";
-import { round, TRADING_DAYS_PER_YEAR } from "@azimut/utils";
+import { mulberry32, round, TRADING_DAYS_PER_YEAR } from "@azimut/utils";
 import { MIN_PROJECTION_DAYS } from "../constants/risk.constants";
-import { mulberry32, percentile } from "./projection.utils";
+import { percentile } from "./projection.utils";
 import { commonDates, dailyReturns, portfolioReturns } from "./risk.utils";
 
 /**

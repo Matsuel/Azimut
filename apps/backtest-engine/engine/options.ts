@@ -66,7 +66,7 @@ export function normalCdf(x: number): number {
 }
 
 /** Prix non arrondis du call et du put européens de Black-Scholes avec dividende continu q (D1). */
-function blackScholes({ spot, strike, maturityYears, rate, dividendYield, volatility }: OptionInput) {
+export function blackScholes({ spot, strike, maturityYears, rate, dividendYield, volatility }: OptionInput) {
     const spread = volatility * Math.sqrt(maturityYears);
     const d1 = (Math.log(spot / strike) + (rate - dividendYield + (volatility * volatility) / 2) * maturityYears) / spread;
     const d2 = d1 - spread;
