@@ -30,7 +30,7 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
 - [Conventions communes](#conventions-communes)
 - [Auth](#auth) : `ALL /api/auth/{*path}`
 - [Market (proxy)](#market-proxy) : `GET /api/market/{search,details/:id,defaults,rates}`
-- [Notifications (proxy)](#notifications-proxy) : `GET /api/notifications`, `GET /unread-count`, `GET /stream` (SSE), `POST /read-all`, `POST /:id/read`
+- [Notifications (proxy)](#notifications-proxy) : `GET /api/notifications`, `GET /unread-count`, `GET /stream` (SSE), `POST /read-all`, `POST /:id/read`, `GET`/`PUT /preferences`
 - [Portfolio](#portfolio) : `POST`, `GET`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
 - [Backtest](#backtest) : `POST`, `POST /preview`, `POST /:id/executions`, `GET /stats`, `POST /batch`, `GET /batch/:batchId`, `POST /batch/:batchId/starts`, `POST /batch/:batchId/executions`, `GET /compare`, `GET /:id`, `GET`
 - [Risque](#risque) : `GET /api/risk/:backtestId`, `PUT /api/risk/:backtestId/constraint`
@@ -110,11 +110,11 @@ Les routes de liste (`GET /api/portfolio`, `GET /api/backtest`) suivent le contr
 
 ## Notifications (proxy)
 
-### GET /api/notifications · GET /api/notifications/unread-count · GET /api/notifications/stream · POST /api/notifications/read-all · POST /api/notifications/:id/read
+### GET /api/notifications · GET /api/notifications/unread-count · GET /api/notifications/stream · POST /api/notifications/read-all · POST /api/notifications/:id/read · GET /api/notifications/preferences · PUT /api/notifications/preferences
 
 - **Auth** : session requise (`authMiddleware`), flux compris : sans session, `401`.
 - **Entrée** : requête relayée telle quelle (chemin complet, query) vers `env.NOTIFICATION_SERVICE_URL` (défaut `http://localhost:8002`, `env.ts`), avec `x-user-id` remplacé par `req.userId` et `x-internal-key` ajouté (même règle que Market). Query de la liste : `category` (`BACKTESTS` | `RISK`), `unread` (`true` | `false`), `page`, `pageSize`.
-- **Réponse** : statut et corps de notification-service, inchangés. `GET /api/notifications` → `NotificationList` ; `GET /unread-count` → `{ count }` ; `POST /read-all` et `POST /:id/read` → `204`. `GET /stream` → `text/event-stream` : `: connected` à l'ouverture, `: ping` toutes les 25 s, puis `event: notification` avec une `NotificationView` en JSON ; le web écoute l'événement nommé `notification` (`addEventListener`). Pas de rejeu à la reconnexion. Détail : voir [`apps/notification-service/API.md`](../notification-service/API.md). Liste blanche : toute autre route reçoit la 404 par défaut d'Express.
+- **Réponse** : statut et corps de notification-service, inchangés. `GET /api/notifications` → `NotificationList` ; `GET /unread-count` → `{ count }` ; `POST /read-all` et `POST /:id/read` → `204`. `GET`/`PUT /preferences` : préférences de notification de l'utilisateur, corps et réponse définis par notification-service (le `PUT` relaie son body JSON tel quel). `GET /stream` → `text/event-stream` : `: connected` à l'ouverture, `: ping` toutes les 25 s, puis `event: notification` avec une `NotificationView` en JSON ; le web écoute l'événement nommé `notification` (`addEventListener`). Pas de rejeu à la reconnexion. Détail : voir [`apps/notification-service/API.md`](../notification-service/API.md). Liste blanche : toute autre route reçoit la 404 par défaut d'Express.
 - **Erreurs** : `401` → pas de session ; `404 NOTIFICATION_NOT_FOUND` → notification inconnue ou d'un autre utilisateur ; `502 { "error": "Service unavailable" }` → service injoignable ou sans réponse sous 10 s (`proxyTimeout: 10_000`). Le flux n'a pas de délai (`proxyTo(url, { stream: true })` : `proxyTimeout: 0`) ; il n'est pas mis en mémoire tampon.
 - **Effets** : aucun côté core-backend ; `read` et `read-all` modifient la base `notifications`.
 - **Appelant** : `apps/web/src/features/notifications/api.ts` et le flux de la zone `/app`.
