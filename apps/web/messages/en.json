@@ -149,6 +149,7 @@
         "tabs": {
             "profile": "Profile",
             "wallet": "Portfolio",
+            "notifications": "Notifications",
             "appearance": "Appearance"
         },
         "profile": {
@@ -163,6 +164,22 @@
             "validation": {
                 "nameRequired": "Name is required.",
                 "nameMaxLength": "Name cannot exceed {count} characters."
+            }
+        },
+        "notifications": {
+            "title": "Notifications",
+            "description": "Choose the notification categories that matter to you.",
+            "loadFailed": "Could not load your preferences.",
+            "saveFailed": "The preference could not be saved.",
+            "categories": {
+                "BACKTESTS": {
+                    "label": "Backtests",
+                    "description": "When a backtest has completed or failed."
+                },
+                "RISK": {
+                    "label": "Risk",
+                    "description": "When a risk constraint is violated."
+                }
             }
         },
         "theme": {

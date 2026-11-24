@@ -149,6 +149,7 @@
         "tabs": {
             "profile": "Profil",
             "wallet": "Portefeuille",
+            "notifications": "Notifications",
             "appearance": "Apparence"
         },
         "profile": {
@@ -163,6 +164,22 @@
             "validation": {
                 "nameRequired": "Le nom est obligatoire.",
                 "nameMaxLength": "Le nom ne peut pas dépasser {count} caractères."
+            }
+        },
+        "notifications": {
+            "title": "Notifications",
+            "description": "Choisissez les catégories de notification qui vous concernent.",
+            "loadFailed": "Impossible de charger vos préférences.",
+            "saveFailed": "La préférence n’a pas pu être enregistrée.",
+            "categories": {
+                "BACKTESTS": {
+                    "label": "Backtests",
+                    "description": "Quand un backtest est terminé ou a échoué."
+                },
+                "RISK": {
+                    "label": "Risque",
+                    "description": "Quand une contrainte de risque est violée."
+                }
             }
         },
         "theme": {

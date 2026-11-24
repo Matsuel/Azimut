@@ -6,7 +6,7 @@
 ### SettingsTabs
 
 - **Import** : `import { SettingsTabs } from "@/features/settings/settings-tabs"`.
-- **Rôle** : barre d'onglets des paramètres (`ui/tabs`) : Profil (défaut, `ProfileCard`), Portefeuille (`TabsTrigger` `disabled`, sans contenu : paper trading à venir), Apparence (`ThemeCard` puis `LanguageCard`). Un nouvel onglet = un `TabsTrigger` et son `TabsContent` ici.
+- **Rôle** : barre d'onglets des paramètres (`ui/tabs`) : Profil (défaut, `ProfileCard`), Portefeuille (`TabsTrigger` `disabled`, sans contenu : paper trading à venir), Notifications (`NotificationPreferencesCard`), Apparence (`ThemeCard` puis `LanguageCard`). Un nouvel onglet = un `TabsTrigger` et son `TabsContent` ici.
 - **Props** : `user` (`{ name, email }`, identité de la session lue par la page).
 - **Exemple** (tiré de `src/app/app/settings/page.tsx`) :
   ```tsx
@@ -42,10 +42,18 @@
 - **Props** : `user` (`{ name, email }`), requis.
 - **Source** : `src/features/settings/profile-card.tsx`.
 
+### NotificationPreferencesCard
+
+- **Import** : `import { NotificationPreferencesCard } from "@/features/settings/notification-preferences-card"`.
+- **Rôle** : carte « Notifications » (maquette `06.1`) : un `Switch` par catégorie (Backtests, Risque ; `PREFERENCE_CATEGORIES`) lu depuis `GET /api/notifications/preferences`. Un clic bascule aussitôt (mise à jour optimiste), `PUT` partiel ; sur erreur l'interrupteur revient et un toast s'affiche. États : squelettes de lignes au chargement, `ErrorState` (« Réessayer ») si la lecture échoue.
+- **Props** : aucune.
+- **Source** : `src/features/settings/notification-preferences-card.tsx`.
+
 ### Fichiers de la feature
 
-- `api.ts` : `updateProfile(values)` (better-auth, relance `AuthError`).
-- `hook.ts` : `useUpdateProfile()`.
+- `api.ts` : `updateProfile(values)` (better-auth, relance `AuthError`), `getNotificationPreferences()`, `updateNotificationPreferences(update)` (`apiFetch`).
+- `hook.ts` : `useUpdateProfile()`, `useNotificationPreferences()`, `useUpdateNotificationPreferences({ onError })` (optimiste), clé `notificationPreferencesKey`.
+- `types.ts` : `NotificationPreferences`, `NotificationPreferencesUpdate`, `NotificationCategory` (réexports du contrat).
 - `schema.ts` : `createProfileSchema(t)`, type `ProfileValues`.
-- `constants.ts` : `NAME_MAX_LENGTH` (100).
+- `constants.ts` : `NAME_MAX_LENGTH` (100), `PREFERENCE_CATEGORIES`.
 - `utils.ts` : `initials(name)`.

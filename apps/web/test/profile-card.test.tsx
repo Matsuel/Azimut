@@ -11,7 +11,11 @@ const toastSuccess = spyOn(toast, "success").mockImplementation(() => 1)
 // Client better-auth (frontière HTTP vers core-backend) : `updateProfile` simulé, `AuthError` réel conservé
 const { AuthError } = await import("../src/features/auth/api")
 const updateProfile = mock<(values: { name: string }) => Promise<void>>(async () => {})
-mock.module("../src/features/settings/api", () => ({ updateProfile }))
+mock.module("../src/features/settings/api", () => ({
+    updateProfile,
+    getNotificationPreferences: async () => ({ BACKTESTS: true, RISK: true }),
+    updateNotificationPreferences: async () => ({ BACKTESTS: true, RISK: true }),
+}))
 const { ProfileCard } = await import("../src/features/settings/profile-card")
 const { SettingsTabs } = await import("../src/features/settings/settings-tabs")
 const { initials } = await import("../src/features/settings/utils")
