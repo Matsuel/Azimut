@@ -13,6 +13,7 @@ const { AuthError } = await import("../src/features/auth/api")
 const updateProfile = mock<(values: { name: string }) => Promise<void>>(async () => {})
 mock.module("../src/features/settings/api", () => ({
     updateProfile,
+    resetAccountData: async () => {},
     getNotificationPreferences: async () => ({ BACKTESTS: true, RISK: true }),
     updateNotificationPreferences: async () => ({ BACKTESTS: true, RISK: true }),
 }))

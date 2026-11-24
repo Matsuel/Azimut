@@ -25,3 +25,8 @@ export async function updateNotificationPreferences(
         body: JSON.stringify(update),
     })
 }
+
+/** Supprime toutes les données de l'utilisateur (backtests, portefeuilles, pricing, notifications) : irréversible, `204`. */
+export async function resetAccountData(): Promise<void> {
+    return apiFetch<void>("/account/reset", { method: "POST" })
+}

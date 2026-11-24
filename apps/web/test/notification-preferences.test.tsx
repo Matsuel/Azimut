@@ -13,6 +13,7 @@ mock.module("../src/features/settings/api", () => ({
     getNotificationPreferences,
     updateNotificationPreferences,
     updateProfile: async () => {},
+    resetAccountData: async () => {},
 }))
 const { NotificationPreferencesCard } = await import("../src/features/settings/notification-preferences-card")
 const toastError = mock(() => "")

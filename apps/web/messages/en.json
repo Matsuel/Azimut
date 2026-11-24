@@ -182,6 +182,29 @@
                 }
             }
         },
+        "reset": {
+            "title": "Data",
+            "description": "Manage your account data.",
+            "action": "Reset my data",
+            "warning": "Deletes all your backtests, portfolios, pricing calculations and notifications. This cannot be undone.",
+            "button": "Reset",
+            "dialog": {
+                "title": "Reset my data?",
+                "description": "This cannot be undone. Everything you created in the app will be permanently deleted.",
+                "families": {
+                    "backtests": "Backtests and their executions",
+                    "portfolios": "Portfolios",
+                    "pricing": "Pricing calculations",
+                    "notifications": "Notifications and preferences"
+                },
+                "deleted": "Deleted",
+                "confirmWord": "RÉINITIALISER",
+                "prompt": "Type {word} to confirm",
+                "cancel": "Cancel",
+                "confirm": "Reset my data",
+                "done": "Your data has been reset."
+            }
+        },
         "theme": {
             "title": "Theme",
             "description": "Choose how the interface looks."

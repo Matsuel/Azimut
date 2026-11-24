@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LanguageCard } from "./language-card"
 import { NotificationPreferencesCard } from "./notification-preferences-card"
 import { ProfileCard } from "./profile-card"
+import { ResetDataCard } from "./reset-data-card"
 import { ThemeCard } from "./theme-card"
 
 interface SettingsTabsProps {
@@ -28,6 +29,7 @@ export function SettingsTabs({ user }: SettingsTabsProps) {
             </TabsList>
             <TabsContent value="profile" className="flex flex-col gap-6">
                 <ProfileCard user={user} />
+                <ResetDataCard />
             </TabsContent>
             <TabsContent value="notifications" className="flex flex-col gap-6">
                 <NotificationPreferencesCard />

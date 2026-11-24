@@ -6,7 +6,7 @@
 ### SettingsTabs
 
 - **Import** : `import { SettingsTabs } from "@/features/settings/settings-tabs"`.
-- **Rôle** : barre d'onglets des paramètres (`ui/tabs`) : Profil (défaut, `ProfileCard`), Portefeuille (`TabsTrigger` `disabled`, sans contenu : paper trading à venir), Notifications (`NotificationPreferencesCard`), Apparence (`ThemeCard` puis `LanguageCard`). Un nouvel onglet = un `TabsTrigger` et son `TabsContent` ici.
+- **Rôle** : barre d'onglets des paramètres (`ui/tabs`) : Profil (défaut, `ProfileCard` puis `ResetDataCard`), Portefeuille (`TabsTrigger` `disabled`, sans contenu : paper trading à venir), Notifications (`NotificationPreferencesCard`), Apparence (`ThemeCard` puis `LanguageCard`). Un nouvel onglet = un `TabsTrigger` et son `TabsContent` ici.
 - **Props** : `user` (`{ name, email }`, identité de la session lue par la page).
 - **Exemple** (tiré de `src/app/app/settings/page.tsx`) :
   ```tsx
@@ -49,10 +49,24 @@
 - **Props** : aucune.
 - **Source** : `src/features/settings/notification-preferences-card.tsx`.
 
+### ResetDataCard
+
+- **Import** : `import { ResetDataCard } from "@/features/settings/reset-data-card"`.
+- **Rôle** : carte « Données » de l'onglet Profil (maquette `06`) : texte d'avertissement et bouton rouge « Réinitialiser » qui ouvre `ResetDataDialog`.
+- **Props** : aucune.
+- **Source** : `src/features/settings/reset-data-card.tsx`.
+
+### ResetDataDialog
+
+- **Import** : `import { ResetDataDialog } from "@/features/settings/reset-data-dialog"`.
+- **Rôle** : dialog `06.3` (`AppDialog` contrôlé) : récapitulatif des familles supprimées (sans compteur), champ où saisir `RÉINITIALISER` (mot `settings.reset.dialog.confirmWord`, identique en FR et EN) ; « Réinitialiser mes données » reste désactivé tant que la saisie diffère exactement. `POST /api/account/reset` : succès, tout le cache TanStack est invalidé, la boîte se ferme, toast ; échec, message `errors.<code>` et boîte ouverte. Fermer efface la saisie et l'erreur.
+- **Props** : `trigger` (`ReactElement`, bouton qui ouvre la boîte), requis.
+- **Source** : `src/features/settings/reset-data-dialog.tsx`.
+
 ### Fichiers de la feature
 
-- `api.ts` : `updateProfile(values)` (better-auth, relance `AuthError`), `getNotificationPreferences()`, `updateNotificationPreferences(update)` (`apiFetch`).
-- `hook.ts` : `useUpdateProfile()`, `useNotificationPreferences()`, `useUpdateNotificationPreferences({ onError })` (optimiste), clé `notificationPreferencesKey`.
+- `api.ts` : `updateProfile(values)` (better-auth, relance `AuthError`), `getNotificationPreferences()`, `updateNotificationPreferences(update)`, `resetAccountData()` (`apiFetch`).
+- `hook.ts` : `useUpdateProfile()`, `useNotificationPreferences()`, `useUpdateNotificationPreferences({ onError })` (optimiste), clé `notificationPreferencesKey`, `useResetAccountData()` (invalide tout le cache).
 - `types.ts` : `NotificationPreferences`, `NotificationPreferencesUpdate`, `NotificationCategory` (réexports du contrat).
 - `schema.ts` : `createProfileSchema(t)`, type `ProfileValues`.
 - `constants.ts` : `NAME_MAX_LENGTH` (100), `PREFERENCE_CATEGORIES`.

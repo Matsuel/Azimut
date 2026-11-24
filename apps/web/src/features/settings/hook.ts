@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { getNotificationPreferences, updateNotificationPreferences, updateProfile } from "./api"
+import { getNotificationPreferences, resetAccountData, updateNotificationPreferences, updateProfile } from "./api"
 import type { NotificationPreferences } from "./types"
 
 export function useUpdateProfile() {
@@ -31,5 +31,14 @@ export function useUpdateNotificationPreferences(options: { onError?: () => void
             options.onError?.()
         },
         onSuccess: (saved) => queryClient.setQueryData(notificationPreferencesKey, saved),
+    })
+}
+
+/** Réinitialise les données du compte ; succès : tout le cache TanStack est invalidé (listes, détails, compteurs). */
+export function useResetAccountData() {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: resetAccountData,
+        onSuccess: () => queryClient.invalidateQueries(),
     })
 }
