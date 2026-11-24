@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl"
 import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from "recharts"
+import { InfoHint } from "@/components/info-hint"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { useFormatters } from "@/lib/format"
@@ -41,7 +42,9 @@ export function SmileChart({ chain }: { chain: OptionChainResult }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>{t("title")}</CardTitle>
+                <CardTitle>
+                    <InfoHint entry="volatilitySmile">{t("title")}</InfoHint>
+                </CardTitle>
                 <CardDescription>{t("subtitle")}</CardDescription>
                 <CardAction>
                     <ul className="flex flex-wrap gap-4 text-small text-muted-foreground">

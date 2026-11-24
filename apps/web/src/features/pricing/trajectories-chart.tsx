@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl"
 import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from "recharts"
+import { InfoHint } from "@/components/info-hint"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { type ChartConfig, ChartContainer } from "@/components/ui/chart"
 import { useFormatters } from "@/lib/format"
@@ -41,7 +42,7 @@ export function TrajectoriesChart({ result, strike, currency }: TrajectoriesChar
                     {(["active", "deactivated"] as const).map((key) => (
                         <span key={key} className="flex items-center gap-1.5">
                             <span className="size-2 rounded-full" style={{ backgroundColor: PATH_COLORS[key] }} />
-                            {t(key)}
+                            <InfoHint entry={key === "deactivated" ? "barrierOption" : undefined}>{t(key)}</InfoHint>
                         </span>
                     ))}
                 </CardAction>

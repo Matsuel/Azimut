@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl"
 import { Area, CartesianGrid, ComposedChart, Line, ReferenceLine, XAxis, YAxis } from "recharts"
+import { InfoHint } from "@/components/info-hint"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { type ChartConfig, ChartContainer } from "@/components/ui/chart"
 import { useFormatters } from "@/lib/format"
@@ -38,9 +39,9 @@ export function ConvergenceChart({ result, currency }: ConvergenceChartProps) {
                 <CardTitle>{t("title")}</CardTitle>
                 <CardDescription>{t("subtitle")}</CardDescription>
                 <CardAction className="flex gap-4 text-small text-muted-foreground">
-                    <span>{t("monteCarlo")}</span>
-                    <span>{t("band")}</span>
-                    <span>{t("blackScholes")}</span>
+                    <InfoHint entry="monteCarloPrice">{t("monteCarlo")}</InfoHint>
+                    <InfoHint entry="standardError">{t("band")}</InfoHint>
+                    <InfoHint entry="optionPrice">{t("blackScholes")}</InfoHint>
                 </CardAction>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">

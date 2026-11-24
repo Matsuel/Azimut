@@ -1,6 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
+import { InfoHint } from "@/components/info-hint"
 import { useFormatters } from "@/lib/format"
 import type { RateCurve } from "./types"
 
@@ -21,10 +22,12 @@ export function CurveLegend({ interpolated }: { interpolated?: InterpolatedRate 
             {interpolated && (
                 <span className="flex items-center gap-1.5">
                     <span className="size-2 rounded-full bg-chart-3" />
-                    {t("interpolated", {
-                        maturity: f.formatYears(interpolated.maturityYears),
-                        rate: f.formatPercent2(interpolated.rate),
-                    })}
+                    <InfoHint entry="interpolatedRate">
+                        {t("interpolated", {
+                            maturity: f.formatYears(interpolated.maturityYears),
+                            rate: f.formatPercent2(interpolated.rate),
+                        })}
+                    </InfoHint>
                 </span>
             )}
         </div>
