@@ -17,11 +17,12 @@
 
 - Onglet « Portefeuille » et réinitialisation (maquettes 29, 29.1) : avec le paper trading.
 - Changement d'e-mail, de mot de passe, photo de profil.
+- Suppression du compte lui-même, export des données avant effacement.
 - Canaux e-mail et navigateur, résumé quotidien, alertes de prix, exécution d'ordres.
 
 ## Décisions à valider
 
-Voir `README.md` (D1 à D6).
+Voir `README.md` (D1 à D9).
 
 ---
 
@@ -56,14 +57,30 @@ Critères d'acceptation :
 
 Tâches : T-04 à T-09.
 
-### Lot 3 — Preuve et clôture
+### Lot 3 — Réinitialisation des données
 
-#### US-03 · Parcours Paramètres vérifié de bout en bout — MUST
+#### US-03 · Réinitialiser mes données — MUST
+
+**En tant qu'** utilisateur, **je veux** effacer tout ce que j'ai créé **afin de** repartir d'un laboratoire vide.
+
+Critères d'acceptation :
+- [ ] Onglet Profil, carte « Données » : bouton « Réinitialiser » ouvre le dialog `06.3` ; le bouton de confirmation reste désactivé tant que `RÉINITIALISER` n'est pas saisi.
+- [ ] Après confirmation : backtests (allocations et exécutions comprises), portefeuilles, calculs de pricing et notifications de l'utilisateur sont supprimés ; compte, session, rôle, préférences et données des autres utilisateurs sont intacts.
+- [ ] Suppression côté `trading` en une transaction (tout ou rien) ; événement `user.data.reset` publié seulement après son succès ; notification-service supprime ses notifications, un rejeu ne change rien.
+- [ ] Une exécution encore en cours ne fait pas planter le consumer à son retour : ligne absente, `logger.warn` et retour.
+- [ ] L'écran se vide sans rechargement (caches invalidés), toast de confirmation, erreur affichée sans fermer le dialog.
+- [ ] Contrat, producteur et consommateur dans le même diff ; services à redémarrer signalés.
+
+Tâches : T-12 à T-15.
+
+### Lot 4 — Preuve et clôture
+
+#### US-04 · Parcours Paramètres vérifié de bout en bout — MUST
 
 **En tant que** développeur, **je veux** un E2E des onglets **afin de** garder la page terminée.
 
 Critères d'acceptation :
-- [ ] E2E : renommer l'utilisateur, voir le nouveau nom dans la sidebar ; désactiver une catégorie, recharger, la retrouver désactivée.
+- [ ] E2E : renommer l'utilisateur, voir le nouveau nom dans la sidebar ; désactiver une catégorie, recharger, la retrouver désactivée ; créer un backtest, réinitialiser, liste vide.
 - [ ] Catalogues `COMPONENTS.md` (settings), `API.md` (core-backend et notification-service) à jour ; roadmap clôturée, dettes (Portefeuille, canaux) dans `TECH-DEBT.md`.
 
 Tâches : T-10, T-11.
@@ -86,4 +103,11 @@ flowchart LR
     T06 --> T10
     T09 --> T10
     T10 --> T11[T-11 Clôture]
+    T12[T-12 Contrat reset] --> T13[T-13 Route reset]
+    T12 --> T14[T-14 Consumer reset]
+    T13 --> T15[T-15 Carte Données]
+    T03 --> T15
+    T01 --> T15
+    T14 --> T10
+    T15 --> T10
 ```
