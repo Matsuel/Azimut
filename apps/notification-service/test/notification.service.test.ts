@@ -206,3 +206,21 @@ test("updatePreferences : transmet seulement les colonnes fournies et renvoie le
     expect(await service.updatePreferences("u1", { RISK: false })).toEqual({ BACKTESTS: true, RISK: false })
     expect(calls).toEqual([["u1", { risk: false }]])
 })
+
+test("resetUserData : supprime les données de l'utilisateur ciblé, rejeu sans erreur", async () => {
+    const calls: string[] = []
+    const service = new NotificationService()
+    service.repo = { deleteUserData: async (userId: string) => void calls.push(userId) } as unknown as INotificationRepository
+
+    await service.resetUserData("u1")
+    await service.resetUserData("u1")
+
+    expect(calls).toEqual(["u1", "u1"])
+})
+
+test("resetUserData : une base indisponible lève (kafkajs rejoue)", async () => {
+    const service = new NotificationService()
+    service.repo = { deleteUserData: async () => { throw new Error("db down") } } as unknown as INotificationRepository
+
+    await expect(service.resetUserData("u1")).rejects.toThrow("db down")
+})

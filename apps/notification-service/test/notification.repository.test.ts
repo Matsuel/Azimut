@@ -99,3 +99,23 @@ describeWithDb("NotificationRepository : préférences (base de test)", () => {
         expect(await repo.findPreferences("u2")).toBeNull()
     })
 })
+
+describeWithDb("NotificationRepository : deleteUserData (base de test)", () => {
+    beforeEach(resetDatabase)
+
+    test("supprime notifications et préférences de l'utilisateur ciblé seulement, rejeu sans erreur", async () => {
+        await repo.create(make({ dedupKey: "a" }))
+        await repo.create(make({ dedupKey: "b", category: "RISK", type: "RISK_CONSTRAINT_VIOLATED" }))
+        await repo.create(make({ dedupKey: "c", userId: "u2" }))
+        await repo.upsertPreferences("u1", { risk: false })
+        await repo.upsertPreferences("u2", { risk: false })
+
+        await repo.deleteUserData("u1")
+        await repo.deleteUserData("u1")
+
+        expect((await repo.list("u1", {}, page)).count).toBe(0)
+        expect(await repo.findPreferences("u1")).toBeNull()
+        expect((await repo.list("u2", {}, page)).count).toBe(1)
+        expect(await repo.findPreferences("u2")).not.toBeNull()
+    })
+})

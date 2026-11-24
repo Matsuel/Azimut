@@ -105,3 +105,10 @@ Catalogue des routes internes de notification-service (port 8002, base PostgreSQ
 - **Effets** : upsert de la ligne `NotificationPreference` de l'utilisateur (base `notifications`).
 - **Appelant** : aucun encore (web : paramètres, préférences de notification).
 - **Source** : `controller/notification.controller.ts` (`updatePreferences`), `services/notification.service.ts` (`updatePreferences`), `repositories/notification.repository.ts` (`upsertPreferences`).
+
+## Topics Kafka consommés
+
+| Topic | Groupe | Consommateur | Effet |
+| --- | --- | --- | --- |
+| `notification.requested` (`NOTIFICATION_TOPICS.requested`) | `notification-service` | `consumers/notification.consumer.ts` | Enregistre la notification (idempotent par `dedupKey`), sauf si la catégorie est désactivée dans les préférences de l'utilisateur ; la diffuse en SSE. |
+| `user.data.reset` (`ACCOUNT_TOPICS.dataReset`) | `notification-service-account` | `consumers/user-data-reset.consumer.ts` | Supprime **toutes** les notifications et la ligne de préférences de `payload.userId` (une transaction). Idempotent : un rejeu ne change rien et ne lève pas. Message invalide : `logger.warn` et ignoré. Base indisponible : l'exception remonte, kafkajs rejoue. |

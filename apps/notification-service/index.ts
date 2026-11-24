@@ -1,11 +1,12 @@
 import express from "express";
 import { errorMiddleware, kafkaCheck, registerProbes } from "@azimut/http";
 import { KafkaClient, KafkaConsumer } from "@azimut/kafka";
-import { NOTIFICATION_TOPICS } from "@azimut/contracts";
+import { ACCOUNT_TOPICS, NOTIFICATION_TOPICS } from "@azimut/contracts";
 import { Logger, onShutdown } from "@azimut/utils";
 import { env } from "./env";
-import { NOTIFICATION_CONSUMER_GROUP } from "./constants/notification.constants";
+import { ACCOUNT_CONSUMER_GROUP, NOTIFICATION_CONSUMER_GROUP } from "./constants/notification.constants";
 import NotificationConsumer from "./consumers/notification.consumer";
+import UserDataResetConsumer from "./consumers/user-data-reset.consumer";
 import NotificationService from "./services/notification.service";
 import internalAuthMiddleware from "./middleware/internal-auth.middleware";
 import notificationRouter from "./routes/notification";
@@ -17,9 +18,13 @@ const client = new KafkaClient();
 
 const consumer = new KafkaConsumer(client.createConsumer(NOTIFICATION_CONSUMER_GROUP));
 
+const accountConsumer = new KafkaConsumer(client.createConsumer(ACCOUNT_CONSUMER_GROUP));
+
 const notificationService = new NotificationService();
 
 const notificationConsumer = new NotificationConsumer(notificationService);
+
+const userDataResetConsumer = new UserDataResetConsumer(notificationService);
 
 const app = express();
 
@@ -28,7 +33,7 @@ app.use(express.json());
 // Sondes sans clé interne (lues par core-backend et Kubernetes) : prêt quand la base `notifications` répond et que le consumer a rejoint son groupe (D3, D4)
 registerProbes(app, [
     { name: "database", check: isDbConnected },
-    kafkaCheck([consumer]),
+    kafkaCheck([consumer, accountConsumer]),
 ]);
 
 app.use(internalAuthMiddleware);
@@ -43,12 +48,17 @@ async function main(): Promise<void> {
     const server = app.listen(env.PORT, () => logger.info(`Server is running on port ${env.PORT}`));
     onShutdown(() => new Promise<void>((resolve) => server.close(() => resolve())));
 
-    await client.ensureTopics([NOTIFICATION_TOPICS.requested]);
+    await client.ensureTopics([NOTIFICATION_TOPICS.requested, ACCOUNT_TOPICS.dataReset]);
 
     await consumer.connect();
     await consumer.subscribe(NOTIFICATION_TOPICS.requested);
     await consumer.consume(notificationConsumer.handle);
     onShutdown(() => consumer.disconnect());
+
+    await accountConsumer.connect();
+    await accountConsumer.subscribe(ACCOUNT_TOPICS.dataReset);
+    await accountConsumer.consume(userDataResetConsumer.handle);
+    onShutdown(() => accountConsumer.disconnect());
 
     onShutdown(notificationService.startPurge());
 }

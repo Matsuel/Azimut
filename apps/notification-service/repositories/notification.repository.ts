@@ -13,6 +13,7 @@ export interface INotificationRepository {
     deleteOlderThan(date: Date): Promise<number>
     findPreferences(userId: string): Promise<NotificationPreference | null>
     upsertPreferences(userId: string, update: NotificationPreferencesColumns): Promise<NotificationPreference>
+    deleteUserData(userId: string): Promise<void>
 }
 
 const UNIQUE_VIOLATION = "P2002"
@@ -90,6 +91,14 @@ class NotificationRepository implements INotificationRepository {
     /** Crée la ligne (autres catégories activées par défaut) ou ne modifie que les colonnes fournies. */
     upsertPreferences(userId: string, update: NotificationPreferencesColumns): Promise<NotificationPreference> {
         return prisma.notificationPreference.upsert({ where: { userId }, create: { userId, ...update }, update })
+    }
+
+    /** Supprime toutes les notifications et la ligne de préférences de l'utilisateur, dans une transaction ; sans effet s'il n'y a rien. */
+    async deleteUserData(userId: string): Promise<void> {
+        await prisma.$transaction([
+            prisma.notification.deleteMany({ where: { userId } }),
+            prisma.notificationPreference.deleteMany({ where: { userId } }),
+        ])
     }
 }
 

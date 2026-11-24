@@ -78,6 +78,15 @@ class NotificationService {
         return this.repo.deleteOlderThan(new Date(now.getTime() - NOTIFICATION_RETENTION_DAYS * DAY_MS))
     }
 
+    /**
+     * Réinitialisation des données d'un utilisateur (`user.data.reset`) : supprime toutes ses notifications et ses préférences.
+     * Idempotent (rejeu = même état). Une base indisponible lève : kafkajs rejoue le message.
+     */
+    async resetUserData(userId: string): Promise<void> {
+        await this.repo.deleteUserData(userId)
+        logger.info("User notification data reset", { userId })
+    }
+
     /** Lance la purge tout de suite puis une fois par heure ; renvoie l'arrêt. Une erreur est loggée sans arrêter le service. */
     startPurge(): () => void {
         const run = () =>
