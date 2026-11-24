@@ -3,8 +3,9 @@ import { SMILE_EXPIRATIONS, type OptionChainResult, type PricingRequestedPayload
 import { MarketClient, type IMarketClient, type IOptionChainClient, type IRateCurveClient } from "@azimut/market-client";
 import { priceBond } from "../engine/bonds";
 import { priceOption } from "../engine/options";
+import { priceOptionMonteCarlo } from "../engine/options.mc";
 import { analyseChain } from "../engine/options.chain";
-import { HISTORICAL_VOLATILITY_DAYS, HISTORICAL_VOLATILITY_LOOKBACK_DAYS, SMILE_MIN_DAYS } from "../constants/pricing.constants";
+import { HISTORICAL_VOLATILITY_DAYS, HISTORICAL_VOLATILITY_LOOKBACK_DAYS, MONTE_CARLO_SEED, SMILE_MIN_DAYS } from "../constants/pricing.constants";
 import type { IPricingPublisher } from "../publishers/pricing.publisher";
 import { env } from "../env";
 
@@ -20,7 +21,7 @@ class PricingService {
 
     /**
      * Exécute un `pricing.requested` : une obligation lit la courbe des taux si son taux d'actualisation en vient, une option
-     * se calcule sur ses seuls paramètres, une chaîne d'options lit market-service (chaîne, taux, dividende, cours) ; puis publie `completed`. Toute erreur (courbe indisponible, maturité hors
+     * (Black-Scholes ou Monte Carlo, graine fixe) se calcule sur ses seuls paramètres, une chaîne d'options lit market-service (chaîne, taux, dividende, cours) ; puis publie `completed`. Toute erreur (courbe indisponible, maturité hors
      * courbe, publication) est publiée en `failed` avec sa cause ; rien n'est relancé.
      */
     async run(request: PricingRequestedPayload): Promise<void> {
@@ -40,6 +41,8 @@ class PricingService {
 
     private async compute(request: PricingRequestedPayload): Promise<PricingResult> {
         if (request.kind === "OPTION") return { kind: "OPTION", option: priceOption(request.option) };
+
+        if (request.kind === "OPTION_MC") return { kind: "OPTION_MC", monteCarlo: priceOptionMonteCarlo(request.monteCarlo, MONTE_CARLO_SEED) };
 
         if (request.kind === "OPTION_CHAIN") return { kind: "OPTION_CHAIN", chain: await this.computeChain(request.chain.symbol) };
 

@@ -77,7 +77,7 @@ test("POST OPTION_MC : trajectoires par défaut 100 000, graine ignorée ; hors 
     expect((await post({ kind: "OPTION_MC", monteCarlo: { ...monteCarlo, seed: 7 } })).status).toBe(202)
     expect(create.mock.calls[0]).toEqual(["u1", { kind: "OPTION_MC", monteCarlo: { ...monteCarlo, paths: 100_000 } }])
     create.mockClear()
-    for (const bad of [{ paths: 9_999 }, { paths: 1_000_001 }, { maturityYears: 2.5 }, { barrier: 0 }]) {
+    for (const bad of [{ paths: 9_999 }, { paths: 1_000_001 }, { maturityYears: 1.5 }, { barrier: 0 }]) {
         const response = await post({ kind: "OPTION_MC", monteCarlo: { ...monteCarlo, ...bad } })
         expect(response.status).toBe(400)
         expect(((await response.json()) as { code: string }).code).toBe("INVALID_PRICING")

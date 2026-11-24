@@ -27,7 +27,7 @@ test("bondInputSchema : maturité entière de 1 à 30 ans, taux plat de 0 à 1",
     expect(bondInputSchema.safeParse({ ...bond, discount: { source: "CURVE" } }).success).toBe(true)
     expect(bondInputSchema.safeParse({ ...bond, maturityYears: 0 }).success).toBe(false)
     expect(bondInputSchema.safeParse({ ...bond, maturityYears: 31 }).success).toBe(false)
-    expect(bondInputSchema.safeParse({ ...bond, maturityYears: 2.5 }).success).toBe(false)
+    expect(bondInputSchema.safeParse({ ...bond, maturityYears: 1.5 }).success).toBe(false)
     expect(bondInputSchema.safeParse({ ...bond, discount: { source: "FLAT", rate: 3 } }).success).toBe(false)
     expect(bondInputSchema.safeParse({ ...bond, discount: { source: "FLAT" } }).success).toBe(false)
 })
@@ -86,14 +86,14 @@ test("pricingResultSchema : une chaîne écartée n'a ni IV ni grecques", () => 
     expect(pricingResultSchema.safeParse({ kind: "OPTION_CHAIN", chain: { ...chain, chain: [{ ...row, status: "BAD" }] } }).success).toBe(false)
 })
 
-test("OPTION_MC : trajectoires bornées de 10 000 à 1 000 000, 100 000 par défaut, maturité d'au plus 2 ans", () => {
+test("OPTION_MC : trajectoires bornées de 10 000 à 1 000 000, 100 000 par défaut, maturité d'au plus 1 an", () => {
     const monteCarlo = { ...option, barrier: 90 }
     const parsed = pricingInputSchema.parse({ kind: "OPTION_MC", monteCarlo })
     expect(parsed.kind === "OPTION_MC" && parsed.monteCarlo.paths).toBe(100_000)
     for (const paths of [9_999, 1_000_001, 20_000.5]) {
         expect(pricingInputSchema.safeParse({ kind: "OPTION_MC", monteCarlo: { ...monteCarlo, paths } }).success).toBe(false)
     }
-    expect(pricingInputSchema.safeParse({ kind: "OPTION_MC", monteCarlo: { ...monteCarlo, maturityYears: 2.5 } }).success).toBe(false)
+    expect(pricingInputSchema.safeParse({ kind: "OPTION_MC", monteCarlo: { ...monteCarlo, maturityYears: 1.5 } }).success).toBe(false)
     expect(pricingInputSchema.safeParse({ kind: "OPTION_MC", monteCarlo: { ...monteCarlo, barrier: 0 } }).success).toBe(false)
     // La graine n'est pas saisissable
     expect(pricingInputSchema.parse({ kind: "OPTION_MC", monteCarlo: { ...monteCarlo, seed: 1 } })).toEqual({ kind: "OPTION_MC", monteCarlo: { ...monteCarlo, paths: 100_000 } })

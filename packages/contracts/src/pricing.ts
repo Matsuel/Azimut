@@ -88,8 +88,8 @@ export const optionChainInputSchema = z.object({
 // Bornes du nombre de trajectoires d'un pricing Monte Carlo et valeur par défaut (20, D4)
 export const MONTE_CARLO_PATHS = { min: 10_000, max: 1_000_000, default: 100_000 } as const;
 
-// Maturité maximale d'un pricing Monte Carlo, en années : une trajectoire a un pas par jour calendaire, le coût croît avec trajectoires × jours (20)
-export const MONTE_CARLO_MATURITY_MAX_YEARS = 2;
+// Maturité maximale d'un pricing Monte Carlo, en années : une trajectoire a un pas par jour calendaire, le coût croît avec trajectoires × jours : 1 million de trajectoires sur 1 an durent ~16 s de calcul bloquant, sous le délai de session Kafka (20)
+export const MONTE_CARLO_MATURITY_MAX_YEARS = 1;
 
 // Option pricée par simulation (20) : mêmes paramètres que l'option européenne (call), plus une barrière et un nombre de trajectoires.
 // La graine n'est pas saisie : fixe côté worker, elle est publiée dans le résultat (D4)
