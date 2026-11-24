@@ -1,11 +1,11 @@
-import { API_ERROR_CODES, NOTIFICATION_CATEGORY_BY_TYPE, type NotificationList, type NotificationRequestedPayload, type NotificationView, type PaginationQuery } from "@azimut/contracts"
+import { API_ERROR_CODES, DEFAULT_NOTIFICATION_PREFERENCES, NOTIFICATION_CATEGORY_BY_TYPE, type NotificationList, type NotificationPreferences, type NotificationPreferencesUpdate, type NotificationRequestedPayload, type NotificationView, type PaginationQuery } from "@azimut/contracts"
 import { NotFoundError } from "@azimut/http"
 import { DAY_MS, Logger } from "@azimut/utils"
 import NotificationRepository, { type INotificationRepository } from "../repositories/notification.repository"
 import type { NotificationListFilters } from "../interfaces/notification.interface"
 import { NOTIFICATION_PURGE_INTERVAL_MS, NOTIFICATION_RETENTION_DAYS } from "../constants/notification.constants"
 import NotificationStreamService, { notificationStream } from "./notification-stream.service"
-import { toNotificationView } from "../utils/notification.mapper"
+import { toNotificationView, toPreferenceColumns, toPreferences } from "../utils/notification.mapper"
 
 const logger = Logger.here()
 
@@ -15,13 +15,20 @@ class NotificationService {
 
     /**
      * Enregistre la notification demandée. Idempotent : une `dedupKey` déjà connue (rejeu Kafka) n'insère rien et renvoie `null`.
-     * La diffuse en SSE à son propriétaire. Une base indisponible lève : kafkajs rejoue le message.
+     * La diffuse en SSE à son propriétaire. Une catégorie désactivée par l'utilisateur n'est ni enregistrée ni diffusée (`null`).
+     * Une base indisponible lève : kafkajs rejoue le message.
      */
     async record(payload: NotificationRequestedPayload): Promise<NotificationView | null> {
+        const category = NOTIFICATION_CATEGORY_BY_TYPE[payload.type]
+        const preferences = await this.getPreferences(payload.userId)
+        if (!preferences[category]) {
+            logger.info("Notification category disabled by user, skipped", { dedupKey: payload.dedupKey, category })
+            return null
+        }
         const row = await this.repo.create({
             userId: payload.userId,
             type: payload.type,
-            category: NOTIFICATION_CATEGORY_BY_TYPE[payload.type],
+            category,
             params: payload.params,
             dedupKey: payload.dedupKey,
             createdAt: new Date(payload.occurredAt),
@@ -34,6 +41,17 @@ class NotificationService {
         // Diffusée seulement à la création : un rejeu ne repousse rien
         this.stream.publish(payload.userId, view)
         return view
+    }
+
+    /** Préférences de l'utilisateur ; sans ligne, tout est activé (rien n'est écrit). */
+    async getPreferences(userId: string): Promise<NotificationPreferences> {
+        const row = await this.repo.findPreferences(userId)
+        return row ? toPreferences(row) : { ...DEFAULT_NOTIFICATION_PREFERENCES }
+    }
+
+    /** Mise à jour partielle : les catégories absentes de `update` gardent leur valeur. Renvoie les préférences résultantes. */
+    async updatePreferences(userId: string, update: NotificationPreferencesUpdate): Promise<NotificationPreferences> {
+        return toPreferences(await this.repo.upsertPreferences(userId, toPreferenceColumns(update)))
     }
 
     /** Liste paginée de l'utilisateur, avec les nombres des onglets (indépendants du filtre) et la durée de conservation. */
@@ -58,6 +76,15 @@ class NotificationService {
     /** Supprime les notifications créées il y a plus de `NOTIFICATION_RETENTION_DAYS` jours ; renvoie leur nombre. */
     purgeExpired(now = new Date()): Promise<number> {
         return this.repo.deleteOlderThan(new Date(now.getTime() - NOTIFICATION_RETENTION_DAYS * DAY_MS))
+    }
+
+    /**
+     * Réinitialisation des données d'un utilisateur (`user.data.reset`) : supprime toutes ses notifications et ses préférences.
+     * Idempotent (rejeu = même état). Une base indisponible lève : kafkajs rejoue le message.
+     */
+    async resetUserData(userId: string): Promise<void> {
+        await this.repo.deleteUserData(userId)
+        logger.info("User notification data reset", { userId })
     }
 
     /** Lance la purge tout de suite puis une fois par heure ; renvoie l'arrêt. Une erreur est loggée sans arrêter le service. */

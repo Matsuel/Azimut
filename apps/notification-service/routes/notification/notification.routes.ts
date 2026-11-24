@@ -25,6 +25,16 @@ const createNotificationRoutes = (): RouteDescriptor[] => {
             handler: controller.stream
         },
         {
+            method: "get",
+            path: `${prefix}/preferences`,
+            handler: asyncHandler(controller.getPreferences)
+        },
+        {
+            method: "put",
+            path: `${prefix}/preferences`,
+            handler: asyncHandler(controller.updatePreferences)
+        },
+        {
             method: "post",
             path: `${prefix}/read-all`,
             handler: asyncHandler(controller.markAllRead)

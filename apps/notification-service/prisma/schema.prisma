@@ -37,3 +37,13 @@ model Notification {
 
   @@index([userId, createdAt])
 }
+
+// Préférences de notification d'un utilisateur ; une ligne absente vaut tout activé (contrat : DEFAULT_NOTIFICATION_PREFERENCES)
+model NotificationPreference {
+  // Identifiant de l'utilisateur côté core-backend : aucune clé étrangère
+  userId    String   @id
+  // Un booléen par catégorie (contrat : NOTIFICATION_CATEGORIES) ; false écarte les notifications de la catégorie
+  backtests Boolean  @default(true)
+  risk      Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}

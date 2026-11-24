@@ -7,4 +7,5 @@ export const describeWithDb = describe.skipIf(process.env.TEST_DB_READY !== "1")
 /** Vide la base de test. */
 export async function resetDatabase() {
     await prisma.notification.deleteMany()
+    await prisma.notificationPreference.deleteMany()
 }

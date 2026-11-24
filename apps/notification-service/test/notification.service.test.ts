@@ -15,9 +15,10 @@ const payload: NotificationRequestedPayload = {
 }
 
 /** Faux repository en mémoire : `create` refuse une dedupKey déjà vue, comme la contrainte unique. */
-function fakeRepo() {
+function fakeRepo(preferences: { backtests: boolean, risk: boolean } | null = null) {
     const rows = new Map<string, Notification>()
     const repo = {
+        findPreferences: async (userId: string) => (preferences && { userId, ...preferences }),
         create: async (data: CreateNotificationDTO) => {
             if (rows.has(data.dedupKey)) return null
             const row = { id: `id-${rows.size}`, ...data, params: data.params, readAt: null } as Notification
@@ -50,9 +51,42 @@ test("record : un rejeu (même dedupKey) n'insère rien et renvoie null", async 
     expect(rows.size).toBe(1)
 })
 
+test("record : catégorie désactivée → ni insertion ni diffusion, renvoie null", async () => {
+    const { repo, rows } = fakeRepo({ backtests: true, risk: false })
+    const stream = new NotificationStreamService()
+    const pushed: string[] = []
+    stream.subscribe("u1", (n) => pushed.push(n.type))
+    const service = new NotificationService()
+    service.repo = repo
+    service.stream = stream
+
+    expect(await service.record(payload)).toBeNull()
+    expect(rows.size).toBe(0)
+    expect(pushed).toEqual([])
+})
+
+test("record : une autre catégorie désactivée n'empêche pas l'enregistrement", async () => {
+    const { repo, rows } = fakeRepo({ backtests: false, risk: true })
+    const service = new NotificationService()
+    service.repo = repo
+
+    expect(await service.record(payload)).not.toBeNull()
+    expect(rows.size).toBe(1)
+})
+
+test("record : préférence absente = activée (déjà couvert par fakeRepo sans ligne), rejeu toujours ignoré", async () => {
+    const { repo, rows } = fakeRepo(null)
+    const service = new NotificationService()
+    service.repo = repo
+
+    expect(await service.record(payload)).not.toBeNull()
+    expect(await service.record(payload)).toBeNull()
+    expect(rows.size).toBe(1)
+})
+
 test("record : une base indisponible lève (kafkajs rejoue)", async () => {
     const service = new NotificationService()
-    service.repo = { create: async () => { throw new Error("db down") } } as unknown as INotificationRepository
+    service.repo = { findPreferences: async () => null, create: async () => { throw new Error("db down") } } as unknown as INotificationRepository
 
     await expect(service.record(payload)).rejects.toThrow("db down")
 })
@@ -141,4 +175,52 @@ test("startPurge : purge tout de suite, une erreur de base ne lève pas, l'arrê
     stop()
 
     expect(runs).toBe(1)
+})
+
+test("getPreferences : sans ligne, tout activé et rien n'est écrit", async () => {
+    let writes = 0
+    const service = new NotificationService()
+    service.repo = {
+        findPreferences: async () => null,
+        upsertPreferences: async () => void writes++,
+    } as unknown as INotificationRepository
+
+    expect(await service.getPreferences("u1")).toEqual({ BACKTESTS: true, RISK: true })
+    expect(writes).toBe(0)
+})
+
+test("getPreferences : mappe la ligne par catégorie", async () => {
+    const service = new NotificationService()
+    service.repo = { findPreferences: async () => ({ userId: "u1", backtests: false, risk: true }) } as unknown as INotificationRepository
+
+    expect(await service.getPreferences("u1")).toEqual({ BACKTESTS: false, RISK: true })
+})
+
+test("updatePreferences : transmet seulement les colonnes fournies et renvoie le résultat", async () => {
+    const calls: unknown[] = []
+    const service = new NotificationService()
+    service.repo = {
+        upsertPreferences: async (userId: string, update: unknown) => (calls.push([userId, update]), { userId, backtests: true, risk: false }),
+    } as unknown as INotificationRepository
+
+    expect(await service.updatePreferences("u1", { RISK: false })).toEqual({ BACKTESTS: true, RISK: false })
+    expect(calls).toEqual([["u1", { risk: false }]])
+})
+
+test("resetUserData : supprime les données de l'utilisateur ciblé, rejeu sans erreur", async () => {
+    const calls: string[] = []
+    const service = new NotificationService()
+    service.repo = { deleteUserData: async (userId: string) => void calls.push(userId) } as unknown as INotificationRepository
+
+    await service.resetUserData("u1")
+    await service.resetUserData("u1")
+
+    expect(calls).toEqual(["u1", "u1"])
+})
+
+test("resetUserData : une base indisponible lève (kafkajs rejoue)", async () => {
+    const service = new NotificationService()
+    service.repo = { deleteUserData: async () => { throw new Error("db down") } } as unknown as INotificationRepository
+
+    await expect(service.resetUserData("u1")).rejects.toThrow("db down")
 })

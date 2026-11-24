@@ -1,7 +1,7 @@
 import type { PaginationQuery } from "@azimut/contracts"
 import { prisma } from "../prisma"
-import { Prisma, type Notification } from "../generated/prisma/client"
-import type { CreateNotificationDTO, NotificationCounts, NotificationListFilters } from "../interfaces/notification.interface"
+import { Prisma, type Notification, type NotificationPreference } from "../generated/prisma/client"
+import type { CreateNotificationDTO, NotificationCounts, NotificationPreferencesColumns, NotificationListFilters } from "../interfaces/notification.interface"
 
 export interface INotificationRepository {
     create(data: CreateNotificationDTO): Promise<Notification | null>
@@ -11,6 +11,9 @@ export interface INotificationRepository {
     markRead(id: string, userId: string): Promise<boolean>
     markAllRead(userId: string): Promise<number>
     deleteOlderThan(date: Date): Promise<number>
+    findPreferences(userId: string): Promise<NotificationPreference | null>
+    upsertPreferences(userId: string, update: NotificationPreferencesColumns): Promise<NotificationPreference>
+    deleteUserData(userId: string): Promise<void>
 }
 
 const UNIQUE_VIOLATION = "P2002"
@@ -78,6 +81,24 @@ class NotificationRepository implements INotificationRepository {
     async deleteOlderThan(date: Date): Promise<number> {
         const { count } = await prisma.notification.deleteMany({ where: { createdAt: { lt: date } } })
         return count
+    }
+
+    /** `null` si l'utilisateur n'a jamais modifié ses préférences. */
+    findPreferences(userId: string): Promise<NotificationPreference | null> {
+        return prisma.notificationPreference.findUnique({ where: { userId } })
+    }
+
+    /** Crée la ligne (autres catégories activées par défaut) ou ne modifie que les colonnes fournies. */
+    upsertPreferences(userId: string, update: NotificationPreferencesColumns): Promise<NotificationPreference> {
+        return prisma.notificationPreference.upsert({ where: { userId }, create: { userId, ...update }, update })
+    }
+
+    /** Supprime toutes les notifications et la ligne de préférences de l'utilisateur, dans une transaction ; sans effet s'il n'y a rien. */
+    async deleteUserData(userId: string): Promise<void> {
+        await prisma.$transaction([
+            prisma.notification.deleteMany({ where: { userId } }),
+            prisma.notificationPreference.deleteMany({ where: { userId } }),
+        ])
     }
 }
 
