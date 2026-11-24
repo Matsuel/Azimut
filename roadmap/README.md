@@ -58,6 +58,7 @@ Les dossiers des features 02 à 08 citent les anciens numéros ; cette table les
 | fix-07 | [Ajustements web après les notifications](fix-07-web-notifications-et-historique/) | — | 2026-11-18 | — | Livrée | 4 ᵃ |
 | 16 | [Monitoring : sondes de santé et page d'état des services](16-monitoring/) | 8 ᵈ | 2026-11-19 → 2026-11-20 | — | Livrée | 35 |
 | 17 | [Taux et obligations](17-taux-et-obligations/) | 8 | 2026-11-20 | — | Livrée | 27 |
+| 18 | [Options vanilles : payoffs et Black-Scholes](18-options-vanilles/) | 9 | 2026-11-23 | #21 | Livrée | 21 |
 | 19 | [Grecques, volatilité implicite et smile](19-grecques-volatilite-implicite/) | 9 | 2026-11-23 → 2026-11-24 | — | Livrée | 27 |
 | fix-08 | [Correctifs après les taux et obligations](fix-08-taux-pricing-et-ci/) | — | 2026-11-21 | — | Livrée | 8 ᵃ |
 

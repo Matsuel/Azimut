@@ -1,10 +1,10 @@
 # 18 · Options vanilles : payoffs et Black-Scholes
 
-- **Statut** : En cours (backend et écran livrés, PR à ouvrir)
+- **Statut** : Livrée
 - **Roadmap** : Mois 9 — Mois 9 — Options (payoffs, Black-Scholes, grecques, volatilité implicite)
-- **Période** : à fixer au démarrage de la feature
-- **Branche / PR** : `feat/options-vanilles` — PR à ouvrir
-- **Points** : 21 (MUST 16, SHOULD 5) — prévus
+- **Période** : 2026-11-23
+- **Branche / PR** : `feat/options-vanilles` — PR #21 (mergée)
+- **Points** : 21 (MUST 16, SHOULD 5) — réalisés = prévus
 - **Maquettes** : `36 · Calculateur d’option` (créée, node `459:12719`)
 - **Écrans modifiés** : `08 · Détail d’un symbole` (node `13:1466`) : bouton « Pricer une option », spot et dividende pré-remplis (T-07) — dessiné dans la copie `à modifier (F18)` ; l’original est mis à jour au codage
 - **Dépend de** : 11 (dividendes) ; 17 (taux, pipeline pricing).
@@ -35,7 +35,9 @@ Aucun sur le périmètre. Un code d'erreur `SYMBOL_NOT_FOUND` et un champ `Optio
 
 ## Bilan
 
-À écrire à la clôture de la feature.
+- **Livré** : les 6 tâches (21 points ; T-03 déplacée en 19). Engine Black-Scholes à dividende continu, payoffs et parité, contrat et pipeline `pricing.*` pour les options, worker, page `36 · Calculateur d'option`, bouton « Pricer une option » du détail d'un symbole.
+- **Écarts** : voir « Écarts au plan ».
+- **Dette** : voir `TECH-DEBT.md`.
 
 ## Fichiers
 
