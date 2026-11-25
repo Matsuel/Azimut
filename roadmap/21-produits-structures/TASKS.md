@@ -1,16 +1,16 @@
 # 21 · Produits structurés : décomposition, juste valeur, marge — Tâches
 
-> Décisions : `US.md`. Échelle de points, statuts et définition de terminé commune : [`roadmap/README.md`](../README.md). Points prévus.
+> Décisions : `US.md`. Échelle de points, statuts et définition de terminé commune : [`roadmap/README.md`](../README.md). Points prévus, réalisés = prévus. T-05 : pas de table ni de routes dédiées (D8), la persistance est celle du pipeline `pricing.*`.
 
 ## Synthèse
 
 | Tâche | Titre | US | Couche | Priorité | Points | Dépend de | Commits |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T-01 | Engine : capital garanti et reverse convertible comme assemblage de briques | US-01, US-02 | backtest-engine | MUST | 5 | — | — |
-| T-02 | Engine : autocallable par Monte Carlo | US-03 | backtest-engine | MUST | 5 | T-03 | — |
-| T-03 | Engine : juste valeur et marge | US-02, US-03 | backtest-engine | MUST | 3 | T-01 | — |
-| T-04 | Contrat : produit structuré | US-01, US-02, US-03 | contracts | MUST | 3 | — | — |
-| T-05 | Persistance et route de produit | US-01, US-02, US-03 | core-backend | MUST | 5 | T-04 | — |
+| T-01 | Engine : capital garanti et reverse convertible comme assemblage de briques | US-01, US-02 | backtest-engine | MUST | 5 | — | `75dec1b` |
+| T-02 | Engine : autocallable par Monte Carlo | US-03 | backtest-engine | MUST | 5 | T-03 | `75dec1b` |
+| T-03 | Engine : juste valeur et marge | US-02, US-03 | backtest-engine | MUST | 3 | T-01 | `75dec1b` |
+| T-04 | Contrat : produit structuré | US-01, US-02, US-03 | contracts | MUST | 3 | — | `0970f3d` |
+| T-05 | Persistance et route de produit | US-01, US-02, US-03 | core-backend | MUST | 5 | T-04 | `4a44cbe` |
 | T-06 | Constructeur de produit | US-01, US-02 | web | MUST | 5 | T-05 | `69be2a1` |
 | T-07 | Décomposition affichée | US-01 | web | MUST | 3 | T-05 | `69be2a1` |
 
@@ -51,13 +51,13 @@ flowchart LR
 
 ### T-01 · Engine : capital garanti et reverse convertible comme assemblage de briques
 
-- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : — · **Commits** : —
+- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : — · **Commits** : `75dec1b`
 - **Fichiers** : `apps/backtest-engine/engine/structured.ts`, tests
 
 Critères d’acceptation :
-- [ ] Capital garanti = zéro-coupon (17) + call (18) ; participation = (100 − zéro-coupon) / prix du call.
-- [ ] Reverse convertible = obligation + vente de put : le coupon couvre la prime.
-- [ ] Test : la somme des briques égale le prix du produit.
+- [x] Capital garanti = zéro-coupon (17) + call (18) ; participation = (100 − zéro-coupon) / prix du call.
+- [x] Reverse convertible = obligation + vente de put : le coupon couvre la prime.
+- [x] Test : la somme des briques égale le prix du produit.
 
 ### T-02 · Engine : autocallable par Monte Carlo
 
@@ -65,8 +65,8 @@ Critères d’acceptation :
 - **Fichiers** : `apps/backtest-engine/engine/structured-mc.ts`
 
 Critères d’acceptation :
-- [ ] Observation annuelle, rappel si sous-jacent ≥ 100 % du niveau initial avec coupon cumulé, barrière de capital 60 % à l'échéance, 5 ans par défaut ; niveaux modifiables (D6).
-- [ ] Chaque trajectoire donne le flux ; prix = moyenne actualisée.
+- [x] Observation annuelle, rappel si sous-jacent ≥ 100 % du niveau initial avec coupon cumulé, barrière de capital 60 % à l'échéance, 5 ans par défaut ; niveaux modifiables (D6).
+- [x] Chaque trajectoire donne le flux ; prix = moyenne actualisée.
 
 ### T-03 · Engine : juste valeur et marge
 
@@ -74,8 +74,8 @@ Critères d’acceptation :
 - **Fichiers** : `apps/backtest-engine/engine/structured.ts`
 
 Critères d’acceptation :
-- [ ] Marge = prix client − juste valeur, en devise et en pourcentage du prix client (D4) ; prix client = nominal à 100 % (D5).
-- [ ] Le calcul vit ici, pas dans le web.
+- [x] Marge = prix client − juste valeur, en devise et en pourcentage du prix client (D4) ; prix client = nominal à 100 % (D5).
+- [x] Le calcul vit ici, pas dans le web.
 
 ## Lot 2 — Contrat
 
@@ -85,7 +85,7 @@ Critères d’acceptation :
 - **Fichiers** : `packages/contracts/src/structured.ts`
 
 Critères d’acceptation :
-- [ ] Type de produit (`CAPITAL_GUARANTEED`, `REVERSE_CONVERTIBLE`, `AUTOCALLABLE`), paramètres, sortie décomposée.
+- [x] Type de produit (`CAPITAL_GUARANTEED`, `REVERSE_CONVERTIBLE`, `AUTOCALLABLE`), paramètres, sortie décomposée.
 
 ## Lot 3 — Service
 
@@ -95,8 +95,8 @@ Critères d’acceptation :
 - **Fichiers** : `apps/core-backend/services/structured.service.ts`, `prisma/schema.prisma`, `routes/structured/`
 
 Critères d’acceptation :
-- [ ] Création et lecture d'un produit ; résultat décomposé stocké.
-- [ ] Migration additive.
+- [x] Création et lecture d'un produit ; résultat décomposé stocké.
+- [x] Migration additive.
 
 ## Lot 4 — Écrans
 
@@ -106,8 +106,8 @@ Critères d’acceptation :
 - **Fichiers** : `apps/web/src/features/structured/` (nouveau)
 
 Critères d’acceptation :
-- [ ] Formulaire : type, maturité, sous-jacent ; niveaux de l'autocallable modifiables (D6). Pas de saisie du prix client (D5).
-- [ ] La participation et la marge sont celles reçues du backend, jamais calculées ici.
+- [x] Formulaire : type, maturité, sous-jacent ; niveaux de l'autocallable modifiables (D6). Pas de saisie du prix client (D5).
+- [x] La participation et la marge sont celles reçues du backend, jamais calculées ici.
 
 ### T-07 · Décomposition affichée
 
@@ -115,4 +115,4 @@ Critères d’acceptation :
 - **Fichiers** : `apps/web/src/features/structured/`
 
 Critères d’acceptation :
-- [ ] Deux lignes : obligation et option, avec leur valeur reçue et une phrase d'explication (glossaire).
+- [x] Deux lignes : obligation et option, avec leur valeur reçue et une phrase d'explication (glossaire).

@@ -1,11 +1,11 @@
 # 21 · Produits structurés : décomposition, juste valeur, marge
 
-- **Statut** : Planifiée
+- **Statut** : Livrée
 - **Roadmap** : Mois 10 — Mois 10 — Pricing et produits structurés (capital garanti, reverse convertible, autocallable, juste valeur et marge)
-- **Période** : à fixer au démarrage de la feature
-- **Branche / PR** : `feat/produits-structures` — PR à ouvrir
-- **Points** : 29 (MUST 29, SHOULD 0) — prévus
-- **Maquettes** : `39 · Constructeur de produit` (créée, node `465:13338`, état Capital garanti) ; états `· Reverse convertible` (node `689:16456`) et `· Autocallable` (node `689:16894`) dessinés le 2026-11-25, à valider
+- **Période** : 2026-11-25
+- **Branche / PR** : `feat/21-produits-structures` — PR vers `develop`
+- **Points** : 29 (MUST 29, SHOULD 0) — réalisés = prévus
+- **Maquettes** : `39 · Constructeur de produit` (créée, node `465:13338`, état Capital garanti) ; états `· Reverse convertible` (node `689:16456`) et `· Autocallable` (node `689:16894`) dessinés et validés le 2026-11-25
 - **Écrans modifiés** : aucun (page `Structuration` de la sidebar existante)
 - **Dépend de** : 17 (obligation), 19 (grecques, IV), 20 (Monte Carlo, barrière).
 
@@ -34,11 +34,13 @@ Moteur : produits comme assemblages de briques (`structured.ts`) ; autocallable 
 
 ## Écarts au plan
 
-Aucun : feature planifiée, rien de livré.
+D7 à D10 ajoutées en cours de route : prix client constant (champ supprimé), kind `STRUCTURED` du pipeline pricing à la place d'une table et de routes dédiées, états Reverse convertible et Autocallable dessinés avant leur code, conventions de calcul dont la marge de structuration fixe du capital garanti. Un graphe de payoff, absent de `TASKS.md`, est ajouté.
 
 ## Bilan
 
-À écrire à la clôture de la feature.
+- **Livré** : les 7 tâches (29 points). Moteur (`structured.ts`, `structured-mc.ts`), contrat `structured.ts` et kind `STRUCTURED` (migration de l'enum `PricingKind`), page Structuration à trois états (cartes, formulaire, décomposition, payoff, dates d'observation de l'autocallable), glossaire, catalogues.
+- **Écarts** : voir « Écarts au plan » ; écarts de la page à la maquette 39 listés dans TD-69 (pas de bouton « Enregistrer », maturité saisie en années, barre en deux blocs pour RC et AC).
+- **Dette** : TD-69 ouverte. Mesure `verifier-rendu` contre les trois cadres et E2E (`structured.e2e.ts`, Docker) non faites. Services à redémarrer après merge : core-backend (migration `PricingKind` à appliquer) et backtest-engine.
 
 ## Fichiers
 
