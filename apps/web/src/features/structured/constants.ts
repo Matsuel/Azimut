@@ -14,20 +14,20 @@ export const STRUCTURED_MATURITY_YEARS = { min: 1, max: 10 } as const
 // Devise d'affichage : le produit est calculé en euros sur un nominal, jamais converti
 export const STRUCTURED_CURRENCY = "EUR"
 
-// Sous-jacents proposés : le libellé accompagne la demande, le prix se calcule en pourcentage du niveau initial (volatilité saisie), sans lecture de cours
-export const STRUCTURED_UNDERLYINGS = [
-    { value: "^STOXX50E", label: "Euro Stoxx 50" },
-    { value: "^FCHI", label: "CAC 40" },
-    { value: "^GSPC", label: "S&P 500" },
-]
+// Sous-jacent proposé au départ : n'importe quel symbole se choisit ensuite par la recherche ; ses volatilité, dividende et taux préremplissent le formulaire
+export const DEFAULT_UNDERLYING = "^STOXX50E"
+
+// Indice Yahoo du taux à 5 ans, préremplissage du taux d'actualisation (la maturité de départ est 5 ans) ; modifiable
+export const STRUCTURED_RATE_SYMBOL = "^FVX"
 
 // Saisie initiale (pourcentages saisis, pas des ratios) : valeurs de la maquette 39
 export const DEFAULT_STRUCTURED = {
-    underlying: "^STOXX50E",
+    underlying: DEFAULT_UNDERLYING,
     nominal: 1000,
     maturityYears: 5,
     rate: 3,
     volatility: 18,
+    dividendYield: 0,
     guarantee: 100,
     callStrike: 100,
     putStrike: 100,

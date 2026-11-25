@@ -27,6 +27,13 @@ Page Structuration (feature 21, maquette `39 · Constructeur de produit`, trois 
   - `input` : `StructuredInput` de la même demande.
 - **Source** : `src/features/structured/structured-cards.tsx`.
 
+### UnderlyingField
+
+- **Import** : `import { UnderlyingField } from "@/features/structured/underlying-field"`.
+- **Rôle** : champ « Sous-jacent » du formulaire : le symbole choisi et un bouton qui ouvre `SymbolPicker` (n'importe quel symbole de market-service).
+- **Props** : `onChange(symbol)`, appelé après la mise à jour du champ.
+- **Source** : `src/features/structured/underlying-field.tsx`.
+
 ### StructuredForm
 
 - **Import** : `import { StructuredForm } from "@/features/structured/structured-form"`.
@@ -34,6 +41,8 @@ Page Structuration (feature 21, maquette `39 · Constructeur de produit`, trois 
 - **Props** :
   - `product` : `StructuredProduct` choisi (état de l'écran).
   - `onProductChange(product)` : changement de type.
+  - `onUnderlyingChange(symbol)` : appelé quand l'utilisateur choisit un autre sous-jacent (l'écran relit alors son marché).
+  - `market` : volatilité, dividende et taux en pourcentages (`marketDefaults`), écrits dans le formulaire dès qu'ils changent.
   - `onSubmit(values)` : `StructuredFormValues` validées ; l'écran les convertit par `toStructuredPricingInput`.
   - `pending` : calcul en cours (bouton désactivé).
   - `error` : message de l'API, non requis.
@@ -87,6 +96,7 @@ Page Structuration (feature 21, maquette `39 · Constructeur de produit`, trois 
 | Export | Rôle |
 | --- | --- |
 | `structuredDefaults(product)` | Saisie de départ (valeurs de la maquette), coupon propre au produit. |
+| `marketDefaults(inputs, curve)` | Volatilité 1 an, dividende 12 mois (`option-inputs`) et taux à 5 ans de la courbe US d'un sous-jacent, en pourcentages saisis ; une valeur absente est omise. |
 | `toStructuredPricingInput(values, today?)` | Saisie → corps de `POST /api/pricing` : pourcentages en ratios, date du jour, champs du seul produit choisi, jamais de prix client. |
 | `structuredOf(view)` | Entrée et résultat (`COMPLETED`) d'une vue `STRUCTURED` ; `null` pour un autre kind. |
 | `payoffRows(payoff, nominal)` | Lignes du graphique : le payoff reçu et la diagonale du sous-jacent. |
@@ -109,7 +119,7 @@ Page Structuration (feature 21, maquette `39 · Constructeur de produit`, trois 
 | `STRUCTURED_PRODUCT_TYPES` | Types proposés, dans l'ordre du sélecteur. |
 | `STRUCTURED_MATURITY_YEARS` | Bornes de la maturité, en années (miroir du contrat). |
 | `STRUCTURED_CURRENCY` | Devise d'affichage (`EUR`). |
-| `STRUCTURED_UNDERLYINGS` | Sous-jacents proposés (`value` symbole, `label`). |
+| `DEFAULT_UNDERLYING`, `STRUCTURED_RATE_SYMBOL` | Sous-jacent de départ (`^STOXX50E`) ; indice Yahoo du taux à 5 ans qui préremplit le taux. |
 | `DEFAULT_STRUCTURED`, `DEFAULT_COUPON_RATE` | Saisie de départ en pourcentages. |
 | `PRODUCT_FIELDS` | Champs propres à chaque produit. |
 | `FIELD_HINTS` | Entrée de glossaire de l'aide d'un champ. |

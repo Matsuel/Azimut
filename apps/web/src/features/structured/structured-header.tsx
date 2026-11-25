@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl"
 import { PageHeader } from "@/components/page-layout"
 import { Badge } from "@/components/ui/badge"
 import { useFormatters } from "@/lib/format"
-import { STRUCTURED_CURRENCY, STRUCTURED_UNDERLYINGS } from "./constants"
+import { STRUCTURED_CURRENCY } from "./constants"
 import type { StructuredInput, StructuredProduct } from "./types"
 
 type StructuredHeaderProps = {
@@ -24,9 +24,7 @@ export function StructuredHeader({ product, input }: StructuredHeaderProps) {
             description={
                 input
                     ? t("description", {
-                          underlying:
-                              STRUCTURED_UNDERLYINGS.find((u) => u.value === input.underlying)?.label ??
-                              input.underlying,
+                          underlying: input.underlying,
                           maturity: f.formatYears(input.maturityYears),
                           nominal: f.formatPrice(input.nominal, STRUCTURED_CURRENCY),
                           date: f.formatMediumDate(input.valueDate),

@@ -1,5 +1,6 @@
-import { toDay } from "../pricing/utils"
-import { DEFAULT_COUPON_RATE, DEFAULT_STRUCTURED } from "./constants"
+import type { OptionInputs, RateCurve } from "@azimut/contracts"
+import { toDay, toPercent } from "../pricing/utils"
+import { DEFAULT_COUPON_RATE, DEFAULT_STRUCTURED, STRUCTURED_RATE_SYMBOL } from "./constants"
 import type { StructuredFormValues } from "./schema"
 import type {
     PricingView,
@@ -31,6 +32,7 @@ export function toStructuredPricingInput(
         maturityYears: values.maturityYears,
         rate: ratio(values.rate),
         volatility: ratio(values.volatility),
+        dividendYield: ratio(values.dividendYield),
         valueDate: toDay(today),
     }
     if (values.product === "CAPITAL_GUARANTEED") {
@@ -96,4 +98,20 @@ export function barSegments(result: StructuredResult): BarSegment[] {
         ? [{ key: "FAIR_VALUE", ratio: result.fairValueRatio }]
         : result.bricks.map((brick) => ({ key: brick.type, ratio: brick.ratio }))
     return result.marginRatio > 0 ? [...base, { key: "MARGIN", ratio: result.marginRatio }] : base
+}
+
+/**
+ * Paramètres de marché du sous-jacent choisi, en pourcentages saisis : volatilité 1 an et dividende des 12 derniers mois
+ * (`GET /api/market/option-inputs`), taux à 5 ans de la courbe US ; une valeur absente est omise et laisse la saisie en l'état.
+ */
+export function marketDefaults(
+    inputs: OptionInputs | undefined,
+    curve: RateCurve | undefined,
+): Partial<Pick<StructuredFormValues, "volatility" | "dividendYield" | "rate">> {
+    const rate = curve?.points.find((point) => point.symbol === STRUCTURED_RATE_SYMBOL)?.rate
+    return {
+        ...(inputs?.volatility != null && { volatility: toPercent(inputs.volatility) }),
+        ...(inputs && { dividendYield: toPercent(inputs.dividendYield) }),
+        ...(rate != null && { rate: toPercent(rate) }),
+    }
 }

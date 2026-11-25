@@ -1,9 +1,11 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { StateCard } from "@/components/state-card"
 import { useApiErrorMessages } from "@/lib/api-error"
+import { useOptionInputs, useRateCurve } from "../pricing/hook"
+import { DEFAULT_UNDERLYING } from "./constants"
 import { DecompositionCard } from "./decomposition-card"
 import { useStructuredPricing } from "./hook"
 import { ObservationsCard } from "./observations-card"
@@ -12,6 +14,7 @@ import { StructuredCards } from "./structured-cards"
 import { StructuredForm } from "./structured-form"
 import { StructuredHeader } from "./structured-header"
 import type { StructuredProduct } from "./types"
+import { marketDefaults } from "./utils"
 
 // Carte d'état de la zone résultat : rien demandé, calcul en cours, échec du calcul ou de la lecture
 function ResultState({ view, readFailed }: Pick<ReturnType<typeof useStructuredPricing>, "view" | "readFailed">) {
@@ -30,6 +33,10 @@ function ResultState({ view, readFailed }: Pick<ReturnType<typeof useStructuredP
 export function StructuredPage() {
     const { errorMessage } = useApiErrorMessages()
     const [product, setProduct] = useState<StructuredProduct>("CAPITAL_GUARANTEED")
+    const [underlying, setUnderlying] = useState(DEFAULT_UNDERLYING)
+    const inputs = useOptionInputs(underlying)
+    const curve = useRateCurve()
+    const market = useMemo(() => marketDefaults(inputs.data, curve.data), [inputs.data, curve.data])
     const pricing = useStructuredPricing()
     const { input, result } = pricing
 
@@ -41,6 +48,8 @@ export function StructuredPage() {
                 <StructuredForm
                     product={product}
                     onProductChange={setProduct}
+                    onUnderlyingChange={setUnderlying}
+                    market={market}
                     onSubmit={pricing.submit}
                     pending={pricing.pending}
                     error={pricing.createError ? errorMessage(pricing.createError) : undefined}

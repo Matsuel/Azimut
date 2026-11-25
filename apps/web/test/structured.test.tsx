@@ -10,11 +10,13 @@ import { toStructuredPricingInput } from "../src/features/structured/utils"
 
 const createPricing = mock<(input: PricingInput) => Promise<PricingView>>()
 const getPricing = mock<(id: string) => Promise<PricingView>>()
+const getRateCurve = mock()
+const getOptionInputs = mock()
 mock.module("../src/features/pricing/api", () => ({
     createPricing,
     getPricing,
-    getRateCurve: mock(),
-    getOptionInputs: mock(),
+    getRateCurve,
+    getOptionInputs,
 }))
 
 const { StructuredPage } = await import("../src/features/structured/structured-page")
@@ -23,6 +25,11 @@ afterEach(cleanup)
 beforeEach(() => {
     createPricing.mockReset()
     getPricing.mockReset()
+    getRateCurve.mockReset()
+    getOptionInputs.mockReset()
+    // Sans marché lisible, le formulaire garde ses valeurs de départ
+    getRateCurve.mockRejectedValue(new Error("no curve"))
+    getOptionInputs.mockRejectedValue(new Error("no inputs"))
 })
 
 const common = {
@@ -31,6 +38,7 @@ const common = {
     maturityYears: 5,
     rate: 0.03,
     volatility: 0.18,
+    dividendYield: 0,
     valueDate: "2026-10-28",
 }
 const totals = {
@@ -143,6 +151,7 @@ test("capital garanti : envoie les ratios sans prix client, puis affiche juste v
         maturityYears: 5,
         rate: 0.03,
         volatility: 0.18,
+        dividendYield: 0,
         guarantee: 1,
         callStrike: 1,
     })
@@ -222,6 +231,7 @@ test("toStructuredPricingInput : pourcentages en ratios, date du jour, champs du
             maturityYears: 3,
             rate: 2.5,
             volatility: 20,
+            dividendYield: 3,
             couponRate: 7,
             recallLevel: 95,
             protectionBarrier: 50,
@@ -239,10 +249,41 @@ test("toStructuredPricingInput : pourcentages en ratios, date du jour, champs du
             maturityYears: 3,
             rate: 0.025,
             volatility: 0.2,
+            dividendYield: 0.03,
             valueDate: "2026-10-28",
             couponRate: 0.07,
             recallLevel: 0.95,
             protectionBarrier: 0.5,
         },
     })
+})
+
+test("sous-jacent : sa volatilité, son dividende et le taux à 5 ans préremplissent le formulaire, modifiables ensuite", async () => {
+    getOptionInputs.mockResolvedValue({
+        symbol: "^STOXX50E",
+        currency: "EUR",
+        spot: 5000,
+        dividendYield: 0.031,
+        volatility: 0.152,
+    })
+    getRateCurve.mockResolvedValue({
+        currency: "USD",
+        points: [
+            { symbol: "^IRX", maturityYears: 0.25, rate: 0.04, date: "2026-10-28" },
+            { symbol: "^FVX", maturityYears: 5, rate: 0.0385, date: "2026-10-28" },
+        ],
+    })
+    createPricing.mockResolvedValue(view("PENDING", "CAPITAL_GUARANTEED"))
+    getPricing.mockResolvedValue(view("PENDING", "CAPITAL_GUARANTEED"))
+    renderPage()
+
+    await waitFor(() =>
+        expect((screen.getByRole("spinbutton", { name: /^Volatilité/ }) as HTMLInputElement).value).toBe("15.2"),
+    )
+    expect((screen.getByRole("spinbutton", { name: /^Rendement du dividende/ }) as HTMLInputElement).value).toBe("3.1")
+    expect((screen.getByRole("spinbutton", { name: /^Taux/ }) as HTMLInputElement).value).toBe("3.85")
+    price()
+
+    await waitFor(() => expect(createPricing).toHaveBeenCalled())
+    expect(sentStructured()).toMatchObject({ volatility: 0.152, dividendYield: 0.031, rate: 0.0385 })
 })

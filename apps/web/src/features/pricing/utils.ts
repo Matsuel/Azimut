@@ -60,7 +60,7 @@ export function toOptionPricingInput(values: OptionFormValues): PricingInput {
 }
 
 // Ratio → pourcentage saisissable, sans bruit de virgule flottante (0,243 → 24,3)
-const toPercent = (ratio: number) => Math.round(ratio * 100 * 1e4) / 1e4
+export const toPercent = (ratio: number) => Math.round(ratio * 100 * 1e4) / 1e4
 
 /** Maturité en jours entiers d'une demande (`maturityYears` × 365), pour l'afficher telle qu'elle a été saisie. */
 export const toMaturityDays = (maturityYears: number) => Math.round(maturityYears * DAYS_PER_YEAR)

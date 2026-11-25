@@ -29,6 +29,10 @@ export function createStructuredSchema(t: StructuredTranslator) {
                 .max(STRUCTURED_MATURITY_YEARS.max, field("maturity")),
             rate: z.number(field("rate")).min(0, field("rate")).max(100, field("rate")),
             volatility: z.number(field("volatility")).gt(0, field("volatility")).max(500, field("volatility")),
+            dividendYield: z
+                .number(field("dividendYield"))
+                .min(0, field("dividendYield"))
+                .max(100, field("dividendYield")),
             guarantee: percent("guarantee", 100),
             callStrike: percent("strike", 200),
             couponRate: percent("coupon", 100),

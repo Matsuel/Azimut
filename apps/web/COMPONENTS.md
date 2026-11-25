@@ -220,7 +220,7 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [ObservationsCard](src/features/structured/COMPONENTS.md#observationscard) : dates d'observation de l'autocallable
   - [`features/structured/hook.ts`](src/features/structured/COMPONENTS.md#featuresstructuredhookts) : exports `useStructuredPricing`
   - [`features/structured/schema.ts`](src/features/structured/COMPONENTS.md#featuresstructuredschemats) : exports `createStructuredSchema`
-  - [`features/structured/utils.ts`](src/features/structured/COMPONENTS.md#featuresstructuredutilsts) : exports `structuredDefaults`, `toStructuredPricingInput`, `structuredOf`, `payoffRows`, `barSegments`
+  - [`features/structured/utils.ts`](src/features/structured/COMPONENTS.md#featuresstructuredutilsts) : exports `structuredDefaults`, `marketDefaults`, `toStructuredPricingInput`, `structuredOf`, `payoffRows`, `barSegments`
   - [`features/structured/constants.ts`](src/features/structured/COMPONENTS.md#featuresstructuredconstantsts) : exports `STRUCTURED_PRODUCT_TYPES`, `PRODUCT_FIELDS`, `DEFAULT_STRUCTURED`…
   - [`features/structured/types.ts`](src/features/structured/COMPONENTS.md#featuresstructuredtypests) : réexports des types du produit structuré du contrat
 - [`features/notifications`](src/features/notifications/COMPONENTS.md)

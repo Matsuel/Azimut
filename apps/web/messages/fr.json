@@ -1969,6 +1969,7 @@
                 "protectionBarrier": "Barrière de protection (%)",
                 "rate": "Taux du zéro-coupon (%)",
                 "volatility": "Volatilité (%)",
+                "dividendYield": "Rendement du dividende (%)",
                 "submit": "Pricer le produit",
                 "validation": {
                     "underlying": "Choisissez un sous-jacent.",
@@ -1976,6 +1977,7 @@
                     "maturity": "Maturité : entier de {min} à {max} ans.",
                     "rate": "Taux de 0 à 100 %.",
                     "volatility": "Volatilité : strictement positive, au plus 500 %.",
+                    "dividendYield": "Dividende : de 0 à 100 %.",
                     "guarantee": "Garantie : strictement positive, au plus 100 %.",
                     "strike": "Strike : strictement positif, au plus 200 %.",
                     "coupon": "Coupon : strictement positif, au plus 100 %.",

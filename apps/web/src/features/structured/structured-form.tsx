@@ -2,10 +2,10 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslations } from "next-intl"
+import { useEffect } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { AppField } from "@/components/form/field"
 import { NumberField } from "@/components/form/fields/number-field"
-import { SelectField } from "@/components/form/fields/select-field"
 import { OptionSelect } from "@/components/option-select"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,15 +17,17 @@ import {
     PRODUCT_FIELDS,
     STRUCTURED_MATURITY_YEARS,
     STRUCTURED_PRODUCT_TYPES,
-    STRUCTURED_UNDERLYINGS,
 } from "./constants"
 import { createStructuredSchema, type StructuredFormValues } from "./schema"
 import type { StructuredProduct } from "./types"
+import { UnderlyingField } from "./underlying-field"
 import { structuredDefaults } from "./utils"
 
 type StructuredFormProps = {
     product: StructuredProduct
     onProductChange: (product: StructuredProduct) => void
+    onUnderlyingChange: (symbol: string) => void
+    market: Partial<Pick<StructuredFormValues, "volatility" | "dividendYield" | "rate">> // marché du sous-jacent, écrit dans le formulaire dès qu'il change
     onSubmit: (values: StructuredFormValues) => void
     pending: boolean
     error?: string // erreur de l'API (saisie refusée, demande non publiée)
@@ -58,12 +60,25 @@ function ProductTabs({
 }
 
 /** Carte « Produit » (maquette 39) : sélecteur de type, paramètres communs puis ceux du produit choisi ; le prix client n'est pas saisi (D5). */
-export function StructuredForm({ product, onProductChange, onSubmit, pending, error }: StructuredFormProps) {
+export function StructuredForm({
+    product,
+    onProductChange,
+    onUnderlyingChange,
+    market,
+    onSubmit,
+    pending,
+    error,
+}: StructuredFormProps) {
     const t = useTranslations("pages.structured")
     const form = useForm<StructuredFormValues>({
         resolver: zodResolver(createStructuredSchema(t)),
         defaultValues: structuredDefaults(product),
     })
+
+    // Un nouveau sous-jacent apporte sa volatilité, son dividende et son taux ; la saisie reste modifiable ensuite
+    useEffect(() => {
+        for (const [name, value] of Object.entries(market)) form.setValue(name as keyof typeof market, value)
+    }, [market, form])
 
     // Changer de type garde la saisie commune ; seul le coupon, propre à chaque produit, reprend sa valeur de départ
     const changeProduct = (next: StructuredProduct) => {
@@ -93,11 +108,7 @@ export function StructuredForm({ product, onProductChange, onSubmit, pending, er
                     <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
                         <ProductTabs product={product} onChange={changeProduct} />
                         <div className="grid gap-4 sm:grid-cols-2">
-                            <SelectField<StructuredFormValues>
-                                name="underlying"
-                                label={t("form.underlying")}
-                                options={STRUCTURED_UNDERLYINGS}
-                            />
+                            <UnderlyingField onChange={onUnderlyingChange} />
                             <AppField<StructuredFormValues> name="maturityYears" label={t("form.maturity")}>
                                 {({ field, invalid }) => (
                                     <OptionSelect
@@ -121,6 +132,7 @@ export function StructuredForm({ product, onProductChange, onSubmit, pending, er
                                 />
                             ))}
                             <NumberField<StructuredFormValues> name="rate" label={t("form.rate")} />
+                            <NumberField<StructuredFormValues> name="dividendYield" label={t("form.dividendYield")} />
                             <NumberField<StructuredFormValues> name="volatility" label={t("form.volatility")} />
                         </div>
                         {error && <FieldError>{error}</FieldError>}
