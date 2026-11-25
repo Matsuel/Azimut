@@ -87,7 +87,7 @@ test("POST OPTION_MC : trajectoires par défaut 100 000, graine ignorée ; hors 
 
 test("POST STRUCTURED : produit transmis au service, prix client ignoré ; produit inconnu ou maturité hors bornes : 400 INVALID_PRICING", async () => {
     create.mockResolvedValue({ id: "p4" } as never)
-    const structured = { product: "REVERSE_CONVERTIBLE" as const, underlying: "^STOXX50E", nominal: 1000, maturityYears: 5, rate: 0.03, volatility: 0.18, valueDate: "2026-10-28", couponRate: 0.04, putStrike: 1 }
+    const structured = { product: "REVERSE_CONVERTIBLE" as const, underlying: "^STOXX50E", nominal: 1000, maturityYears: 5, rate: 0.03, volatility: 0.18, dividendYield: 0.02, valueDate: "2026-10-28", couponRate: 0.04, putStrike: 1 }
 
     expect((await post({ kind: "STRUCTURED", structured: { ...structured, clientPrice: 900 } })).status).toBe(202)
     expect(create.mock.calls[0]).toEqual(["u1", { kind: "STRUCTURED", structured }])

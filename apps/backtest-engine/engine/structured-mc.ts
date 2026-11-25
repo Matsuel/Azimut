@@ -7,7 +7,7 @@ import { assemble, brick, continuousRate, discountFactor, payoffGrid } from "./s
 const yearDate = (valueDate: string, years: number): string => addYears(new Date(`${valueDate}T00:00:00Z`), years).toISOString().slice(0, 10);
 
 /**
- * Autocallable par simulation (D3, D6) : un tirage log-normal par année (GBM neutre au risque, dérive r − σ²/2, sans dividende).
+ * Autocallable par simulation (D3, D6) : un tirage log-normal par année (GBM neutre au risque, dérive r − q − σ²/2).
  * Chaque année avant l'échéance, un niveau ≥ seuil de rappel rembourse le nominal + coupon cumulé et arrête la trajectoire. À l'échéance :
  * ≥ seuil : nominal + coupon cumulé ; entre barrière et seuil : nominal ; sous la barrière : nominal × niveau. Le prix est la moyenne
  * des flux actualisés, avec son erreur standard. Briques : le zéro-coupon (capital à l'échéance) et le reste, « coupons nets » de la
@@ -15,8 +15,8 @@ const yearDate = (valueDate: string, years: number): string => addYears(new Date
  * Fonction pure : mêmes paramètres et même `seed`, mêmes sorties. Lève si la volatilité sort de la plage numérique.
  */
 export function priceAutocallable(input: AutocallableInput, seed: number, paths = AUTOCALL_PATHS): AutocallableResult {
-    const { nominal, maturityYears, rate, volatility, couponRate, recallLevel, protectionBarrier, valueDate } = input;
-    const drift = continuousRate(rate) - (volatility * volatility) / 2;
+    const { nominal, maturityYears, rate, volatility, dividendYield, couponRate, recallLevel, protectionBarrier, valueDate } = input;
+    const drift = continuousRate(rate) - dividendYield - (volatility * volatility) / 2;
     const draw = standardNormal(mulberry32(seed));
 
     const prices = new PayoffStats();

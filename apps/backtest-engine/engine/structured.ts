@@ -62,12 +62,12 @@ export function payoffGrid(payoffAt: (level: number) => number): StructuredPayof
  * Lève si le budget est nul ou négatif (zéro-coupon trop cher : garantie élevée avec un taux bas) ou si Black-Scholes sort de sa plage.
  */
 export function priceCapitalGuaranteed(input: CapitalGuaranteedInput): CapitalGuaranteedResult {
-    const { nominal, maturityYears, rate, volatility, guarantee, callStrike } = input;
+    const { nominal, maturityYears, rate, volatility, dividendYield, guarantee, callStrike } = input;
     const zeroCoupon = guarantee * nominal * discountFactor(rate, maturityYears);
     const optionBudget = nominal - zeroCoupon - STRUCTURING_MARGIN * nominal;
     if (optionBudget <= 0) throw new Error("Option budget is not positive: lower the guarantee or raise the rate");
 
-    const callPrice = blackScholes({ spot: nominal, strike: callStrike * nominal, maturityYears, rate: continuousRate(rate), dividendYield: 0, volatility }).call;
+    const callPrice = blackScholes({ spot: nominal, strike: callStrike * nominal, maturityYears, rate: continuousRate(rate), dividendYield, volatility }).call;
     if (!(callPrice > 0)) throw new Error("Call price is not positive: parameters out of numeric range");
     const participation = optionBudget / callPrice;
 
@@ -86,11 +86,11 @@ export function priceCapitalGuaranteed(input: CapitalGuaranteedInput): CapitalGu
  * est ce qui reste du prix client après la juste valeur (le coupon d'un produit trop généreux la rend négative).
  */
 export function priceReverseConvertible(input: ReverseConvertibleInput): ReverseConvertibleResult {
-    const { nominal, maturityYears, rate, volatility, couponRate, putStrike } = input;
+    const { nominal, maturityYears, rate, volatility, dividendYield, couponRate, putStrike } = input;
     let bond = nominal * discountFactor(rate, maturityYears);
     for (let year = 1; year <= maturityYears; year++) bond += nominal * couponRate * discountFactor(rate, year);
 
-    const putPrice = blackScholes({ spot: nominal, strike: putStrike * nominal, maturityYears, rate: continuousRate(rate), dividendYield: 0, volatility }).put;
+    const putPrice = blackScholes({ spot: nominal, strike: putStrike * nominal, maturityYears, rate: continuousRate(rate), dividendYield, volatility }).put;
     if (!Number.isFinite(putPrice)) throw new Error("Put price out of numeric range");
 
     return {

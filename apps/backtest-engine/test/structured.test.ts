@@ -5,7 +5,7 @@ import { blackScholes } from "../engine/options"
 import { priceCapitalGuaranteed, priceReverseConvertible } from "../engine/structured"
 import { priceAutocallable } from "../engine/structured-mc"
 
-const common = { underlying: "^STOXX50E", nominal: 1000, maturityYears: 5, rate: 0.03, volatility: 0.18, valueDate: "2026-10-28" }
+const common = { underlying: "^STOXX50E", nominal: 1000, maturityYears: 5, rate: 0.03, volatility: 0.18, dividendYield: 0.02, valueDate: "2026-10-28" }
 const guaranteed: CapitalGuaranteedInput = { product: "CAPITAL_GUARANTEED", ...common, guarantee: 1, callStrike: 1 }
 const convertible: ReverseConvertibleInput = { product: "REVERSE_CONVERTIBLE", ...common, couponRate: 0.04, putStrike: 1 }
 const autocall: AutocallableInput = { product: "AUTOCALLABLE", ...common, couponRate: 0.06, recallLevel: 1, protectionBarrier: 0.6 }
@@ -25,7 +25,7 @@ test("capital garanti : zéro-coupon + call, la somme des briques est la juste v
 
 test("capital garanti : participation = budget / prix du call, payoff plat sous le strike puis participation", () => {
     const result = priceCapitalGuaranteed(guaranteed)
-    const call = blackScholes({ spot: 1000, strike: 1000, maturityYears: 5, rate: Math.log(1.03), dividendYield: 0, volatility: 0.18 }).call
+    const call = blackScholes({ spot: 1000, strike: 1000, maturityYears: 5, rate: Math.log(1.03), dividendYield: 0.02, volatility: 0.18 }).call
 
     expect(result.callPrice).toBeCloseTo(call, 2)
     expect(result.participation).toBeCloseTo(result.optionBudget / call, 3)
@@ -37,6 +37,11 @@ test("capital garanti : participation = budget / prix du call, payoff plat sous 
 
 test("capital garanti : garantie 100 % avec un taux nul, budget négatif : refusé", () => {
     expect(() => priceCapitalGuaranteed({ ...guaranteed, rate: 0, maturityYears: 1 })).toThrow("Option budget")
+})
+
+test("dividende du sous-jacent : il abaisse le call, donc la participation du capital garanti", () => {
+    expect(priceCapitalGuaranteed({ ...guaranteed, dividendYield: 0.04 }).participation).toBeGreaterThan(priceCapitalGuaranteed({ ...guaranteed, dividendYield: 0 }).participation)
+    expect(priceReverseConvertible({ ...convertible, dividendYield: 0.04 }).putPrice).toBeGreaterThan(priceReverseConvertible({ ...convertible, dividendYield: 0 }).putPrice)
 })
 
 test("capital garanti : garantie plus basse, participation plus forte", () => {

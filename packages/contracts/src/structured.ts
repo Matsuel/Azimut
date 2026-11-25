@@ -10,7 +10,7 @@ export const STRUCTURED_MATURITY_BOUNDS = { min: 1, max: 10 } as const;
 export const STRUCTURED_BRICK_TYPES = ["ZERO_COUPON", "CALL", "BOND", "PUT", "AUTOCALL_NET_COUPONS"] as const;
 
 const commonInput = {
-    // Libellé du sous-jacent (symbole market-service) : le produit est calculé en pourcentage du niveau initial, le cours n'entre pas dans le prix
+    // Symbole du sous-jacent (market-service) : le produit est calculé en pourcentage du niveau initial, le cours n'entre pas dans le prix ; ce sont la volatilité, le dividende et le taux, lus sur le marché par le web, qui le déterminent
     underlying: z.string().trim().min(1),
     // EUR (> 0) : nominal ; le prix client est le nominal à 100 % (D5), jamais saisi
     nominal: z.number().gt(0),
@@ -20,6 +20,8 @@ const commonInput = {
     rate: z.number().min(0).max(1),
     // Ratio annuel (0.18 = 18 %) : volatilité du sous-jacent
     volatility: z.number().gt(0).max(5),
+    // Ratio annuel continu (0.03 = 3 %) : rendement des dividendes du sous-jacent, que le produit ne perçoit pas : il abaisse le forward, donc le prix du call et la participation
+    dividendYield: z.number().min(0).max(1),
     // Date de départ, YYYY-MM-DD : ne date que les observations, jamais le prix
     valueDate: z.iso.date(),
 };

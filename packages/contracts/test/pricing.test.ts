@@ -100,7 +100,7 @@ test("OPTION_MC : trajectoires bornées de 10 000 à 1 000 000, 100 000 par déf
 })
 
 test("STRUCTURED : un produit à la fois, maturité entière de 1 à 10 ans, niveaux en ratio ; le prix client n'est pas saisissable", () => {
-    const common = { underlying: "^STOXX50E", nominal: 1000, maturityYears: 5, rate: 0.03, volatility: 0.18, valueDate: "2026-10-28" }
+    const common = { underlying: "^STOXX50E", nominal: 1000, maturityYears: 5, rate: 0.03, volatility: 0.18, dividendYield: 0.02, valueDate: "2026-10-28" }
     const guaranteed = { product: "CAPITAL_GUARANTEED", ...common, guarantee: 1, callStrike: 1 }
     const convertible = { product: "REVERSE_CONVERTIBLE", ...common, couponRate: 0.04, putStrike: 1 }
     const autocall = { product: "AUTOCALLABLE", ...common, couponRate: 0.06, recallLevel: 1, protectionBarrier: 0.6 }
