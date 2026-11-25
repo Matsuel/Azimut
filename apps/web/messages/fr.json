@@ -1958,7 +1958,8 @@
                 "description": "Choisissez un type, puis ses paramètres",
                 "type": "Type",
                 "underlying": "Sous-jacent",
-                "maturity": "Maturité (années)",
+                "maturity": "Maturité",
+                "maturityOption": "{years, plural, one {# an} other {# ans}}",
                 "nominal": "Nominal (€)",
                 "guarantee": "Garantie du capital (%)",
                 "callStrike": "Strike du call (% du niveau initial)",
@@ -2061,7 +2062,7 @@
                 "recallLevel": "Seuil de rappel",
                 "coupon": "Coupon",
                 "probability": "Proba. de rappel",
-                "end": "Échéance · {years} ans",
+                "end": "Échéance · {date}",
                 "note": "Pas de formule fermée : prix par simulation, {paths} trajectoires, seed {seed}."
             },
             "states": {

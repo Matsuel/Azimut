@@ -75,6 +75,7 @@ test("autocallable : même graine, même résultat ; briques = juste valeur ; pr
     expect(first.observations.map(({ cumulativeCoupon }) => cumulativeCoupon)).toEqual([0.06, 0.12, 0.18, 0.24])
     expect(first.observations.reduce((total, { recallProbability }) => total + recallProbability, 0) + first.maturityProbability).toBeCloseTo(1, 3)
     expect(first.recallProbability).toBeCloseTo(1 - first.maturityProbability, 3)
+    expect(first.maturityDate).toBe("2031-10-28")
     expect(first.maturityCumulativeCoupon).toBe(0.3)
 })
 

@@ -86,6 +86,7 @@ const autocallable: StructuredResult = {
     observations: [{ year: 1, date: "2027-10-28", recallLevel: 1, cumulativeCoupon: 0.06, recallProbability: 0.41 }],
     maturityProbability: 0.27,
     recallProbability: 0.73,
+    maturityDate: "2031-10-28",
     maturityCumulativeCoupon: 0.3,
 }
 const structuredInputs = {
@@ -195,10 +196,10 @@ test("autocallable : niveaux envoyés en ratios, dates d'observation, probabilit
 test("saisie hors bornes : refusée sans appel", async () => {
     renderPage()
 
-    fireEvent.change(screen.getByRole("spinbutton", { name: /^Maturité/ }), { target: { value: "11" } })
+    fireEvent.change(screen.getByRole("spinbutton", { name: /^Volatilité/ }), { target: { value: "600" } })
     price()
 
-    await waitFor(() => expect(screen.getByText(/entier de 1 à 10 ans/)).toBeTruthy())
+    await waitFor(() => expect(screen.getByText(/au plus 500 %/)).toBeTruthy())
     expect(createPricing).not.toHaveBeenCalled()
 })
 

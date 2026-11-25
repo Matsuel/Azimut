@@ -3,8 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslations } from "next-intl"
 import { FormProvider, useForm } from "react-hook-form"
+import { AppField } from "@/components/form/field"
 import { NumberField } from "@/components/form/fields/number-field"
 import { SelectField } from "@/components/form/fields/select-field"
+import { OptionSelect } from "@/components/option-select"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FieldError } from "@/components/ui/field"
@@ -13,6 +15,7 @@ import {
     DEFAULT_COUPON_RATE,
     FIELD_HINTS,
     PRODUCT_FIELDS,
+    STRUCTURED_MATURITY_YEARS,
     STRUCTURED_PRODUCT_TYPES,
     STRUCTURED_UNDERLYINGS,
 } from "./constants"
@@ -70,6 +73,14 @@ export function StructuredForm({ product, onProductChange, onSubmit, pending, er
         onProductChange(next)
     }
 
+    const maturityOptions = Array.from(
+        { length: STRUCTURED_MATURITY_YEARS.max - STRUCTURED_MATURITY_YEARS.min + 1 },
+        (_, index) => {
+            const years = STRUCTURED_MATURITY_YEARS.min + index
+            return { value: String(years), label: t("form.maturityOption", { years }) }
+        },
+    )
+
     return (
         <Card>
             <CardHeader>
@@ -87,7 +98,17 @@ export function StructuredForm({ product, onProductChange, onSubmit, pending, er
                                 label={t("form.underlying")}
                                 options={STRUCTURED_UNDERLYINGS}
                             />
-                            <NumberField<StructuredFormValues> name="maturityYears" label={t("form.maturity")} />
+                            <AppField<StructuredFormValues> name="maturityYears" label={t("form.maturity")}>
+                                {({ field, invalid }) => (
+                                    <OptionSelect
+                                        id={field.name}
+                                        value={String(field.value ?? "")}
+                                        options={maturityOptions}
+                                        onChange={(value) => field.onChange(Number(value))}
+                                        invalid={invalid}
+                                    />
+                                )}
+                            </AppField>
                             <NumberField<StructuredFormValues> name="nominal" label={t("form.nominal")} />
                             {PRODUCT_FIELDS[product].map((name) => (
                                 <NumberField<StructuredFormValues>

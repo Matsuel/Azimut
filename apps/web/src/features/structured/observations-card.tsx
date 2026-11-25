@@ -42,7 +42,7 @@ function ObservationsTable({ result, input }: { result: AutocallableResult; inpu
                     </TableRow>
                 ))}
                 <TableRow variant="static" className="h-11 text-body-semibold">
-                    <TableCell>{t("end", { years: input.maturityYears })}</TableCell>
+                    <TableCell>{t("end", { date: f.formatMediumDate(result.maturityDate) })}</TableCell>
                     <TableCell className="text-right">{f.formatRate(input.protectionBarrier)}</TableCell>
                     <TableCell className="text-right">{f.formatRate(result.maturityCumulativeCoupon)}</TableCell>
                     <TableCell className="text-right">{f.formatRate(result.maturityProbability)}</TableCell>

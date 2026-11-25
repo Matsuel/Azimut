@@ -62,6 +62,7 @@ export function priceAutocallable(input: AutocallableInput, seed: number, paths 
         observations,
         maturityProbability: round(reachedMaturity, 4),
         recallProbability: round(1 - reachedMaturity, 4),
+        maturityDate: yearDate(valueDate, maturityYears),
         maturityCumulativeCoupon: round(couponRate * maturityYears, 4),
         payoff: payoffGrid((level) => nominal * (level >= recallLevel ? 1 + couponRate * maturityYears : level >= protectionBarrier ? 1 : level)),
     };

@@ -136,6 +136,8 @@ export const autocallableResultSchema = z.object({
     maturityProbability: z.number().min(0).max(1),
     // Ratio : part des trajectoires rappelées avant l'échéance (1 − maturityProbability)
     recallProbability: z.number().min(0).max(1),
+    // YYYY-MM-DD : valueDate + maturityYears ans, date de la dernière observation
+    maturityDate: z.iso.date(),
     // Ratio du nominal : coupon cumulé à l'échéance
     maturityCumulativeCoupon: z.number(),
 });
