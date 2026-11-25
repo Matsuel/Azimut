@@ -126,3 +126,20 @@ export const notificationListQuerySchema = z.object({
         .transform((v) => v === "true")
         .optional(),
 });
+
+// Une préférence par catégorie : `false` écarte les notifications de la catégorie (jamais enregistrées ni diffusées)
+export const notificationPreferencesSchema = z.object({
+    BACKTESTS: z.boolean(),
+    RISK: z.boolean(),
+});
+
+// Mise à jour partielle : au moins une catégorie, les autres gardent leur valeur
+export const notificationPreferencesUpdateSchema = notificationPreferencesSchema
+    .partial()
+    .refine((v) => Object.keys(v).length > 0, { message: "At least one category" });
+
+export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;
+export type NotificationPreferencesUpdate = z.infer<typeof notificationPreferencesUpdateSchema>;
+
+// Valeur d'un utilisateur sans ligne de préférences : tout activé
+export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = { BACKTESTS: true, RISK: true };

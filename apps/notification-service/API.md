@@ -10,6 +10,8 @@ Catalogue des routes internes de notification-service (port 8002, base PostgreSQ
 - [`POST /api/notifications/:id/read`](#post-apinotificationsidread)
 - [`POST /api/notifications/read-all`](#post-apinotificationsread-all)
 - [`GET /api/notifications/stream`](#get-apinotificationsstream)
+- [`GET /api/notifications/preferences`](#get-apinotificationspreferences)
+- [`PUT /api/notifications/preferences`](#put-apinotificationspreferences)
 
 ## Conventions communes
 
@@ -83,3 +85,30 @@ Catalogue des routes internes de notification-service (port 8002, base PostgreSQ
 - **Effets** : abonnement en mémoire (`NotificationStreamService`), retiré à la fermeture du client.
 - **Appelant** : aucun encore (web : `EventSource`, T-12).
 - **Source** : `controller/notification.controller.ts` (`stream`), `services/notification-stream.service.ts`, `services/notification.service.ts` (`record` diffuse).
+
+### GET /api/notifications/preferences
+
+- **Auth** : clé interne + `x-user-id`.
+- **Entrée** : aucune.
+- **Réponse** : `200`, `NotificationPreferences` : `{ "BACKTESTS": true, "RISK": true }` (un booléen par catégorie ; `false` = les notifications de la catégorie ne sont ni enregistrées ni diffusées). Utilisateur sans ligne : `DEFAULT_NOTIFICATION_PREFERENCES` (tout activé), **rien n'est écrit**.
+- **Erreurs** : aucune propre à la route.
+- **Effets** : aucun.
+- **Appelant** : aucun encore (web : paramètres, préférences de notification).
+- **Source** : `controller/notification.controller.ts` (`getPreferences`), `services/notification.service.ts` (`getPreferences`), `repositories/notification.repository.ts` (`findPreferences`).
+
+### PUT /api/notifications/preferences
+
+- **Auth** : clé interne + `x-user-id`.
+- **Entrée** : body JSON `notificationPreferencesUpdateSchema` (`@azimut/contracts`) : `BACKTESTS` et/ou `RISK` (booléens), au moins un ; une catégorie absente garde sa valeur. `userId` vient de `x-user-id` seulement.
+- **Réponse** : `200`, `NotificationPreferences` résultantes.
+- **Erreurs** : `400 { "code": "INVALID_BODY", "issues": [ZodIssue] }` → body vide, clé inconnue de type invalide ou valeur non booléenne.
+- **Effets** : upsert de la ligne `NotificationPreference` de l'utilisateur (base `notifications`).
+- **Appelant** : aucun encore (web : paramètres, préférences de notification).
+- **Source** : `controller/notification.controller.ts` (`updatePreferences`), `services/notification.service.ts` (`updatePreferences`), `repositories/notification.repository.ts` (`upsertPreferences`).
+
+## Topics Kafka consommés
+
+| Topic | Groupe | Consommateur | Effet |
+| --- | --- | --- | --- |
+| `notification.requested` (`NOTIFICATION_TOPICS.requested`) | `notification-service` | `consumers/notification.consumer.ts` | Enregistre la notification (idempotent par `dedupKey`), sauf si la catégorie est désactivée dans les préférences de l'utilisateur ; la diffuse en SSE. |
+| `user.data.reset` (`ACCOUNT_TOPICS.dataReset`) | `notification-service-account` | `consumers/user-data-reset.consumer.ts` | Supprime **toutes** les notifications et la ligne de préférences de `payload.userId` (une transaction). Idempotent : un rejeu ne change rien et ne lève pas. Message invalide : `logger.warn` et ignoré. Base indisponible : l'exception remonte, kafkajs rejoue. |

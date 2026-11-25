@@ -8,12 +8,14 @@ beforeAll(async () => {
 })
 afterAll(() => app.close())
 
-test("le proxy relaie les cinq routes de D9 et rien d'autre", () => {
+test("le proxy relaie les routes de D9 et des préférences, rien d'autre", () => {
     expect(createNotificationRoutes().map((route) => `${route.method} ${route.path}`)).toEqual([
         "get /api/notifications",
         "get /api/notifications/unread-count",
         "get /api/notifications/stream",
         "post /api/notifications/read-all",
+        "get /api/notifications/preferences",
+        "put /api/notifications/preferences",
         "post /api/notifications/:id/read",
     ])
 })
@@ -24,6 +26,8 @@ test("sans session, chaque route répond 401, flux compris", async () => {
         ["GET", "/api/notifications/unread-count"],
         ["GET", "/api/notifications/stream"],
         ["POST", "/api/notifications/read-all"],
+        ["GET", "/api/notifications/preferences"],
+        ["PUT", "/api/notifications/preferences"],
         ["POST", "/api/notifications/abc/read"],
     ] as const) {
         const response = await app.request(path, { method })

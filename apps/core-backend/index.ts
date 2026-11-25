@@ -13,9 +13,10 @@ import backtestRouter from './routes/backtest';
 import riskRouter from './routes/risk';
 import projectionRouter from './routes/projection';
 import pricingRouter from './routes/pricing';
+import accountRouter from './routes/account';
 import monitoringRouter from './routes/monitoring';
 import { Logger, onShutdown } from '@azimut/utils';
-import { BACKTEST_TOPICS, PRICING_TOPICS, PROJECTION_TOPICS, RISK_TOPICS } from '@azimut/contracts';
+import { ACCOUNT_TOPICS, BACKTEST_TOPICS, PRICING_TOPICS, PROJECTION_TOPICS, RISK_TOPICS } from '@azimut/contracts';
 import { consumer, kafkaClient, producer } from './lib/kafka';
 import type { MessageHandler } from '@azimut/kafka';
 import BacktestConsumer from './consumers/backtest.consumer';
@@ -64,6 +65,7 @@ app.use(riskRouter);
 app.use(projectionRouter);
 app.use('/api/pricing', pricingCreateRateLimit);
 app.use(pricingRouter);
+app.use(accountRouter);
 app.use(monitoringRouter);
 
 app.use(errorMiddleware);
@@ -76,7 +78,7 @@ async function main(): Promise<void> {
     const server = app.listen(env.PORT, () => logger.info(`Server is running on port ${env.PORT}`));
     onShutdown(() => new Promise<void>((resolve) => server.close(() => resolve())));
 
-    await kafkaClient.ensureTopics([...Object.values(BACKTEST_TOPICS), ...Object.values(RISK_TOPICS), ...Object.values(PROJECTION_TOPICS), ...Object.values(PRICING_TOPICS)]);
+    await kafkaClient.ensureTopics([...Object.values(BACKTEST_TOPICS), ...Object.values(RISK_TOPICS), ...Object.values(PROJECTION_TOPICS), ...Object.values(PRICING_TOPICS), ...Object.values(ACCOUNT_TOPICS)]);
     await producer.connect();
     await consumer.connect();
     await consumer.subscribe(BACKTEST_TOPICS.started);

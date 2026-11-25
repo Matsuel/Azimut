@@ -24,3 +24,9 @@ export const listNotificationsQuerySchema = notificationListQuerySchema.extend(p
 export const notificationIdSchema = z.string().trim().min(1)
 
 export type { NotificationCounts }
+
+// Colonnes de `NotificationPreference` (une par catégorie) ; toutes facultatives pour une mise à jour partielle
+export interface NotificationPreferencesColumns {
+    backtests?: boolean
+    risk?: boolean
+}

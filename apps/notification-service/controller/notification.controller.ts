@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { BadRequestError } from "@azimut/http";
-import { API_ERROR_CODES } from "@azimut/contracts";
+import { API_ERROR_CODES, notificationPreferencesUpdateSchema } from "@azimut/contracts";
 import { Logger } from "@azimut/utils";
 import NotificationService from "../services/notification.service";
 import { notificationStream } from "../services/notification-stream.service";
@@ -40,6 +40,19 @@ class NotificationController {
     markAllRead = async (_req: Request, res: Response) => {
         await this.notificationService.markAllRead(res.locals.userId)
         res.status(204).end()
+    }
+
+    getPreferences = async (_req: Request, res: Response) => {
+        res.json(await this.notificationService.getPreferences(res.locals.userId))
+    }
+
+    updatePreferences = async (req: Request, res: Response) => {
+        logger.info(`Handling update notification preferences request ${req.method} ${req.originalUrl}`)
+
+        const parsed = notificationPreferencesUpdateSchema.safeParse(req.body)
+        if (!parsed.success) throw new BadRequestError(API_ERROR_CODES.INVALID_BODY, { issues: parsed.error.issues })
+
+        res.json(await this.notificationService.updatePreferences(res.locals.userId, parsed.data))
     }
 
     /** Flux SSE : reste ouvert, un événement `notification` par nouvelle notification de l'utilisateur, un commentaire de battement toutes les 25 s. */

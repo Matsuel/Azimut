@@ -30,18 +30,19 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
 - [Conventions communes](#conventions-communes)
 - [Auth](#auth) : `ALL /api/auth/{*path}`
 - [Market (proxy)](#market-proxy) : `GET /api/market/{search,details/:id,defaults,rates}`
-- [Notifications (proxy)](#notifications-proxy) : `GET /api/notifications`, `GET /unread-count`, `GET /stream` (SSE), `POST /read-all`, `POST /:id/read`
+- [Notifications (proxy)](#notifications-proxy) : `GET /api/notifications`, `GET /unread-count`, `GET /stream` (SSE), `POST /read-all`, `POST /:id/read`, `GET`/`PUT /preferences`
 - [Portfolio](#portfolio) : `POST`, `GET`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
 - [Backtest](#backtest) : `POST`, `POST /preview`, `POST /:id/executions`, `GET /stats`, `POST /batch`, `GET /batch/:batchId`, `POST /batch/:batchId/starts`, `POST /batch/:batchId/executions`, `GET /compare`, `GET /:id`, `GET`
 - [Risque](#risque) : `GET /api/risk/:backtestId`, `PUT /api/risk/:backtestId/constraint`
 - [Projection](#projection) : `GET /api/projection/:backtestId`
 - [Pricing](#pricing) : `POST /api/pricing`, `GET /api/pricing/:id`
+- [Compte](#compte) : `POST /api/account/reset`
 - [Monitoring (admin)](#monitoring-admin) : `GET /api/admin/monitoring/services`
 
 ## Conventions communes
 
 - **Base** : `http://localhost:8000`. Le web appelle via `apiFetch(path)` (`apps/web/src/lib/api.ts`) avec `NEXT_PUBLIC_API_URL=http://localhost:8000/api` : `apiFetch("/backtest")` → `GET /api/backtest`. Cookies envoyés (`credentials: "include"`), CORS limité à `env.WEB_URL` (défaut `http://localhost:3000`, `env.ts`).
-- **Ordre d'enregistrement** (`index.ts`) : `GET /liveness` et `GET /readiness` (`registerProbes`), `helmet`, `cors`, limiteur `/api/auth` + `authRouter`, `marketRouter` et `notificationRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, limiteur `/api/pricing` + `pricingRouter`, `monitoringRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
+- **Ordre d'enregistrement** (`index.ts`) : `GET /liveness` et `GET /readiness` (`registerProbes`), `helmet`, `cors`, limiteur `/api/auth` + `authRouter`, `marketRouter` et `notificationRouter` (avant `express.json()` pour garder le body brut), puis `express.json({ limit: "100kb" })`, `portfolioRouter`, limiteur `/api/backtest` + `backtestRouter`, `riskRouter`, `projectionRouter`, limiteur `/api/pricing` + `pricingRouter`, `accountRouter`, `monitoringRouter`, `errorMiddleware`. Port : `env.PORT` (défaut 8000) ; `env.TRUST_PROXY` (défaut 0) = nombre de reverse proxies devant l'API, pour que les limites de débit comptent par client et non par proxy. Arrêt propre sur `SIGTERM`/`SIGINT` (serveur, consumer et producer Kafka fermés).
 - **Santé** (sans auth, hors `/api`, `registerProbes` et `kafkaCheck` de `@azimut/http`) :
   - `GET /liveness` → toujours `200 { "status": "ok" }`, sans toucher aucune dépendance.
   - `GET /readiness` → `200 { "status": "ok", "checks": { "database": "ok", "kafka": "ok" } }` ; `503 { "status": "unavailable", "checks": { … } }` dès qu'un contrôle vaut `"down"`. `database` : la base `trading` répond (`isDbConnected`) ; `kafka` : le consumer (groupe rejoint) et le producer (connecté) sont prêts (`isReady()`). Forme : `readinessResponseSchema` de `@azimut/contracts`.
@@ -56,6 +57,7 @@ Catalogue des routes HTTP exposées par core-backend (port 8000) et appelées pa
   | `SERVICE_UNAVAILABLE` | 502 | market-service ou notification-service injoignable |
   | `INTERNAL_ERROR` | 500 | exception inattendue |
   | `INVALID_QUERY` | 400 | query invalide |
+  | `INVALID_BODY` | 400 | body invalide (préférences de notification) |
   | `INVALID_BACKTEST` | 400 | body de backtest invalide |
   | `NAME_REQUIRED` | 400 | `name` de portefeuille absent ou vide |
   | `PORTFOLIO_NOT_FOUND` | 404 | portefeuille inexistant |
@@ -110,11 +112,11 @@ Les routes de liste (`GET /api/portfolio`, `GET /api/backtest`) suivent le contr
 
 ## Notifications (proxy)
 
-### GET /api/notifications · GET /api/notifications/unread-count · GET /api/notifications/stream · POST /api/notifications/read-all · POST /api/notifications/:id/read
+### GET /api/notifications · GET /api/notifications/unread-count · GET /api/notifications/stream · POST /api/notifications/read-all · POST /api/notifications/:id/read · GET /api/notifications/preferences · PUT /api/notifications/preferences
 
 - **Auth** : session requise (`authMiddleware`), flux compris : sans session, `401`.
 - **Entrée** : requête relayée telle quelle (chemin complet, query) vers `env.NOTIFICATION_SERVICE_URL` (défaut `http://localhost:8002`, `env.ts`), avec `x-user-id` remplacé par `req.userId` et `x-internal-key` ajouté (même règle que Market). Query de la liste : `category` (`BACKTESTS` | `RISK`), `unread` (`true` | `false`), `page`, `pageSize`.
-- **Réponse** : statut et corps de notification-service, inchangés. `GET /api/notifications` → `NotificationList` ; `GET /unread-count` → `{ count }` ; `POST /read-all` et `POST /:id/read` → `204`. `GET /stream` → `text/event-stream` : `: connected` à l'ouverture, `: ping` toutes les 25 s, puis `event: notification` avec une `NotificationView` en JSON ; le web écoute l'événement nommé `notification` (`addEventListener`). Pas de rejeu à la reconnexion. Détail : voir [`apps/notification-service/API.md`](../notification-service/API.md). Liste blanche : toute autre route reçoit la 404 par défaut d'Express.
+- **Réponse** : statut et corps de notification-service, inchangés. `GET /api/notifications` → `NotificationList` ; `GET /unread-count` → `{ count }` ; `POST /read-all` et `POST /:id/read` → `204`. `GET`/`PUT /preferences` : préférences de notification de l'utilisateur, corps et réponse définis par notification-service (le `PUT` relaie son body JSON tel quel). `GET /stream` → `text/event-stream` : `: connected` à l'ouverture, `: ping` toutes les 25 s, puis `event: notification` avec une `NotificationView` en JSON ; le web écoute l'événement nommé `notification` (`addEventListener`). Pas de rejeu à la reconnexion. Détail : voir [`apps/notification-service/API.md`](../notification-service/API.md). Liste blanche : toute autre route reçoit la 404 par défaut d'Express.
 - **Erreurs** : `401` → pas de session ; `404 NOTIFICATION_NOT_FOUND` → notification inconnue ou d'un autre utilisateur ; `502 { "error": "Service unavailable" }` → service injoignable ou sans réponse sous 10 s (`proxyTimeout: 10_000`). Le flux n'a pas de délai (`proxyTo(url, { stream: true })` : `proxyTimeout: 0`) ; il n'est pas mis en mémoire tampon.
 - **Effets** : aucun côté core-backend ; `read` et `read-all` modifient la base `notifications`.
 - **Appelant** : `apps/web/src/features/notifications/api.ts` et le flux de la zone `/app`.
@@ -441,6 +443,18 @@ Calcul de prix demandé à backtest-engine par `pricing.requested`, résultat re
 - **Effets** : aucun. Les transitions `PENDING` → `COMPLETED` / `FAILED` viennent de `pricing.completed` / `pricing.failed` (gardées par statut, un rejeu est ignoré).
 - **Appelant** : `getPricing` (`features/pricing/api.ts`), hook `usePricing()`.
 - **Source** : `routes/pricing/pricing.routes.ts`, `controller/pricing.controller.ts`, `services/pricing.service.ts`.
+
+## Compte
+
+### POST /api/account/reset
+
+- **Auth** : session requise ; l'utilisateur est celui de la session (`req.userId`), jamais le corps.
+- **Entrée** : aucune (pas de body).
+- **Réponse** : `204`, sans corps.
+- **Erreurs** : `401` → pas de session ; `500` → la transaction a échoué (rien n'est supprimé ni publié) ou la publication de `user.data.reset` a échoué (données `trading` déjà supprimées : relancer l'appel, la suppression est idempotente).
+- **Effets** : **irréversible**. En une transaction, supprime les backtests (allocations, exécutions et résultats en cascade), les portefeuilles (comptes de trading en cascade) et les demandes de pricing de l'utilisateur ; `User`, `Account` et `Session` restent. Après le succès, publie `user.data.reset` `{ userId }` (clé Kafka = `userId`) : notification-service purge les notifications et préférences de l'utilisateur. Un échec de publication fait échouer l'appel. Un résultat d'engine arrivé après la suppression (`backtest.completed`, `risk.completed`, `projection.completed`) est ignoré (ligne absente, aucune erreur).
+- **Appelant** : `apps/web/src/features/settings`.
+- **Source** : `routes/account/account.routes.ts`, `controller/account.controller.ts`, `services/account.service.ts`, `repositories/account.repository.ts`.
 
 ## Monitoring (admin)
 
