@@ -90,5 +90,5 @@ test("« Pricing Monte Carlo » ouvre la simulation : prix, trajectoires, conver
     await expect(page.getByText("Trajectoires simulées")).toBeVisible()
     await expect(page.getByText("Convergence du prix")).toBeVisible()
     await expect(page.getByText("Comparaison des méthodes")).toBeVisible()
-    await expect(page.getByText("= vanille")).toBeVisible()
+    await expect(page.getByText(/KO \+ KI = .* = vanille/)).toBeVisible()
 })
