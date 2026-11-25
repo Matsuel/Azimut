@@ -21,6 +21,7 @@ enum PricingKind {
   OPTION
   OPTION_CHAIN
   OPTION_MC
+  STRUCTURED
 }
 
 enum PricingStatus {

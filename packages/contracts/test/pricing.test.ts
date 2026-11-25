@@ -98,3 +98,21 @@ test("OPTION_MC : trajectoires bornées de 10 000 à 1 000 000, 100 000 par déf
     // La graine n'est pas saisissable
     expect(pricingInputSchema.parse({ kind: "OPTION_MC", monteCarlo: { ...monteCarlo, seed: 1 } })).toEqual({ kind: "OPTION_MC", monteCarlo: { ...monteCarlo, paths: 100_000 } })
 })
+
+test("STRUCTURED : un produit à la fois, maturité entière de 1 à 10 ans, niveaux en ratio ; le prix client n'est pas saisissable", () => {
+    const common = { underlying: "^STOXX50E", nominal: 1000, maturityYears: 5, rate: 0.03, volatility: 0.18, valueDate: "2026-10-28" }
+    const guaranteed = { product: "CAPITAL_GUARANTEED", ...common, guarantee: 1, callStrike: 1 }
+    const convertible = { product: "REVERSE_CONVERTIBLE", ...common, couponRate: 0.04, putStrike: 1 }
+    const autocall = { product: "AUTOCALLABLE", ...common, couponRate: 0.06, recallLevel: 1, protectionBarrier: 0.6 }
+
+    for (const structured of [guaranteed, convertible, autocall]) {
+        expect(pricingInputSchema.safeParse({ kind: "STRUCTURED", structured }).success).toBe(true)
+        expect(pricingInputSchema.safeParse({ kind: "STRUCTURED", structured: { ...structured, maturityYears: 11 } }).success).toBe(false)
+        expect(pricingInputSchema.safeParse({ kind: "STRUCTURED", structured: { ...structured, maturityYears: 2.5 } }).success).toBe(false)
+        expect(pricingInputSchema.safeParse({ kind: "STRUCTURED", structured: { ...structured, nominal: 0 } }).success).toBe(false)
+    }
+    expect(pricingInputSchema.safeParse({ kind: "STRUCTURED", structured: { ...autocall, protectionBarrier: 1.5 } }).success).toBe(false)
+    expect(pricingInputSchema.safeParse({ kind: "STRUCTURED", structured: { ...guaranteed, guarantee: 0 } }).success).toBe(false)
+    expect(pricingInputSchema.safeParse({ kind: "STRUCTURED", structured: { ...convertible, product: "WORST_OF" } }).success).toBe(false)
+    expect(pricingInputSchema.parse({ kind: "STRUCTURED", structured: { ...guaranteed, clientPrice: 900 } })).toEqual({ kind: "STRUCTURED", structured: guaranteed })
+})

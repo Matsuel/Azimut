@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { kafkaEventSchema } from "./event";
+import { structuredInputSchema, structuredResultSchema } from "./structured";
 
 export const PRICING_TOPICS = {
     requested: "pricing.requested",
@@ -7,8 +8,8 @@ export const PRICING_TOPICS = {
     failed: "pricing.failed",
 } as const;
 
-// Produits pricés par le pipeline `pricing.*` : OPTION_MC est le pricing par simulation (20), à la place d'un champ `method` : son résultat n'a pas la forme de OPTION
-export const PRICING_KINDS = ["BOND", "OPTION", "OPTION_CHAIN", "OPTION_MC"] as const;
+// Produits pricés par le pipeline `pricing.*` : OPTION_MC est le pricing par simulation (20), à la place d'un champ `method` : son résultat n'a pas la forme de OPTION ; STRUCTURED est un produit structuré (21, D8)
+export const PRICING_KINDS = ["BOND", "OPTION", "OPTION_CHAIN", "OPTION_MC", "STRUCTURED"] as const;
 
 // Statuts d'une demande de pricing : créée puis publiée, calculée, ou en échec
 export const PRICING_STATUSES = ["PENDING", "COMPLETED", "FAILED"] as const;
@@ -104,6 +105,7 @@ const bondPricingInputSchema = z.object({ kind: z.literal("BOND"), bond: bondInp
 const optionPricingInputSchema = z.object({ kind: z.literal("OPTION"), option: optionInputSchema });
 const optionChainPricingInputSchema = z.object({ kind: z.literal("OPTION_CHAIN"), chain: optionChainInputSchema });
 const optionMonteCarloPricingInputSchema = z.object({ kind: z.literal("OPTION_MC"), monteCarlo: optionMonteCarloInputSchema });
+const structuredPricingInputSchema = z.object({ kind: z.literal("STRUCTURED"), structured: structuredInputSchema });
 
 // Demande saisie par l'utilisateur (POST /api/pricing) : un produit à la fois, discriminé par `kind`
 export const pricingInputSchema = z.discriminatedUnion("kind", [
@@ -111,6 +113,7 @@ export const pricingInputSchema = z.discriminatedUnion("kind", [
     optionPricingInputSchema,
     optionChainPricingInputSchema,
     optionMonteCarloPricingInputSchema,
+    structuredPricingInputSchema,
 ]);
 
 export const pricingRequestedPayloadSchema = z.discriminatedUnion("kind", [
@@ -118,6 +121,7 @@ export const pricingRequestedPayloadSchema = z.discriminatedUnion("kind", [
     optionPricingInputSchema.extend({ requestId: z.string().min(1) }),
     optionChainPricingInputSchema.extend({ requestId: z.string().min(1) }),
     optionMonteCarloPricingInputSchema.extend({ requestId: z.string().min(1) }),
+    structuredPricingInputSchema.extend({ requestId: z.string().min(1) }),
 ]);
 
 export const pricingRequestedEventSchema = kafkaEventSchema(pricingRequestedPayloadSchema);
@@ -340,11 +344,14 @@ const optionChainPricingResultSchema = z.object({ kind: z.literal("OPTION_CHAIN"
 
 const optionMonteCarloPricingResultSchema = z.object({ kind: z.literal("OPTION_MC"), monteCarlo: optionMonteCarloResultSchema });
 
+const structuredPricingResultSchema = z.object({ kind: z.literal("STRUCTURED"), structured: structuredResultSchema });
+
 export const pricingResultSchema = z.discriminatedUnion("kind", [
     bondPricingResultSchema,
     optionPricingResultSchema,
     optionChainPricingResultSchema,
     optionMonteCarloPricingResultSchema,
+    structuredPricingResultSchema,
 ]);
 
 export const pricingCompletedPayloadSchema = z.object({
