@@ -78,7 +78,7 @@ Les dossiers des features 02 à 08 citent les anciens numéros ; cette table les
 
 Ordre fixé le 2026-11-03 d’après les dépendances, pas d’après les mois seuls. L’internationalisation (10) est **urgente** : elle passe avant toute nouvelle page, pour que les écrans suivants naissent traduits. Chaque feature est planifiée avec le skill `feature-roadmap` (dossier `roadmap/<NN>-<slug>/`). « Dépend de » liste les features qui doivent être **livrées** avant.
 
-Planification : **toutes les features 10 à 26 sont planifiées** (dossiers `roadmap/<NN>-<slug>/`, statut `Planifiée`). Maquettes Figma 31 à 40 : **dessinées** (aucune pour 23 à 26, infrastructure ; la 16 réutilise la maquette 09).
+Planification : **toutes les features 10 à 28 sont planifiées** (dossiers `roadmap/<NN>-<slug>/`, statut `Planifiée`). Maquettes Figma 31 à 40 : **dessinées** (aucune pour 23 à 26, infrastructure ; la 16 réutilise la maquette 09).
 
 | # | Feature | Mois | Dépend de | Pourquoi à cette place |
 | --- | --- | --- | --- | --- |
@@ -100,11 +100,15 @@ Planification : **toutes les features 10 à 26 sont planifiées** (dossiers `roa
 | 24 | Kubernetes, Helm et Argo CD | 11 | 23, 16 | Environnements `dev` / `demo`. |
 | 25 | Observabilité : OpenTelemetry, traces, runbooks | 11 | 24 | Trace d’une simulation de bout en bout. ClickHouse seulement si une requête analytique le justifie. |
 | 26 | Résilience et soutenance | 12 | 25 | Reprise du worker et des consumers, sauvegarde-restauration, pannes contrôlées, charge, audit sécurité, démo, rapport. |
+| 27 | [Portefeuille réel : positions, import et analyse](27-portefeuille-reel/) | — ᵉ | 13, 14 | Saisie ou import des positions d'un vrai portefeuille (PEA, compte-titres), valeur et poids, analyse par les flux de risque et de projection existants. Idée du 2026-11-25 ; 50 points. |
+| 28 | [Offres et abonnement : plans, facturation et cadre légal](28-offres-et-abonnement/) | — ᵉ | 27, fix-10 | Plans et limites côté serveur, Stripe, mentions « pas un conseil », CGU, suppression et export du compte. Condition d'un lancement public (avec 24 à 26) ; 45 points. |
 
 ᶜ hors « Roadmap annuelle » : notifications remontées du COULD le 2026-11-17, avant la feature 16.
 ᵈ hors « Roadmap annuelle » : demande du 2026-11-18 ; la page Monitoring (squelette vide depuis la 04) et les sondes `/liveness` / `/readiness` passent avant les taux et obligations.
 
-**Extensions (COULD, hors chemin critique)** : delta-hedging (après 21), optimisation minimale Max Sharpe / min variance (après 13), objectifs financiers et taux de retrait (après 14), paper trading, notifications (types Paper trading, Rapports et Optimisation, préférences, e-mail), profils de clients fictifs, marché simulé (bonus).
+ᵉ hors « Roadmap annuelle » : idées du 2026-11-25 (portefeuille réel, offre payante pour un lancement public) ; planifiées, sans maquette (écrans à dessiner avant le code).
+
+**Extensions (COULD, hors chemin critique)** : connexion bancaire par agrégateur DSP2 (Powens ou Bridge, après 27 et 28 : coût par connexion, donc offre payante), delta-hedging (après 21), optimisation minimale Max Sharpe / min variance (après 13), objectifs financiers et taux de retrait (après 14), paper trading, notifications (types Paper trading, Rapports et Optimisation, préférences, e-mail), profils de clients fictifs, marché simulé (bonus).
 
 **CI/CD (23)** : aucune dépendance fonctionnelle, donc libre d’être avancée. Les moteurs de pricing (18 à 22) sont les plus lourds en tests ; un pipeline qui exécute `bun test` et `tsc` à chaque PR avant la 18 les protégerait. Décision à prendre par l’utilisateur ; l’ordre ci-dessus garde le mois 11 d’origine.
 
@@ -122,6 +126,7 @@ Planification : **toutes les features 10 à 26 sont planifiées** (dossiers `roa
 | 2026-11-17 | Les notifications quittent le COULD : service dédié `notification-service` avec sa propre base (exception à « core-backend seul écrivain en base »), alimenté par `notification.requested` publié par core-backend, flux SSE ; les features 15 à 24 deviennent 16 à 25. | [15](15-notification-service/), `4373b83` |
 | 2026-11-18 | Une feature Monitoring prend le numéro 16 (page admin d'état des services, limitée aux statuts) ; les features 16 à 25 deviennent 17 à 26. Routes `/liveness` et `/readiness` sur les cinq services, qui remplacent `/health` ; Kubernetes (24) les consomme au lieu de les écrire. | [16](16-monitoring/) |
 | 2026-11-21 | Les correctifs hors feature ont leur dossier `roadmap/fix-NN-<slug>/`, numéroté à part ; `fix-01` à `fix-08` rétro-documentés, `fix-09` (navigation automatique) planifié après la feature 18. | [fix-09](fix-09-navigation-automatique/) |
+| 2026-11-25 | Deux features hors roadmap annuelle : 27 (portefeuille réel, saisie et import, analyse par les moteurs existants) et 28 (offres et abonnement, pour un lancement public). L'agrégateur de comptes (DSP2) est repoussé après elles ; la projection Monte Carlo n'est pas refaite (feature 14), elle s'appuie sur un backtest créé depuis le portefeuille. | [27](27-portefeuille-reel/), [28](28-offres-et-abonnement/) |
 
 ## Conventions communes
 
