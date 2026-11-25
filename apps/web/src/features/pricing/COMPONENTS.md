@@ -271,7 +271,7 @@ Pages Taux et obligations (feature 17, maquette `35 · Taux et obligations`) et 
 
 ### `features/pricing/utils.ts`
 
-- **Import** : `import { toPricingInput, groupFlows, toOptionPricingInput, optionDefaults, toMaturityDays } from "@/features/pricing/utils"`.
+- **Import** : `import { toPricingInput, groupFlows, toOptionPricingInput, optionDefaults, toMaturityDays, toDay } from "@/features/pricing/utils"`.
 
 | Export | Rôle |
 | --- | --- |
@@ -282,6 +282,7 @@ Pages Taux et obligations (feature 17, maquette `35 · Taux et obligations`) et 
 | `toMonteCarloPricingInput(values)` | Saisie Monte Carlo → corps de `POST /api/pricing` (`OPTION_MC`) : pourcentages en ratios, jours en années de 365 jours, sans graine. |
 | `monteCarloDefaults(inputs, curve)` | Valeurs de départ du formulaire Monte Carlo : celles de `optionDefaults`, barrière à 90 % du spot arrondi, 100 000 trajectoires. |
 | `toMaturityDays(years)` | Années de la demande → jours entiers (× 365). |
+| `toDay(date)` | Jour local `YYYY-MM-DD` (pas `toISOString`, qui décalerait d'un jour après minuit hors UTC) ; réutilisé par `features/structured`. |
 
 ### `features/pricing/constants.ts`
 

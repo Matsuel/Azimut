@@ -9,6 +9,7 @@ import {
     FileText,
     FlaskConical,
     GitCompareArrows,
+    Layers,
     LayoutDashboard,
     Percent,
     ShieldAlert,
@@ -32,7 +33,7 @@ export type SidebarSection = {
 }
 
 // Sections du menu (maquette Figma) : laboratoire, analyse, dérivés, trading virtuel, suivi, administration.
-// L'onglet « Structuration » de « Dérivés » et l'onglet « Alertes » arrivent avec leurs features.
+// L'onglet « Alertes » arrive avec sa feature.
 export const sidebarSections: SidebarSection[] = [
     {
         key: "laboratory",
@@ -59,6 +60,7 @@ export const sidebarSections: SidebarSection[] = [
         tabs: [
             { key: "rates", url: routes.rates, icon: <Percent /> },
             { key: "options", url: routes.options, icon: <ArrowUpDown /> },
+            { key: "structured", url: routes.structured, icon: <Layers /> },
         ],
     },
     {

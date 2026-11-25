@@ -9,7 +9,7 @@ import type { BondFormValues, MonteCarloFormValues, OptionFormValues } from "./s
 import type { BondFlow, OptionInputs, PricingInput, RateCurve } from "./types"
 
 // Jour local `YYYY-MM-DD` (pas `toISOString`, qui décalerait d'un jour après minuit hors UTC)
-const toDay = (date: Date) =>
+export const toDay = (date: Date) =>
     [date.getFullYear(), date.getMonth() + 1, date.getDate()]
         .map((n, i) => String(n).padStart(i ? 2 : 4, "0"))
         .join("-")

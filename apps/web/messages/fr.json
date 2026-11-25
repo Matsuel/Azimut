@@ -68,7 +68,8 @@
             "monitoring": "Monitoring",
             "users": "Utilisateurs",
             "referenceData": "Données de référence",
-            "account": "Compte"
+            "account": "Compte",
+            "structured": "Structuration"
         },
         "descriptions": {
             "dashboard": "Vue d’ensemble de vos portefeuilles, backtests et indicateurs clés.",
@@ -86,12 +87,13 @@
             "monitoring": "État des services et de leurs dépendances.",
             "users": "Comptes et rôles des utilisateurs.",
             "referenceData": "Données de référence utilisées par les calculs.",
-            "account": "Votre profil, votre portefeuille virtuel et l’apparence."
+            "account": "Votre profil, votre portefeuille virtuel et l’apparence.",
+            "structured": "Construisez un produit structuré, voyez sa décomposition, sa juste valeur et la marge de son émetteur."
         },
         "sectionDescriptions": {
             "laboratory": "Vos portefeuilles simulés et le marché qui les alimente.",
             "analysis": "Comparez, mesurez le risque et projetez vos résultats.",
-            "derivatives": "Taux, obligations, options et, bientôt, produits structurés.",
+            "derivatives": "Taux, obligations, options et produits structurés.",
             "virtualTrading": "Passez des ordres sur un portefeuille virtuel.",
             "followUp": "Rapports et notifications de vos calculs.",
             "administration": "Supervision des services, utilisateurs et données de référence."
@@ -1404,6 +1406,52 @@
             "computation": "Lue telle que reçue de Yahoo Finance, jamais utilisée dans un calcul.",
             "unit": "Ratio annuel, affiché en pourcentage.",
             "readingTip": "Un écart avec l’IV moteur vient du prix milieu et des hypothèses de Black-Scholes, pas d’une erreur."
+        },
+        "structuredFairValue": {
+            "title": "Juste valeur",
+            "purpose": "Ce que vaut le produit aujourd’hui, brique par brique, indépendamment du prix auquel il est vendu.",
+            "computation": "Somme des briques : zéro-coupon ou obligation actualisés, plus l’option achetée, moins l’option vendue. L’autocallable est simulé (Monte Carlo, graine fixe).",
+            "unit": "Euros, et part du nominal."
+        },
+        "structuredMargin": {
+            "title": "Marge du structureur",
+            "purpose": "La rémunération de celui qui vend le produit : l’écart entre ce que paie le client et ce que vaut le produit.",
+            "computation": "Prix client (le nominal, 100 %) moins la juste valeur. Les coûts de couverture et de financement de l’émetteur ne sont pas modélisés.",
+            "unit": "Euros, et part du prix client.",
+            "readingTip": "Une marge négative signifie que le coupon promis dépasse ce que la juste valeur finance."
+        },
+        "structuredParticipation": {
+            "title": "Participation",
+            "purpose": "La part de la hausse du sous-jacent que le client reçoit au-delà du capital garanti.",
+            "computation": "Budget d’option (nominal moins zéro-coupon moins marge) divisé par le prix d’un call au strike choisi.",
+            "unit": "Pourcentage de la hausse du sous-jacent.",
+            "readingTip": "Plus la garantie est haute, plus le budget d’option baisse, et avec lui la participation."
+        },
+        "structuredOptionBudget": {
+            "title": "Budget d’option",
+            "purpose": "La somme qui reste pour acheter le call une fois le capital garanti financé et la marge prélevée.",
+            "computation": "Nominal moins le zéro-coupon qui rend la garantie, moins la marge de structuration.",
+            "unit": "Euros."
+        },
+        "structuredRecallProbability": {
+            "title": "Probabilité de rappel",
+            "purpose": "La part des scénarios où le produit est remboursé avant l’échéance, à une date d’observation donnée.",
+            "computation": "Part des trajectoires simulées dont le niveau est au-dessus du seuil de rappel à cette date, sans l’avoir été avant.",
+            "unit": "Pourcentage des trajectoires.",
+            "readingTip": "La ligne d’échéance donne la part des trajectoires qui arrivent au bout sans rappel."
+        },
+        "structuredProtectionBarrier": {
+            "title": "Barrière de protection",
+            "purpose": "Le niveau du sous-jacent sous lequel le capital n’est plus rendu à l’échéance.",
+            "computation": "Observée à l’échéance seulement : sous la barrière, le client reçoit le nominal multiplié par le niveau final.",
+            "unit": "Pourcentage du niveau initial.",
+            "readingTip": "Une barrière plus basse protège plus de capital : la juste valeur monte."
+        },
+        "structuredRecallLevel": {
+            "title": "Seuil de rappel",
+            "purpose": "Le niveau du sous-jacent à partir duquel le produit est remboursé avant l’échéance, avec ses coupons cumulés.",
+            "computation": "Observé chaque année : un niveau au-dessus du seuil rembourse le nominal plus le coupon cumulé et arrête le produit.",
+            "unit": "Pourcentage du niveau initial."
         }
     },
     "pages": {
@@ -1877,6 +1925,150 @@
                 "noBidAsk": "Écarté · bid/ask nuls",
                 "noPrice": "Écarté · prix nul",
                 "ivOutOfBounds": "Écarté · IV hors bornes"
+            }
+        },
+        "structured": {
+            "title": "Constructeur de produit",
+            "products": {
+                "CAPITAL_GUARANTEED": "Capital garanti",
+                "REVERSE_CONVERTIBLE": "Reverse convertible",
+                "AUTOCALLABLE": "Autocallable"
+            },
+            "description": "{underlying} · {maturity} · nominal {nominal} · données au {date} · prix indicatifs, pas un conseil",
+            "descriptionEmpty": "Choisissez un type de produit, puis pricez-le · prix indicatifs, pas un conseil",
+            "cards": {
+                "fairValue": "Juste valeur",
+                "fairValueCaption": "Somme des briques",
+                "clientPrice": "Prix client",
+                "clientRatio": "100 %",
+                "clientCaption": "Prix proposé au client",
+                "margin": "Marge",
+                "marginCaption": "Calculée automatiquement",
+                "participation": "Participation",
+                "participationBadge": "hausse",
+                "participationCaption": "Budget {budget} ÷ call {call}",
+                "coupon": "Coupon",
+                "couponBadge": "par an",
+                "couponCaption": "Prime du put {put}",
+                "recall": "Rappel anticipé",
+                "recallCaption": "Probabilité avant l’échéance"
+            },
+            "form": {
+                "title": "Produit",
+                "description": "Choisissez un type, puis ses paramètres",
+                "type": "Type",
+                "underlying": "Sous-jacent",
+                "maturity": "Maturité (années)",
+                "nominal": "Nominal (€)",
+                "guarantee": "Garantie du capital (%)",
+                "callStrike": "Strike du call (% du niveau initial)",
+                "couponRate": "Coupon annuel (%)",
+                "putStrike": "Strike du put (% du niveau initial)",
+                "recallLevel": "Seuil de rappel (%)",
+                "protectionBarrier": "Barrière de protection (%)",
+                "rate": "Taux du zéro-coupon (%)",
+                "volatility": "Volatilité (%)",
+                "submit": "Pricer le produit",
+                "validation": {
+                    "underlying": "Choisissez un sous-jacent.",
+                    "nominal": "Le nominal doit être strictement positif.",
+                    "maturity": "Maturité : entier de {min} à {max} ans.",
+                    "rate": "Taux de 0 à 100 %.",
+                    "volatility": "Volatilité : strictement positive, au plus 500 %.",
+                    "guarantee": "Garantie : strictement positive, au plus 100 %.",
+                    "strike": "Strike : strictement positif, au plus 200 %.",
+                    "coupon": "Coupon : strictement positif, au plus 100 %.",
+                    "recallLevel": "Seuil de rappel : strictement positif, au plus 200 %.",
+                    "barrier": "Barrière : strictement positive, au plus 100 %.",
+                    "required": "Champ obligatoire."
+                }
+            },
+            "decomposition": {
+                "title": "Décomposition",
+                "subtitle": "Les briques qui fabriquent le produit, en EUR",
+                "brick": "Brique",
+                "role": "Rôle",
+                "value": "Valeur",
+                "ofNominal": "% nominal",
+                "fairValue": "Juste valeur",
+                "fairValueRole": "Total des briques",
+                "margin": "Marge",
+                "marginRole": "Prix client − juste valeur",
+                "clientPrice": "Prix client",
+                "legend": {
+                    "ZERO_COUPON": "Zéro-coupon",
+                    "CALL": "Call",
+                    "AUTOCALL_NET_COUPONS": "Coupons nets",
+                    "FAIR_VALUE": "Juste valeur",
+                    "MARGIN": "Marge"
+                },
+                "bricks": {
+                    "CAPITAL_GUARANTEED": {
+                        "ZERO_COUPON": {
+                            "name": "Zéro-coupon {years} ans",
+                            "role": "Rend le capital garanti"
+                        },
+                        "CALL": {
+                            "name": "Call × {participation}",
+                            "role": "Participation à la hausse"
+                        }
+                    },
+                    "REVERSE_CONVERTIBLE": {
+                        "BOND": {
+                            "name": "Obligation {years} ans",
+                            "role": "Capital + coupons"
+                        },
+                        "PUT": {
+                            "name": "Vente de put",
+                            "role": "Prime encaissée, perte si baisse"
+                        }
+                    },
+                    "AUTOCALLABLE": {
+                        "ZERO_COUPON": {
+                            "name": "Zéro-coupon {years} ans",
+                            "role": "Rend le capital"
+                        },
+                        "AUTOCALL_NET_COUPONS": {
+                            "name": "Coupons nets du put",
+                            "role": "Coupons rappelés − put à barrière"
+                        }
+                    }
+                },
+                "notes": {
+                    "CAPITAL_GUARANTEED": "Participation = budget d’option ÷ prix du call = {budget} ÷ {call} = {participation}. Coûts de couverture et de financement non inclus.",
+                    "REVERSE_CONVERTIBLE": "Coupon de {coupon} par an : obligation {bond} − prime du put {put} = {fairValue}. Coûts de couverture et de financement non inclus.",
+                    "AUTOCALLABLE": "Briques en espérance sur {paths} trajectoires : zéro-coupon {zeroCoupon} + coupons nets du put à barrière {net} = {fairValue}. Coûts de couverture et de financement non inclus."
+                }
+            },
+            "payoff": {
+                "title": "Payoff à l’échéance",
+                "subtitle": "Pour {nominal}, selon le sous-jacent",
+                "underlying": "Sous-jacent",
+                "notes": {
+                    "CAPITAL_GUARANTEED": "Sous 0 % : capital rendu ({capital}). Au-dessus : {participation} de la hausse. Dividendes du sous-jacent non perçus.",
+                    "REVERSE_CONVERTIBLE": "Au-dessus de 0 % : capital + {years} coupons de {coupon} ({total} au total). En dessous : perte égale à celle du sous-jacent sous le strike {strike}, coupons conservés. Dividendes du sous-jacent non perçus.",
+                    "AUTOCALLABLE": "Scénario sans rappel anticipé. Sous {barrier} : perte du sous-jacent. De {barrier} à {recall} : capital rendu. Dès {recall} : capital + {years} coupons de {coupon}. Dividendes du sous-jacent non perçus."
+                }
+            },
+            "observations": {
+                "title": "Autocallable · dates d’observation",
+                "subtitle": "Coupon {coupon} par an, rappel à {recall}, protection {barrier}",
+                "price": "Prix Monte Carlo",
+                "priceCaption": "± {error} (erreur standard)",
+                "barrier": "Barrière de protection",
+                "barrierCaption": "observée à l’échéance",
+                "date": "Observation",
+                "recallLevel": "Seuil de rappel",
+                "coupon": "Coupon",
+                "probability": "Proba. de rappel",
+                "end": "Échéance · {years} ans",
+                "note": "Pas de formule fermée : prix par simulation, {paths} trajectoires, seed {seed}."
+            },
+            "states": {
+                "empty": "Pricez un produit pour voir sa décomposition.",
+                "pending": "Calcul en cours…",
+                "failed": "Le calcul a échoué : {reason}",
+                "readError": "Impossible de lire le résultat de la demande."
             }
         }
     },
