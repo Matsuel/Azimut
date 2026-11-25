@@ -5,7 +5,7 @@
 - **Période** : à fixer au démarrage de la feature
 - **Branche / PR** : `feat/produits-structures` — PR à ouvrir
 - **Points** : 29 (MUST 29, SHOULD 0) — prévus
-- **Maquettes** : `39 · Constructeur de produit` (créée, node `465:13338`)
+- **Maquettes** : `39 · Constructeur de produit` (créée, node `465:13338`, état Capital garanti) ; états `· Reverse convertible` (node `689:16456`) et `· Autocallable` (node `689:16894`) dessinés le 2026-11-25, à valider
 - **Écrans modifiés** : aucun (page `Structuration` de la sidebar existante)
 - **Dépend de** : 17 (obligation), 19 (grecques, IV), 20 (Monte Carlo, barrière).
 
@@ -27,6 +27,9 @@ Moteur : produits comme assemblages de briques (`structured.ts`) ; autocallable 
 | D4 | **Marge** : Prix client − juste valeur, en devise et en % | Affiche la rémunération sans la faire passer pour un conseil. Hypothèses de financement et de couverture non incluses. | `US.md` (à valider) |
 | D5 | **Prix client** : nominal à 100 %, marge = 100 % − juste valeur | Aucune saisie en plus ; lecture simple. | Décision du 2026-11-14 |
 | D6 | **Autocallable** : observation annuelle, rappel si le sous-jacent est ≥ 100 % du niveau initial (coupon cumulé), barrière de protection 60 % à l'échéance, 5 ans ; niveaux modifiables | Cas d'école de la structuration ; les niveaux modifiables montrent l'effet de la barrière sur la juste valeur. | Décision du 2026-11-14 |
+| D7 | **D5 prime sur la maquette 39** : le champ « Prix client » est supprimé des trois formulaires (le prix client est une constante, 100 % du nominal, pas une entrée) et reste affiché dans la carte de statistique et le tableau de décomposition ; le graphe de payoff à l'échéance est calculé par l'engine (courbe du produit et du sous-jacent) et affiché tel quel | La maquette montre un champ saisissable et un graphe absent de `TASKS.md` ; D5 écrite le 2026-11-14 prime, le graphe est ajouté au périmètre. | Décision du 2026-11-25 |
+| D8 | **Pipeline pricing, pas de table dédiée** : un nouveau `kind` `STRUCTURED` du pipeline `pricing.*` (migration de l'enum `PricingKind`, comme `OPTION_MC` en F20 D5) remplace `StructuredProduct` et `routes/structured/` de T-05 ; « Enregistrer » conserve le résultat dans l'historique des calculs existant | Même flux Kafka et même table de résultats que 17 à 20 : pas de seconde persistance. | Décision du 2026-11-25 |
+| D9 | **États Reverse convertible et Autocallable dessinés dans Figma avant leur code** (copies du cadre 39 dans la même section) ; le code d'un état attend son cadre | Seul l'état Capital garanti existait ; `apps/web/AGENTS.md` bloque un écran sans cadre. | Décision du 2026-11-25 |
 
 ## Écarts au plan
 

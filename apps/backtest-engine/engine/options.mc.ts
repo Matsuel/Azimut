@@ -9,7 +9,7 @@ import {
 import { blackScholes, DAYS_PER_YEAR, payoff } from "./options";
 
 /** Somme et somme des carrés de payoffs, de quoi donner la moyenne et l'erreur standard sans stocker les trajectoires. */
-class PayoffStats {
+export class PayoffStats {
     sum = 0;
     squares = 0;
 
