@@ -2033,7 +2033,7 @@
                         },
                         "AUTOCALL_NET_COUPONS": {
                             "name": "Coupons net of the put",
-                            "role": "Recalled coupons − barrier put"
+                            "role": "Coupons − barrier put"
                         }
                     }
                 },

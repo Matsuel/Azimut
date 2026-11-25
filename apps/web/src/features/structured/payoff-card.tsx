@@ -10,6 +10,9 @@ import { useStructuredNotes } from "./notes"
 import type { StructuredInput, StructuredResult } from "./types"
 import { payoffRows } from "./utils"
 
+// Repères de l'axe des variations du sous-jacent (ratios), lus par la maquette : de −50 % à +60 %
+const PAYOFF_TICKS = [-0.5, -0.25, 0, 0.25, 0.6]
+
 const config = {
     payoff: { color: PAYOFF_COLORS.product },
     underlying: { color: PAYOFF_COLORS.underlying },
@@ -32,7 +35,8 @@ function PayoffPlot({ result, input }: { result: StructuredResult; input: Struct
                     domain={["dataMin", "dataMax"]}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(change) => f.formatChange(change * 100)}
+                    ticks={PAYOFF_TICKS}
+                    tickFormatter={(change) => f.formatRate(change)}
                 />
                 <YAxis
                     width={64}

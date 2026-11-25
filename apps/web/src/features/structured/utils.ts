@@ -100,6 +100,9 @@ export function barSegments(result: StructuredResult): BarSegment[] {
     return result.marginRatio > 0 ? [...base, { key: "MARGIN", ratio: result.marginRatio }] : base
 }
 
+// Pourcentage saisi à 2 décimales : une volatilité lue sur le marché (0,162495) n'a pas à s'afficher à 4 décimales
+const toInputPercent = (ratio: number) => Math.round(toPercent(ratio) * 100) / 100
+
 /**
  * Paramètres de marché du sous-jacent choisi, en pourcentages saisis : volatilité 1 an et dividende des 12 derniers mois
  * (`GET /api/market/option-inputs`), taux à 5 ans de la courbe US ; une valeur absente est omise et laisse la saisie en l'état.
@@ -110,8 +113,8 @@ export function marketDefaults(
 ): Partial<Pick<StructuredFormValues, "volatility" | "dividendYield" | "rate">> {
     const rate = curve?.points.find((point) => point.symbol === STRUCTURED_RATE_SYMBOL)?.rate
     return {
-        ...(inputs?.volatility != null && { volatility: toPercent(inputs.volatility) }),
-        ...(inputs && { dividendYield: toPercent(inputs.dividendYield) }),
-        ...(rate != null && { rate: toPercent(rate) }),
+        ...(inputs?.volatility != null && { volatility: toInputPercent(inputs.volatility) }),
+        ...(inputs && { dividendYield: toInputPercent(inputs.dividendYield) }),
+        ...(rate != null && { rate: toInputPercent(rate) }),
     }
 }

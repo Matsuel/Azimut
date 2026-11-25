@@ -2033,7 +2033,7 @@
                         },
                         "AUTOCALL_NET_COUPONS": {
                             "name": "Coupons nets du put",
-                            "role": "Coupons rappelés − put à barrière"
+                            "role": "Coupons − put à barrière"
                         }
                     }
                 },
