@@ -11,8 +11,8 @@
 | T-03 | Engine : juste valeur et marge | US-02, US-03 | backtest-engine | MUST | 3 | T-01 | — |
 | T-04 | Contrat : produit structuré | US-01, US-02, US-03 | contracts | MUST | 3 | — | — |
 | T-05 | Persistance et route de produit | US-01, US-02, US-03 | core-backend | MUST | 5 | T-04 | — |
-| T-06 | Constructeur de produit | US-01, US-02 | web | MUST | 5 | T-05 | — |
-| T-07 | Décomposition affichée | US-01 | web | MUST | 3 | T-05 | — |
+| T-06 | Constructeur de produit | US-01, US-02 | web | MUST | 5 | T-05 | `69be2a1` |
+| T-07 | Décomposition affichée | US-01 | web | MUST | 3 | T-05 | `69be2a1` |
 
 **Total** : 29 points — MUST 29, SHOULD 0.
 
@@ -102,7 +102,7 @@ Critères d’acceptation :
 
 ### T-06 · Constructeur de produit
 
-- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-05 · **Commits** : —
+- **US** : US-01, US-02 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-05 · **Commits** : `69be2a1`
 - **Fichiers** : `apps/web/src/features/structured/` (nouveau)
 
 Critères d’acceptation :
@@ -111,7 +111,7 @@ Critères d’acceptation :
 
 ### T-07 · Décomposition affichée
 
-- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-05 · **Commits** : —
+- **US** : US-01 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-05 · **Commits** : `69be2a1`
 - **Fichiers** : `apps/web/src/features/structured/`
 
 Critères d’acceptation :
