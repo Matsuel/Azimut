@@ -1,6 +1,6 @@
 export { Logger, createLogger } from './logger'
 export { DAY_MS, TRADING_DAYS_PER_YEAR, addYears, periodKey, type PeriodFrequency } from './period'
-export { HISTORICAL_VOLATILITY_MIN_RETURNS, historicalVolatility, median, round } from './stats'
+export { HISTORICAL_VOLATILITY_MIN_RETURNS, historicalVolatility, median, returnsCorrelation, round, type DatedClose } from './stats'
 export { mulberry32, standardNormal } from './random'
 export { onShutdown } from './shutdown'
 export { businessDays, estimateSchedule, type ScheduleEstimate } from './schedule'

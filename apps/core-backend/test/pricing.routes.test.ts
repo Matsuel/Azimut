@@ -85,6 +85,21 @@ test("POST OPTION_MC : trajectoires par défaut 100 000, graine ignorée ; hors 
     expect(create).not.toHaveBeenCalled()
 })
 
+test("POST STRUCTURED : produit transmis au service, prix client ignoré ; produit inconnu ou maturité hors bornes : 400 INVALID_PRICING", async () => {
+    create.mockResolvedValue({ id: "p4" } as never)
+    const structured = { product: "REVERSE_CONVERTIBLE" as const, underlying: "^STOXX50E", nominal: 1000, maturityYears: 5, rate: 0.03, volatility: 0.18, dividendYield: 0.02, valueDate: "2026-10-28", couponRate: 0.04, putStrike: 1 }
+
+    expect((await post({ kind: "STRUCTURED", structured: { ...structured, clientPrice: 900 } })).status).toBe(202)
+    expect(create.mock.calls[0]).toEqual(["u1", { kind: "STRUCTURED", structured }])
+    create.mockClear()
+    for (const bad of [{ product: "WORST_OF" }, { maturityYears: 11 }, { putStrike: 0 }]) {
+        const response = await post({ kind: "STRUCTURED", structured: { ...structured, ...bad } })
+        expect(response.status).toBe(400)
+        expect(((await response.json()) as { code: string }).code).toBe("INVALID_PRICING")
+    }
+    expect(create).not.toHaveBeenCalled()
+})
+
 test("GET /api/pricing/:id : le service reçoit l'id et l'utilisateur ; autre propriétaire : 403", async () => {
     get.mockResolvedValueOnce({ id: "p1" } as never)
     expect((await app.request("/api/pricing/p1")).status).toBe(200)

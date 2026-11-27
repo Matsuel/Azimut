@@ -60,3 +60,9 @@ export const CURRENCY_SUBUNITS: Record<string, { currency: string; divisor: numb
 
 // Préremplissage du calculateur d'option (D4) : fenêtre d'un an (clôtures et dividendes)
 export const OPTION_INPUTS_WINDOW_YEARS = 1;
+
+// Volatilité implicite du préremplissage (T-16) : première échéance à au moins 30 jours, les échéances proches étant faussées par le temps restant
+export const IMPLIED_VOLATILITY_MIN_DAYS = 30;
+
+// Corrélations d'un panier (T-11a) : rendements communs sous lesquels la corrélation est trop incertaine pour être publiée (environ trois mois de cotation)
+export const BASKET_CORRELATION_MIN_RETURNS = 60;

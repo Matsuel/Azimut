@@ -10,6 +10,13 @@ const closes = spyOn(MarketService.prototype, "getDailyCloses").mockResolvedValu
 const dividends = spyOn(MarketService.prototype, "getDividends").mockResolvedValue({ AAPL: { currency: "USD", dividends: [] } })
 const rates = spyOn(MarketService.prototype, "getRateCurve").mockResolvedValue({ currency: "USD", points: [{ symbol: "^TNX", maturityYears: 10, rate: 0.0421, date: "2026-10-28" }] })
 const optionInputs = spyOn(MarketService.prototype, "getOptionInputs").mockResolvedValue({ symbol: "AAPL", currency: "USD", spot: 224.4, dividendYield: 0.005, volatility: 0.243 })
+const basketInputs = spyOn(MarketService.prototype, "getBasketInputs").mockResolvedValue({
+    underlyings: [
+        { symbol: "AAPL", currency: "USD", spot: 224.4, dividendYield: 0.005, volatility: 0.243 },
+        { symbol: "MSFT", currency: "USD", spot: 410, dividendYield: 0.007, volatility: 0.21 },
+    ],
+    correlations: [[1, 0.62], [0.62, 1]],
+})
 const optionChain = spyOn(MarketService.prototype, "getOptionChain").mockResolvedValue({ symbol: "SPY", spot: 582, expirations: ["2026-12-19"], expiration: "2026-12-19", calls: [], puts: [] })
 const search = spyOn(MarketService.prototype, "searchMarket").mockResolvedValue([])
 const details = spyOn(MarketService.prototype, "getMarketDetails").mockResolvedValue([])
@@ -26,6 +33,7 @@ afterAll(async () => {
     dividends.mockRestore()
     rates.mockRestore()
     optionInputs.mockRestore()
+    basketInputs.mockRestore()
     optionChain.mockRestore()
     search.mockRestore()
     details.mockRestore()
@@ -129,4 +137,23 @@ test("GET /options : transmet symbole et échéance, 400 INVALID_QUERY sans symb
         expect(response.status).toBe(400)
         expect(((await response.json()) as { code: string }).code).toBe("INVALID_QUERY")
     }
+})
+
+test("GET /api/market/basket-inputs : 200 avec les entrées et la matrice, symboles dans l'ordre demandé", async () => {
+    const response = await app.request("/api/market/basket-inputs?symbols=AAPL,%20MSFT", { headers: withKey })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({ correlations: [[1, 0.62], [0.62, 1]] })
+    expect(basketInputs.mock.calls.at(-1)).toEqual([["AAPL", "MSFT"]])
+})
+
+test("GET /api/market/basket-inputs : moins de 2, plus de 5 symboles ou doublon : 400 INVALID_QUERY", async () => {
+    for (const symbols of ["AAPL", "A,B,C,D,E,F", "AAPL,AAPL", "AAPL,", ""]) {
+        const response = await app.request(`/api/market/basket-inputs?symbols=${symbols}`, { headers: withKey })
+
+        expect(response.status).toBe(400)
+        expect(await response.json()).toMatchObject({ code: "INVALID_QUERY" })
+    }
+    expect((await app.request("/api/market/basket-inputs", { headers: withKey })).status).toBe(400)
+    expect((await app.request("/api/market/basket-inputs?symbols=A,B,C,D,E", { headers: withKey })).status).toBe(200)
 })

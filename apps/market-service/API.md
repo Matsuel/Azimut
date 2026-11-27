@@ -32,6 +32,7 @@ Catalogue des routes internes de market-service (port 8001, données yahoo-finan
 - [`GET /api/market/dividends`](#get-apimarketdividends)
 - [`GET /api/market/rates`](#get-apimarketrates)
 - [`GET /api/market/option-inputs`](#get-apimarketoption-inputs)
+- [`GET /api/market/basket-inputs`](#get-apimarketbasket-inputs)
 - [`GET /api/market/options`](#get-apimarketoptions)
 
 ## Conventions communes
@@ -41,7 +42,7 @@ Catalogue des routes internes de market-service (port 8001, données yahoo-finan
 - **Sondes** (sans clé interne, `registerProbes` de `@azimut/http`, enregistrées avant `internalAuthMiddleware`) : `GET /liveness` → toujours `200 { "status": "ok" }` ; `GET /readiness` → `200 { "status": "ok", "checks": { "provider": "ok" } }` ou `503 { "status": "unavailable", "checks": { "provider": "down" } }`. Le contrôle `provider` (`MarketService.isProviderReachable`) cote `PROVIDER_PROBE_SYMBOL` (`SPY`) auprès de Yahoo avec un délai de `PROVIDER_PROBE_TIMEOUT_MS` (1,5 s) ; succès comme échec sont gardés `PROVIDER_PROBE_CACHE_TTL_MS` (60 s) : au plus un appel au fournisseur par minute, quel que soit le nombre de sondes. Lu par core-backend (page Monitoring) et Kubernetes.
 - **Port** : `env.PORT` (défaut 8001). `x-user-id` est posé par le proxy mais aucune route ne le lit aujourd'hui.
 - **Erreurs** : `AppError` → `{ "error": "<message anglais>", "code": "<CODE>", ...data }` avec son statut (mêmes codes que core-backend, voir son `API.md`) ; toute autre exception (erreur yahoo-finance2) → `500 { "error": "Internal server error", "code": "INTERNAL_ERROR" }`. Seules les routes `GET` ci-dessous existent : une autre méthode ou un autre chemin reçoit la 404 par défaut d'Express (HTML).
-- **Types** : schémas zod d'entrée propres au service dans `interfaces/market.interface.ts` (`searchMarketSchema`, `marketIdSchema`, `dailyClosesQuerySchema`, `optionInputsQuerySchema`) ; `periodSchema` et types de réponse (`MarketData`, `MarketAsset`, `MarketDetails`, `DailyCloses`, `Period`), unités comprises, dans `@azimut/contracts` (`src/market.ts`), partagés avec le web ; pagination (`paginationQuerySchema`, `Paginated<T>`) depuis le même package. Dates sérialisées en ISO 8601. Prix dans la devise de cotation du symbole, sans conversion.
+- **Types** : schémas zod d'entrée propres au service dans `interfaces/market.interface.ts` (`searchMarketSchema`, `marketIdSchema`, `dailyClosesQuerySchema`, `optionInputsQuerySchema`, `basketInputsQuerySchema`) ; `periodSchema` et types de réponse (`MarketData`, `MarketAsset`, `MarketDetails`, `DailyCloses`, `Period`), unités comprises, dans `@azimut/contracts` (`src/market.ts`), partagés avec le web ; pagination (`paginationQuerySchema`, `Paginated<T>`) depuis le même package. Dates sérialisées en ISO 8601. Prix dans la devise de cotation du symbole, sans conversion.
 - **Logos** : `logoUrl` vaut `https://img.logo.dev/ticker/<symbol>?token=…&size=64` si `LOGO_DEV_TOKEN` est défini (`env.ts`), sinon absent.
 
 ### GET /api/market/search
@@ -146,15 +147,32 @@ Catalogue des routes internes de market-service (port 8001, données yahoo-finan
 
 - **Auth** : `x-internal-key` (comme toute route). Appelée par le web via le proxy de core-backend (`GET /api/market/option-inputs`, liste blanche).
 - **Entrée** : query `optionInputsQuerySchema` : `symbol` (string non vide après `trim`).
-- **Réponse** : `200`, `OptionInputs` : de quoi préremplir le calculateur d'option (D2, D4). `spot` = dernier cours (`quote`), `currency` = devise principale (`GBp` → `GBP`, montants ÷ 100) ; `dividendYield` = ratio annuel, dividendes des 12 derniers mois / spot (`0` sans dividende) ; `volatility` = ratio annuel, écart-type des rendements logarithmiques journaliers sur 1 an × √252 (`TRADING_DAYS_PER_YEAR`), `null` sous 20 rendements ou sur une série plate. Jamais mis en cache. Le taux sans risque n'y figure pas : le web le lit sur `GET /api/market/rates` (`^IRX`).
+- **Réponse** : `200`, `OptionInputs` : de quoi préremplir le calculateur d'option (D2, D4). `spot` = dernier cours (`quote`), `currency` = devise principale (`GBp` → `GBP`, montants ÷ 100) ; `dividendYield` = ratio annuel, dividendes des 12 derniers mois / spot (`0` sans dividende) ; `volatility` = ratio annuel, écart-type des rendements logarithmiques journaliers sur 1 an × √252 (`TRADING_DAYS_PER_YEAR`), `null` sous 20 rendements ou sur une série plate ; `impliedVolatility` (optionnel) = ratio annuel (0.25 = 25 %), volatilité implicite de Yahoo (`yahooVolatility` de `getOptionChain`) de l'option au strike le plus proche du cours (moyenne call et put s'ils en ont une), sur la première échéance à au moins 30 jours (`IMPLIED_VOLATILITY_MIN_DAYS`) ; `null` sans chaîne, sans échéance assez lointaine ou sans implicite non nulle ; une chaîne en erreur est loggée (`warn`) et ne fait pas échouer la route. Jamais mis en cache. Le taux sans risque n'y figure pas : le web le lit sur `GET /api/market/rates` (`^IRX`).
   ```json
   // GET /api/market/option-inputs?symbol=AAPL
-  { "symbol": "AAPL", "currency": "USD", "spot": 224.4, "dividendYield": 0.005, "volatility": 0.243 }
+  { "symbol": "AAPL", "currency": "USD", "spot": 224.4, "dividendYield": 0.005, "volatility": 0.243, "impliedVolatility": 0.25 }
   ```
 - **Erreurs** : `400 { "code": "INVALID_QUERY", "issues": [ZodIssue] }` → `symbol` absent ; `404 { "code": "SYMBOL_NOT_FOUND" }` → symbole inconnu ou sans cours ; `500` → erreur yahoo-finance2.
-- **Effets** : aucun (lecture yahoo-finance2 : `quote` et `chart` 1 an avec `events: "div"`).
+- **Effets** : aucun (lecture yahoo-finance2 : `quote`, `chart` 1 an avec `events: "div"` et `options` pour l'implicite).
 - **Appelant** : `getOptionInputs(symbol)` de `apps/web/src/features/pricing/api.ts`, hook `useOptionInputs(symbol)`.
 - **Source** : `routes/market/market.routes.ts`, `controller/market.controller.ts` (`getOptionInputs`), `services/market.service.ts`, `repositories/market.repository.ts` (`getOptionInputs`), `utils/option-inputs.ts` (`trailingDividendYield`), `historicalVolatility` de `@azimut/utils`.
+
+### GET /api/market/basket-inputs
+
+- **Auth** : `x-internal-key` (comme toute route). Appelée par le web via le proxy de core-backend (`GET /api/market/basket-inputs`, liste blanche).
+- **Entrée** : query `basketInputsQuerySchema` : `symbols` (2 à 5 symboles distincts séparés par des virgules, `STRUCTURED_BASKET_SIZE`, `trim` appliqué ; doublon refusé).
+- **Réponse** : `200`, `BasketInputs` : `underlyings` = une entrée par symbole, dans l'ordre demandé, avec les valeurs d'option-inputs (`symbol`, `currency`, `spot`, `dividendYield`, `volatility`, mêmes unités ; pas d'`impliedVolatility`) ; `correlations` = matrice n×n (même ordre) des corrélations de Pearson (ratio de -1 à 1) des rendements logarithmiques journaliers sur 1 an, calculés entre les dates de cotation communes à tous les symboles (`returnsCorrelation` de `@azimut/utils`), diagonale 1, symétrique, arrondie à 4 décimales. Jamais mis en cache.
+  ```json
+  // GET /api/market/basket-inputs?symbols=AAPL,MSFT
+  { "underlyings": [
+      { "symbol": "AAPL", "currency": "USD", "spot": 224.4, "dividendYield": 0.005, "volatility": 0.243 },
+      { "symbol": "MSFT", "currency": "USD", "spot": 410, "dividendYield": 0.007, "volatility": 0.21 } ],
+    "correlations": [[1, 0.62], [0.62, 1]] }
+  ```
+- **Erreurs** : `400 { "code": "INVALID_QUERY", "issues": [ZodIssue] }` → `symbols` absent, moins de 2 ou plus de 5 symboles, doublon ; `404 { "code": "SYMBOL_NOT_FOUND" }` → symbole inconnu ou sans cours ; `502 { "code": "SERVICE_UNAVAILABLE", "reason": "INSUFFICIENT_HISTORY", "symbols": [...], "minReturns": 60 }` → moins de `BASKET_CORRELATION_MIN_RETURNS` (60) rendements communs ou série plate : aucune corrélation n'est inventée ; `500` → erreur yahoo-finance2.
+- **Effets** : aucun (lecture yahoo-finance2 : `quote` et `chart` 1 an par symbole).
+- **Appelant** : aucun pour l'instant (lot 5a de la feature 21 : le web le lira pour préremplir un produit structuré sur panier).
+- **Source** : `routes/market/market.routes.ts`, `controller/market.controller.ts` (`getBasketInputs`), `services/market.service.ts` (`getBasketInputs`), `repositories/market.repository.ts` (`getOptionInputs`, `getDailyCloses`), `returnsCorrelation` de `@azimut/utils`.
 
 ### GET /api/market/options
 

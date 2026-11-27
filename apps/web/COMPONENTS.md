@@ -210,6 +210,19 @@ Catalogues par feature (exports publics : écrans, sections, `api.ts`, `hook.ts`
   - [`features/pricing/utils.ts`](src/features/pricing/COMPONENTS.md#featurespricingutilsts) : exports `toPricingInput`, `groupFlows`, `toOptionPricingInput`, `optionDefaults`, `toMaturityDays`
   - [`features/pricing/constants.ts`](src/features/pricing/COMPONENTS.md#featurespricingconstantsts) : exports `PRICING_POLL_MS`, `RATE_CURVE_STALE_MS`, `PRICING_CURRENCY`, `BOND_MATURITY_YEARS`, `RATE_CARD_KEYS`, `BOND_TYPES`, `DISCOUNT_SOURCES`, `DEFAULT_BOND`, `DAYS_PER_YEAR`, `OPTION_MATURITY_MAX_DAYS`, `DEFAULT_OPTION_MATURITY_DAYS`, `RISK_FREE_SYMBOL`, `OPTION_DEFAULT_CURRENCY`
   - [`features/pricing/types.ts`](src/features/pricing/COMPONENTS.md#featurespricingtypests) : réexports des types de pricing du contrat
+- [`features/structured`](src/features/structured/COMPONENTS.md)
+  - [StructuredPage](src/features/structured/COMPONENTS.md#structuredpage) : écran Structuration (maquette 39, route `routes.structured`) : constructeur de produit structuré
+  - [StructuredHeader](src/features/structured/COMPONENTS.md#structuredheader) : titre, badge du type et description de la demande
+  - [StructuredCards](src/features/structured/COMPONENTS.md#structuredcards) : juste valeur, prix client, marge et carte propre au produit
+  - [StructuredForm](src/features/structured/COMPONENTS.md#structuredform) : sélecteur de type et paramètres du produit
+  - [DecompositionCard](src/features/structured/COMPONENTS.md#decompositioncard) : barre empilée, briques, marge et note de calcul
+  - [PayoffCard](src/features/structured/COMPONENTS.md#payoffcard) : payoff à l'échéance face au sous-jacent
+  - [ObservationsCard](src/features/structured/COMPONENTS.md#observationscard) : dates d'observation de l'autocallable
+  - [`features/structured/hook.ts`](src/features/structured/COMPONENTS.md#featuresstructuredhookts) : exports `useStructuredPricing`
+  - [`features/structured/schema.ts`](src/features/structured/COMPONENTS.md#featuresstructuredschemats) : exports `createStructuredSchema`
+  - [`features/structured/utils.ts`](src/features/structured/COMPONENTS.md#featuresstructuredutilsts) : exports `structuredDefaults`, `marketDefaults`, `toStructuredPricingInput`, `structuredOf`, `payoffRows`, `barSegments`
+  - [`features/structured/constants.ts`](src/features/structured/COMPONENTS.md#featuresstructuredconstantsts) : exports `STRUCTURED_PRODUCT_TYPES`, `PRODUCT_FIELDS`, `DEFAULT_STRUCTURED`…
+  - [`features/structured/types.ts`](src/features/structured/COMPONENTS.md#featuresstructuredtypests) : réexports des types du produit structuré du contrat
 - [`features/notifications`](src/features/notifications/COMPONENTS.md)
   - [NotificationCenter](src/features/notifications/COMPONENTS.md#notificationcenter) : écran Notifications (maquette 22) : onglets, liste par jour, « Tout marquer comme lu »
   - [NotificationBody](src/features/notifications/COMPONENTS.md#notificationbody) : états de la carte (chargement, erreur, vide, liste)

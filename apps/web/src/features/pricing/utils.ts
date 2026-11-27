@@ -9,7 +9,7 @@ import type { BondFormValues, MonteCarloFormValues, OptionFormValues } from "./s
 import type { BondFlow, OptionInputs, PricingInput, RateCurve } from "./types"
 
 // Jour local `YYYY-MM-DD` (pas `toISOString`, qui décalerait d'un jour après minuit hors UTC)
-const toDay = (date: Date) =>
+export const toDay = (date: Date) =>
     [date.getFullYear(), date.getMonth() + 1, date.getDate()]
         .map((n, i) => String(n).padStart(i ? 2 : 4, "0"))
         .join("-")
@@ -60,7 +60,7 @@ export function toOptionPricingInput(values: OptionFormValues): PricingInput {
 }
 
 // Ratio → pourcentage saisissable, sans bruit de virgule flottante (0,243 → 24,3)
-const toPercent = (ratio: number) => Math.round(ratio * 100 * 1e4) / 1e4
+export const toPercent = (ratio: number) => Math.round(ratio * 100 * 1e4) / 1e4
 
 /** Maturité en jours entiers d'une demande (`maturityYears` × 365), pour l'afficher telle qu'elle a été saisie. */
 export const toMaturityDays = (maturityYears: number) => Math.round(maturityYears * DAYS_PER_YEAR)

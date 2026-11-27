@@ -68,7 +68,8 @@
             "monitoring": "Monitoring",
             "users": "Users",
             "referenceData": "Reference data",
-            "account": "Account"
+            "account": "Account",
+            "structured": "Structuring"
         },
         "descriptions": {
             "dashboard": "Overview of your portfolios, backtests and key indicators.",
@@ -86,12 +87,13 @@
             "monitoring": "Status of the services and their dependencies.",
             "users": "User accounts and roles.",
             "referenceData": "Reference data used by the calculations.",
-            "account": "Your profile, virtual portfolio and appearance."
+            "account": "Your profile, virtual portfolio and appearance.",
+            "structured": "Build a structured product and see its breakdown, fair value and the issuer's margin."
         },
         "sectionDescriptions": {
             "laboratory": "Your simulated portfolios and the market that feeds them.",
             "analysis": "Compare, measure risk and project your results.",
-            "derivatives": "Rates, bonds, options and, soon, structured products.",
+            "derivatives": "Rates, bonds, options and structured products.",
             "virtualTrading": "Place orders on a virtual portfolio.",
             "followUp": "Reports and notifications from your calculations.",
             "administration": "Service supervision, users and reference data."
@@ -1404,6 +1406,52 @@
             "computation": "Read as received from Yahoo Finance, never used in a calculation.",
             "unit": "Annual ratio, shown as a percentage.",
             "readingTip": "A gap with the engine IV comes from the mid price and Black-Scholes assumptions, not from an error."
+        },
+        "structuredFairValue": {
+            "title": "Fair value",
+            "purpose": "What the product is worth today, brick by brick, regardless of the price it is sold at.",
+            "computation": "Sum of the bricks: discounted zero-coupon or bond, plus the option bought, minus the option sold. The autocallable is simulated (Monte Carlo, fixed seed).",
+            "unit": "Euros, and share of the nominal."
+        },
+        "structuredMargin": {
+            "title": "Structurer's margin",
+            "purpose": "What the seller of the product earns: the gap between what the client pays and what the product is worth.",
+            "computation": "Client price (the nominal, 100 %) minus the fair value. The issuer's hedging and funding costs are not modelled.",
+            "unit": "Euros, and share of the client price.",
+            "readingTip": "A negative margin means the promised coupon exceeds what the fair value funds."
+        },
+        "structuredParticipation": {
+            "title": "Participation",
+            "purpose": "The share of the underlying's rise the client receives on top of the guaranteed capital.",
+            "computation": "Option budget (nominal minus zero-coupon minus margin) divided by the price of a call at the chosen strike.",
+            "unit": "Percentage of the underlying's rise.",
+            "readingTip": "The higher the guarantee, the smaller the option budget, and the participation with it."
+        },
+        "structuredOptionBudget": {
+            "title": "Option budget",
+            "purpose": "What is left to buy the call once the guaranteed capital is funded and the margin taken.",
+            "computation": "Nominal minus the zero-coupon that returns the guarantee, minus the structuring margin.",
+            "unit": "Euros."
+        },
+        "structuredRecallProbability": {
+            "title": "Recall probability",
+            "purpose": "The share of scenarios where the product is redeemed early, on a given observation date.",
+            "computation": "Share of simulated paths whose level is above the recall level on that date, without having been before.",
+            "unit": "Percentage of paths.",
+            "readingTip": "The maturity line gives the share of paths that reach the end without being recalled."
+        },
+        "structuredProtectionBarrier": {
+            "title": "Protection barrier",
+            "purpose": "The underlying level below which the capital is no longer returned at maturity.",
+            "computation": "Observed at maturity only: below the barrier, the client receives the nominal times the final level.",
+            "unit": "Percentage of the initial level.",
+            "readingTip": "A lower barrier protects more capital: the fair value rises."
+        },
+        "structuredRecallLevel": {
+            "title": "Recall level",
+            "purpose": "The underlying level from which the product is redeemed early, with its accumulated coupons.",
+            "computation": "Observed every year: a level above the threshold repays the nominal plus the accumulated coupon and ends the product.",
+            "unit": "Percentage of the initial level."
         }
     },
     "pages": {
@@ -1877,6 +1925,153 @@
                 "noBidAsk": "Discarded · empty bid/ask",
                 "noPrice": "Discarded · no price",
                 "ivOutOfBounds": "Discarded · IV out of bounds"
+            }
+        },
+        "structured": {
+            "title": "Product builder",
+            "products": {
+                "CAPITAL_GUARANTEED": "Capital guaranteed",
+                "REVERSE_CONVERTIBLE": "Reverse convertible",
+                "AUTOCALLABLE": "Autocallable"
+            },
+            "description": "{underlying} · {maturity} · nominal {nominal} · data as of {date} · indicative prices, not advice",
+            "descriptionEmpty": "Pick a product type, then price it · indicative prices, not advice",
+            "cards": {
+                "fairValue": "Fair value",
+                "fairValueCaption": "Sum of the bricks",
+                "clientPrice": "Client price",
+                "clientRatio": "100 %",
+                "clientCaption": "Price offered to the client",
+                "margin": "Margin",
+                "marginCaption": "Computed automatically",
+                "participation": "Participation",
+                "participationBadge": "upside",
+                "participationCaption": "Budget {budget} ÷ call {call}",
+                "coupon": "Coupon",
+                "couponBadge": "per year",
+                "couponCaption": "Put premium {put}",
+                "recall": "Early redemption",
+                "recallCaption": "Probability before maturity"
+            },
+            "form": {
+                "title": "Product",
+                "description": "Pick a type, then its parameters",
+                "type": "Type",
+                "underlying": "Underlying",
+                "maturity": "Maturity",
+                "maturityOption": "{years, plural, one {# year} other {# years}}",
+                "nominal": "Nominal (€)",
+                "guarantee": "Capital guarantee (%)",
+                "callStrike": "Call strike (% of initial level)",
+                "couponRate": "Annual coupon (%)",
+                "putStrike": "Put strike (% of initial level)",
+                "recallLevel": "Recall level (%)",
+                "protectionBarrier": "Protection barrier (%)",
+                "rate": "Zero-coupon rate (%)",
+                "volatility": "Volatility (%)",
+                "dividendYield": "Dividend yield (%)",
+                "submit": "Price the product",
+                "validation": {
+                    "underlying": "Pick an underlying.",
+                    "nominal": "The nominal must be strictly positive.",
+                    "maturity": "Maturity: whole number from {min} to {max} years.",
+                    "rate": "Rate from 0 to 100 %.",
+                    "volatility": "Volatility: strictly positive, at most 500 %.",
+                    "dividendYield": "Dividend yield: 0 to 100 %.",
+                    "guarantee": "Guarantee: strictly positive, at most 100 %.",
+                    "strike": "Strike: strictly positive, at most 200 %.",
+                    "coupon": "Coupon: strictly positive, at most 100 %.",
+                    "recallLevel": "Recall level: strictly positive, at most 200 %.",
+                    "barrier": "Barrier: strictly positive, at most 100 %.",
+                    "required": "Required field."
+                }
+            },
+            "decomposition": {
+                "title": "Breakdown",
+                "subtitle": "The bricks that make the product, in EUR",
+                "brick": "Brick",
+                "role": "Role",
+                "value": "Value",
+                "ofNominal": "% nominal",
+                "fairValue": "Fair value",
+                "fairValueRole": "Sum of the bricks",
+                "margin": "Margin",
+                "marginRole": "Client price − fair value",
+                "clientPrice": "Client price",
+                "legend": {
+                    "ZERO_COUPON": "Zero-coupon",
+                    "CALL": "Call",
+                    "AUTOCALL_NET_COUPONS": "Net coupons",
+                    "FAIR_VALUE": "Fair value",
+                    "MARGIN": "Margin"
+                },
+                "bricks": {
+                    "CAPITAL_GUARANTEED": {
+                        "ZERO_COUPON": {
+                            "name": "{years}-year zero-coupon",
+                            "role": "Returns the guaranteed capital"
+                        },
+                        "CALL": {
+                            "name": "Call × {participation}",
+                            "role": "Participation in the upside"
+                        }
+                    },
+                    "REVERSE_CONVERTIBLE": {
+                        "BOND": {
+                            "name": "{years}-year bond",
+                            "role": "Capital + coupons"
+                        },
+                        "PUT": {
+                            "name": "Put sold",
+                            "role": "Premium received, loss if the underlying falls"
+                        }
+                    },
+                    "AUTOCALLABLE": {
+                        "ZERO_COUPON": {
+                            "name": "{years}-year zero-coupon",
+                            "role": "Returns the capital"
+                        },
+                        "AUTOCALL_NET_COUPONS": {
+                            "name": "Coupons net of the put",
+                            "role": "Coupons − barrier put"
+                        }
+                    }
+                },
+                "notes": {
+                    "CAPITAL_GUARANTEED": "Participation = option budget ÷ call price = {budget} ÷ {call} = {participation}. Hedging and funding costs not included.",
+                    "REVERSE_CONVERTIBLE": "Coupon of {coupon} per year: bond {bond} − put premium {put} = {fairValue}. Hedging and funding costs not included.",
+                    "AUTOCALLABLE": "Expected bricks over {paths} paths: zero-coupon {zeroCoupon} + coupons net of the barrier put {net} = {fairValue}. Hedging and funding costs not included."
+                }
+            },
+            "payoff": {
+                "title": "Payoff at maturity",
+                "subtitle": "For {nominal}, depending on the underlying",
+                "underlying": "Underlying",
+                "notes": {
+                    "CAPITAL_GUARANTEED": "Below 0 %: capital returned ({capital}). Above: {participation} of the upside. Underlying dividends not received.",
+                    "REVERSE_CONVERTIBLE": "Above 0 %: capital + {years} coupons of {coupon} ({total} in total). Below: loss equal to the underlying's under the {strike} strike, coupons kept. Underlying dividends not received.",
+                    "AUTOCALLABLE": "No early redemption scenario. Below {barrier}: loss of the underlying. From {barrier} to {recall}: capital returned. From {recall}: capital + {years} coupons of {coupon}. Underlying dividends not received."
+                }
+            },
+            "observations": {
+                "title": "Autocallable · observation dates",
+                "subtitle": "Coupon {coupon} per year, recall at {recall}, protection {barrier}",
+                "price": "Monte Carlo price",
+                "priceCaption": "± {error} (standard error)",
+                "barrier": "Protection barrier",
+                "barrierCaption": "observed at maturity",
+                "date": "Observation",
+                "recallLevel": "Recall level",
+                "coupon": "Coupon",
+                "probability": "Recall prob.",
+                "end": "Maturity · {date}",
+                "note": "No closed formula: priced by simulation, {paths} paths, seed {seed}."
+            },
+            "states": {
+                "empty": "Price a product to see its breakdown.",
+                "pending": "Computing…",
+                "failed": "The computation failed: {reason}",
+                "readError": "Could not read the result of the request."
             }
         }
     },

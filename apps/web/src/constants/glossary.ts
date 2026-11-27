@@ -19,6 +19,8 @@ const BONDS = "apps/backtest-engine/engine/bonds.ts"
 const OPTIONS = "apps/backtest-engine/engine/options.ts"
 const OPTION_CHAIN = "apps/backtest-engine/engine/options.chain.ts"
 const OPTIONS_MC = "apps/backtest-engine/engine/options.mc.ts"
+const STRUCTURED = "apps/backtest-engine/engine/structured.ts"
+const STRUCTURED_MC = "apps/backtest-engine/engine/structured-mc.ts"
 const OPTION_INPUTS = "apps/market-service/utils/option-inputs.ts"
 const MONITORING_SERVICE = "apps/core-backend/services/monitoring.service.ts"
 
@@ -59,6 +61,13 @@ export const GLOSSARY = {
     standardError: { source: `${OPTIONS_MC} · PayoffStats.estimate (standardError)` },
     barrierOption: { source: `${OPTIONS_MC} · priceOptionMonteCarlo (knockOut, knockIn)` },
     monteCarloPaths: { source: `${OPTIONS_MC} · priceOptionMonteCarlo (paths)` },
+    structuredFairValue: { source: `${STRUCTURED} · assemble (fairValue)` },
+    structuredMargin: { source: `${STRUCTURED} · assemble (margin)` },
+    structuredParticipation: { source: `${STRUCTURED} · priceCapitalGuaranteed (participation)` },
+    structuredOptionBudget: { source: `${STRUCTURED} · priceCapitalGuaranteed (optionBudget)` },
+    structuredRecallProbability: { source: `${STRUCTURED_MC} · priceAutocallable (observations.recallProbability)` },
+    structuredProtectionBarrier: { source: `${STRUCTURED_MC} · priceAutocallable (protectionBarrier)` },
+    structuredRecallLevel: { source: `${STRUCTURED_MC} · priceAutocallable (recallLevel)` },
     greekDelta: { source: `${OPTIONS} · optionGreeks (delta)` },
     greekGamma: { source: `${OPTIONS} · optionGreeks (gamma)` },
     greekVega: { source: `${OPTIONS} · optionGreeks (vega)` },

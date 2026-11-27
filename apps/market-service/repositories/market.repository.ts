@@ -5,7 +5,7 @@ import { BadGatewayError, NotFoundError } from "@azimut/http";
 import { env } from "../env";
 import { addYears, DAY_MS, historicalVolatility, Logger, round } from "@azimut/utils";
 import { toMajorCurrency } from "../utils/currency";
-import { OPTION_INPUTS_WINDOW_YEARS, RATE_CURVE_CURRENCY, RATE_CURVE_SYMBOLS } from "../constants/market.constants";
+import { IMPLIED_VOLATILITY_MIN_DAYS, OPTION_INPUTS_WINDOW_YEARS, RATE_CURVE_CURRENCY, RATE_CURVE_SYMBOLS } from "../constants/market.constants";
 import { trailingDividendYield } from "../utils/option-inputs";
 
 const logger = Logger.here();
@@ -17,7 +17,7 @@ export interface IMarketRepository {
     getDailyCloses(symbols: string[], start: Date, end: Date): Promise<DailyCloses>;
     getDividends(symbols: string[], start: Date, end: Date): Promise<Dividends>;
     getRateCurve(): Promise<RateCurve>;
-    getOptionInputs(symbol: string): Promise<OptionInputs>;
+    getOptionInputs(symbol: string, withImpliedVolatility?: boolean): Promise<OptionInputs>;
     getOptionChain(symbol: string, expiration?: string): Promise<OptionChain>;
     ping(symbol: string): Promise<void>;
 }
@@ -176,10 +176,10 @@ class MarketRepository implements IMarketRepository {
     /**
      * Préremplissage du calculateur d'option (D2, D4) : dernier cours (`quote`), volatilité historique 1 an annualisée sur 252 jours
      * et dividendes des 12 derniers mois rapportés au cours (une seule série `chart` avec `events: "div"`). Montants dans la devise
-     * principale (`toMajorCurrency`). `volatility` vaut `null` sans historique suffisant. Un symbole inconnu ou sans cours lève
+     * principale (`toMajorCurrency`). `volatility` vaut `null` sans historique suffisant. `withImpliedVolatility: false` saute la lecture de la chaîne d'options (`impliedVolatility` vaut alors `null`). Un symbole inconnu ou sans cours lève
      * `NotFoundError` (`SYMBOL_NOT_FOUND`).
      */
-    async getOptionInputs(symbol: string): Promise<OptionInputs> {
+    async getOptionInputs(symbol: string, withImpliedVolatility = true): Promise<OptionInputs> {
         const quote = await MarketRepository.yahooFinance.quote(symbol)
         // Un cours nul ou négatif ne se price pas : traité comme un symbole sans cours
         if (!quote || quote.regularMarketPrice == null || quote.regularMarketPrice <= 0) throw new NotFoundError(API_ERROR_CODES.SYMBOL_NOT_FOUND)
@@ -204,6 +204,35 @@ class MarketRepository implements IMarketRepository {
             spot: round(spot, 4),
             dividendYield: round(trailingDividendYield(dividends, spot), 6),
             volatility: volatility == null ? null : round(volatility, 6),
+            impliedVolatility: withImpliedVolatility ? await this.getImpliedVolatility(symbol) : null,
+        }
+    }
+
+    /**
+     * Volatilité implicite de Yahoo (ratio annuel) : option (moyenne call et put si les deux en ont une) au strike le plus proche du cours,
+     * sur la première échéance à au moins `IMPLIED_VOLATILITY_MIN_DAYS` jours. `null` sans chaîne, sans échéance assez lointaine ou sans
+     * implicite non nulle. Ne lève jamais : une chaîne en erreur est loggée (`warn`) et ne fait pas échouer `getOptionInputs`.
+     */
+    private async getImpliedVolatility(symbol: string): Promise<number | null> {
+        try {
+            const first = await this.getOptionChain(symbol)
+            const limit = Date.now() + IMPLIED_VOLATILITY_MIN_DAYS * DAY_MS
+            const expiration = first.expirations.find((day) => new Date(`${day}T00:00:00Z`).getTime() >= limit)
+            if (!expiration) return null
+
+            const chain = expiration === first.expiration ? first : await this.getOptionChain(symbol, expiration)
+            const strikes = [...chain.calls, ...chain.puts].map((quote) => quote.strike)
+            if (strikes.length === 0) return null
+            const strike = strikes.reduce((best, value) => (Math.abs(value - chain.spot) < Math.abs(best - chain.spot) ? value : best))
+
+            const values = [...chain.calls, ...chain.puts]
+                .filter((quote) => quote.strike === strike && quote.yahooVolatility != null && quote.yahooVolatility > 0)
+                .map((quote) => quote.yahooVolatility!)
+            if (values.length === 0) return null
+            return round(values.reduce((sum, value) => sum + value, 0) / values.length, 6)
+        } catch (error) {
+            logger.warn("Implied volatility unavailable", { symbol, error: error instanceof Error ? error.message : String(error) })
+            return null
         }
     }
 

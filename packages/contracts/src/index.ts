@@ -9,4 +9,5 @@ export * from "./internal";
 export * from "./notification";
 export * from "./monitoring";
 export * from "./pricing";
+export * from "./structured";
 export * from "./account";

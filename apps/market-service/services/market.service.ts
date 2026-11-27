@@ -1,17 +1,20 @@
-import type { DailyCloses, Dividends, MarketAsset, OptionChain, OptionInputs, Paginated, PaginationQuery, Period, RateCurve } from "@azimut/contracts";
+import { API_ERROR_CODES, type BasketInputs, type DailyCloses, type Dividends, type MarketAsset, type OptionChain, type OptionInputs, type Paginated, type PaginationQuery, type Period, type RateCurve } from "@azimut/contracts";
 import MarketRepository, { type IMarketRepository } from "../repositories/market.repository";
 import {
     ASSETS_CACHE_TTL_MS,
+    BASKET_CORRELATION_MIN_RETURNS,
     DEFAULT_TICKERS,
     DETAILS_CACHE_TTL_MS,
     PROVIDER_PROBE_CACHE_TTL_MS,
     PROVIDER_PROBE_SYMBOL,
     PROVIDER_PROBE_TIMEOUT_MS,
     RATES_CACHE_TTL_MS,
+    OPTION_INPUTS_WINDOW_YEARS,
     SEARCH_CACHE_TTL_MS,
 } from "../constants/market.constants";
 import { TtlCache } from "../utils/cache";
-import { Logger } from "@azimut/utils";
+import { BadGatewayError } from "@azimut/http";
+import { addYears, Logger, returnsCorrelation } from "@azimut/utils";
 
 const logger = Logger.here();
 
@@ -51,6 +54,27 @@ class MarketService {
     // Jamais mis en cache : spot, volatilité et dividende se lisent au moment du calcul
     async getOptionInputs(symbol: string): Promise<OptionInputs> {
         return this.repo.getOptionInputs(symbol)
+    }
+
+    /**
+     * Préremplissage d'un produit sur panier (T-11a) : valeurs d'option-inputs de chaque symbole, dans l'ordre demandé, et corrélations
+     * des rendements journaliers sur 1 an. Un symbole inconnu lève `NotFoundError` (`SYMBOL_NOT_FOUND`) ; un historique commun
+     * de moins de `BASKET_CORRELATION_MIN_RETURNS` rendements (ou une série plate) lève `BadGatewayError` avec `reason`
+     * `INSUFFICIENT_HISTORY` et les symboles : jamais de corrélation inventée. Jamais mis en cache.
+     */
+    async getBasketInputs(symbols: string[]): Promise<BasketInputs> {
+        // Les entrées d'abord : un symbole inconnu lève SYMBOL_NOT_FOUND avant la lecture des cours
+        const inputs = await Promise.all(symbols.map((symbol) => this.repo.getOptionInputs(symbol, false)))
+        const end = new Date()
+        const closes = await this.repo.getDailyCloses(symbols, addYears(end, -OPTION_INPUTS_WINDOW_YEARS), end)
+
+        const correlations = returnsCorrelation(symbols.map((symbol) => closes[symbol] ?? []), BASKET_CORRELATION_MIN_RETURNS)
+        if (!correlations) {
+            logger.warn("Basket correlations unavailable", { symbols })
+            throw new BadGatewayError(API_ERROR_CODES.SERVICE_UNAVAILABLE, { reason: "INSUFFICIENT_HISTORY", symbols, minReturns: BASKET_CORRELATION_MIN_RETURNS })
+        }
+
+        return { underlyings: inputs.map(({ impliedVolatility: _implied, ...underlying }) => underlying), correlations }
     }
 
     // Jamais mis en cache : une chaîne d'options est celle du jour, recalculée à chaque demande de pricing

@@ -24,6 +24,7 @@ export const routes = {
     symbolOptionsMonteCarlo: (symbol: string) => `${prefix}/options/monte-carlo?symbol=${encodeURIComponent(symbol)}`,
     optionsSmile: `${prefix}/options/smile`,
     symbolOptionsSmile: (symbol: string) => `${prefix}/options/smile?symbol=${encodeURIComponent(symbol)}`,
+    structured: `${prefix}/structured`,
     paperTrading: `${prefix}/paper-trading`,
     risk: `${prefix}/risk`,
     backtestProjection: (backtestId: string) => `${prefix}/projection?backtest=${encodeURIComponent(backtestId)}`,

@@ -1,9 +1,11 @@
 import { DAY_MS, historicalVolatility, Logger } from "@azimut/utils";
-import { SMILE_EXPIRATIONS, type OptionChainResult, type PricingRequestedPayload, type PricingResult } from "@azimut/contracts";
+import { SMILE_EXPIRATIONS, type OptionChainResult, type PricingRequestedPayload, type PricingResult, type StructuredInput, type StructuredResult } from "@azimut/contracts";
 import { MarketClient, type IMarketClient, type IOptionChainClient, type IRateCurveClient } from "@azimut/market-client";
 import { priceBond } from "../engine/bonds";
 import { priceOption } from "../engine/options";
 import { priceOptionMonteCarlo } from "../engine/options.mc";
+import { priceCapitalGuaranteed, priceReverseConvertible } from "../engine/structured";
+import { priceAutocallable } from "../engine/structured-mc";
 import { analyseChain } from "../engine/options.chain";
 import { HISTORICAL_VOLATILITY_DAYS, HISTORICAL_VOLATILITY_LOOKBACK_DAYS, MONTE_CARLO_SEED, SMILE_MIN_DAYS } from "../constants/pricing.constants";
 import type { IPricingPublisher } from "../publishers/pricing.publisher";
@@ -44,11 +46,20 @@ class PricingService {
 
         if (request.kind === "OPTION_MC") return { kind: "OPTION_MC", monteCarlo: priceOptionMonteCarlo(request.monteCarlo, MONTE_CARLO_SEED) };
 
+        if (request.kind === "STRUCTURED") return { kind: "STRUCTURED", structured: this.computeStructured(request.structured) };
+
         if (request.kind === "OPTION_CHAIN") return { kind: "OPTION_CHAIN", chain: await this.computeChain(request.chain.symbol) };
 
         const { bond } = request;
         const curve = bond.discount.source === "CURVE" ? (await this.repo.getRateCurve()).points : null;
         return { kind: "BOND", bond: priceBond(bond, curve) };
+    }
+
+    /** Produit structuré (21) : calcul pur sur ses seuls paramètres, graine fixe pour l'autocallable. */
+    private computeStructured(input: StructuredInput): StructuredResult {
+        if (input.product === "CAPITAL_GUARANTEED") return priceCapitalGuaranteed(input, MONTE_CARLO_SEED);
+        if (input.product === "REVERSE_CONVERTIBLE") return priceReverseConvertible(input, MONTE_CARLO_SEED);
+        return priceAutocallable(input, MONTE_CARLO_SEED);
     }
 
     /**

@@ -181,3 +181,16 @@ test("option Monte Carlo avec barrière au spot : pricing.failed avec la cause",
     expect(completed).toEqual([])
     expect(failed[0]!.reason).toContain("Barrier must differ")
 })
+
+test("produit structuré : prix sur les seuls paramètres, courbe jamais lue ; capital garanti sans budget d'option : pricing.failed", async () => {
+    const { service, completed, failed, curveReads } = setup()
+    const common = { underlying: "^STOXX50E", nominal: 1000, maturityYears: 5, rate: 0.03, volatility: 0.18, dividendYield: 0.02, valueDate: "2026-10-28" }
+
+    await service.run({ requestId: "p7", kind: "STRUCTURED", structured: { product: "REVERSE_CONVERTIBLE", ...common, couponRate: 0.04, putStrike: 1 } })
+    await service.run({ requestId: "p8", kind: "STRUCTURED", structured: { product: "CAPITAL_GUARANTEED", ...common, rate: 0, maturityYears: 1, guarantee: 1, callStrike: 1 } })
+
+    const result = completed[0]!.result
+    expect(result.kind === "STRUCTURED" && result.structured).toMatchObject({ product: "REVERSE_CONVERTIBLE", clientPrice: 1000 })
+    expect(failed[0]!.reason).toContain("Option budget")
+    expect(curveReads()).toBe(0)
+})
