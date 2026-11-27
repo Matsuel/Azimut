@@ -5,7 +5,7 @@
 - **Période** : 2026-11-25
 - **Branche / PR** : lots 1 à 4 : `feat/21-produits-structures` ; évolution en une PR vers `develop` par lot : `feat/21a-moteur-panier`, `feat/21b-parcours-six-etapes`, `feat/21c-vie-du-produit`, `feat/21d-mes-produits`, `feat/21e-suivi-automatique` (découpage du 2026-11-27, voir `TASKS.md`)
 - **Points** : 117 (MUST 117, SHOULD 0) — 29 livrés (T-01 à T-07), 88 prévus (T-08 à T-26, lots 5a à 5e)
-- **Maquettes** : `39 · Constructeur de produit` (créée, node `465:13338`, état Capital garanti) ; états `· Reverse convertible` (node `689:16456`) et `· Autocallable` (node `689:16894`) dessinés et validés le 2026-11-25
+- **Maquettes** : `39 · Constructeur de produit` (créée, node `465:13338`, état Capital garanti) ; états `· Reverse convertible` (node `689:16456`) et `· Autocallable` (node `689:16894`) dessinés et validés le 2026-11-25 (état livré). Maquette 39 v2 (T-14, `proposée`, à valider) : parcours en six étapes, cadres nommés `39 · Constructeur de produit v3 (parcours) · <n> <étape>` dans la section de la feature, voir « Écarts de la maquette 39 v2 »
 - **Écrans modifiés** : aucun (page `Structuration` de la sidebar existante)
 - **Dépend de** : 17 (obligation), 19 (grecques, IV), 20 (Monte Carlo, barrière).
 
@@ -57,6 +57,40 @@ Moteur : produits comme assemblages de briques (`structured.ts`) ; autocallable 
 ## Écarts au plan
 
 D7 à D10 ajoutées en cours de route : prix client constant (champ supprimé), kind `STRUCTURED` du pipeline pricing à la place d'une table et de routes dédiées, états Reverse convertible et Autocallable dessinés avant leur code, conventions de calcul dont la marge de structuration fixe du capital garanti. Un graphe de payoff, absent de `TASKS.md`, est ajouté.
+
+## Écarts de la maquette 39 v2
+
+Maquette `proposée` (T-14), à valider par l'utilisateur avant le code du lot 5b (`apps/web/AGENTS.md`, « Maquette d'abord »). Les cadres existaient déjà dans la section Figma de la feature sous le nom `… v3 (parcours) · …` (pas `v2`) ; ils couvrent le périmètre de T-14 et n'ont pas été redessinés ni renommés. Scénario montré : autocallable worst-of Airbus, LVMH, TotalEnergies, nominal 100 000 €, 5 ans, trimestriel.
+
+| Cadre | node-id | Contenu |
+| --- | --- | --- |
+| 1 Besoin | `709:18263` | Nom du produit prérempli, vue, profil de risque, besoin, horizon, perte tolérée, tableau « Produits envisagés » (adéquation) |
+| 2 Sous-jacents | `709:18841` | Nominal, devise, mode du panier (`FilterTabs`), poids (champ + barre), recherche de sous-jacents, niveaux initiaux |
+| 3 Payoff | `709:19436` | Type (`FilterTabs`), maturité, fréquence d'observation, non-rappel, coupon mémoire, barrières, niveaux en prix, payoff |
+| 4 Marché | `710:18039` | Taux, spread de financement, volatilité implicite par sous-jacent, corrélations modifiables (pastille « modifiée », retour à l'historique), dividendes |
+| 5 Marge | `710:18669` | Marge cible, coût de couverture |
+| 6 Résultat | `710:19256` | Prix client, décomposition, payoff, corrélations, risque (delta, vega, corrélation, coût de couverture, marge nette), Enregistrer / Émettre |
+| Fiche Émis | `714:19590` | Repère « barrière touchée » rouge sur la courbe, renommage (`715:19659`), plafond (`714:20189`) |
+| Fiche Remboursé | `724:19246` | État `REDEEMED` (D26) |
+
+Les cadres `39.1 · Mes produits` (`712:18645`, `712:19330`) et `39.2 · Fiche produit` (`714:19056`, `714:19590`, `714:20189`, `715:19659`, `724:19246`) relèvent de T-24 ; ils ne sont pas validés ici. Chaque cadre porte le résumé du produit, les quatre cartes de résultat (juste valeur, prix client, marge, coupon offert) et un `InfoHint` par champ et par résultat.
+
+Capital garanti et reverse convertible n'ont pas de cadre dédié : ce sont des variantes de l'étape 3 (D26), seul l'autocallable est dessiné.
+
+### Écarts à l'état livré (page Structuration actuelle vs maquette v2)
+
+1. **Une page → six étapes** (D19) : barre `FilterTabs` « 1 · Besoin … 6 · Résultat », navigation libre, boutons « Précédent / Suivant », badge « Étape n sur 6 ». La page livrée montre le type, le formulaire et le résultat sur un seul écran.
+2. **Résumé du produit** toujours visible (nom, produit, sous-jacents, nominal, observation, barrières, marché, marge cible), absent de la page livrée.
+3. **Étape 1 Besoin** : nouvelle (nom du produit 1 à 80 caractères prérempli « type + sous-jacents », vue, profil, besoin, horizon, perte tolérée, tableau d'adéquation par type de produit, calculé côté backend).
+4. **Panier** (D13, D27) : sous-jacent unique remplacé par 2 à 5 sous-jacents, mode worst-of / best-of / moyenne, poids (champ + barre `Progress`), devise unique ; niveaux en prix seulement pour un sous-jacent, en % du niveau initial pour un panier.
+5. **Nominal en devise** (D14) à la place du capital implicite ; niveaux (initial, rappel, protection) affichés en prix.
+6. **Marge cible** (D12) : le prix client et le coupon offert deviennent des sorties (carte « Coupon offert » ajoutée) ; plus de champ de coupon saisi sur reverse convertible et autocallable, ni de participation saisie.
+7. **Autocallable** (D18, D28) : fréquence d'observation (annuelle, semestrielle, trimestrielle), coupon mémoire oui / non (`FilterTabs`), période de non-rappel en observations ; les observations du produit sont un tableau de la fiche, plus la carte « Observations » actuelle.
+8. **Hypothèses de marché** (D16, D17, D29) : volatilité implicite préremplie par sous-jacent (source affichée, historique en repli), spread de financement en pb, taux d'actualisation, dividendes, corrélations modifiables avec pastille « modifiée » et retour à l'historique ; la page livrée ne préremplit que volatilité, dividende et taux d'un seul sous-jacent.
+9. **Résultat** (D20) : ajout de la matrice de corrélations du panier, de la carte Risque (delta et vega par sous-jacent, sensibilité à +10 points de corrélation, coût de couverture, marge nette) et des boutons « Enregistrer en brouillon » / « Émettre le produit » (D22, D23) ; la décomposition garde sa barre empilée et son tableau.
+10. **Choix courts en `FilterTabs`** (D26) : type de produit, mode du panier, coupon mémoire, vue, profil, besoin.
+11. **Fiche produit** (T-24, D24 à D26) : repère « barrière touchée » rouge sur la courbe des instantanés, état « Remboursé », renommage, plafond de 90 instantanés, suivi automatique ; aucune de ces pièces n'existe dans la page livrée.
+12. **Écarts de la maquette à signaler** : (a) la pastille « modifiée » est à l'étape 4 (corrélations), l'étape 2 ne porte que les poids ; (b) la maquette 39 v2 ne montre que l'état autocallable, les variantes capital garanti et reverse convertible de l'étape 3 restent à imaginer au codage (champs de D1, D2, D6 sans cadre) ; (c) les noms de cadres disent `v3`, pas `v2`.
 
 ## Évolution du 2026-11-25
 
