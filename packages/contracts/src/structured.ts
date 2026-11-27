@@ -13,6 +13,9 @@ export const STRUCTURED_BASKET_MODES = ["WORST_OF", "BEST_OF", "AVERAGE"] as con
 // Fréquence d'observation de l'autocallable (D18) ; les observations par an sont 1, 2 et 4
 export const STRUCTURED_OBSERVATION_FREQUENCIES = ["ANNUAL", "SEMI_ANNUAL", "QUARTERLY"] as const;
 
+// Observations par an pour chaque fréquence
+export const STRUCTURED_OBSERVATIONS_PER_YEAR = { ANNUAL: 1, SEMI_ANNUAL: 2, QUARTERLY: 4 } as const;
+
 // Briques d'un produit : l'obligation et l'option dont le total fait la juste valeur
 export const STRUCTURED_BRICK_TYPES = ["ZERO_COUPON", "CALL", "BOND", "PUT", "AUTOCALL_NET_COUPONS"] as const;
 
@@ -104,8 +107,6 @@ export const autocallableInputSchema = z.object({
     nonCallObservations: z.number().int().min(0).max(39).optional(),
 });
 
-const OBSERVATIONS_PER_YEAR = { ANNUAL: 1, SEMI_ANNUAL: 2, QUARTERLY: 4 } as const;
-
 /**
  * Contrôles entre champs, sur l'union plutôt que sur chaque produit (les schémas de produit restent des objets simples) : niveaux en
  * prix (D27), forme de la matrice de corrélations (D13), période de non-rappel. La définie-positivité de la matrice reste à l'engine.
@@ -132,7 +133,7 @@ export const structuredInputSchema = z
         }
 
         if (input.product === "AUTOCALLABLE" && input.nonCallObservations !== undefined) {
-            const perYear = OBSERVATIONS_PER_YEAR[input.observationFrequency ?? "ANNUAL"];
+            const perYear = STRUCTURED_OBSERVATIONS_PER_YEAR[input.observationFrequency ?? "ANNUAL"];
             if (input.nonCallObservations >= input.maturityYears * perYear) issue("nonCallObservations", "Non-call period must leave at least one observation");
         }
     });

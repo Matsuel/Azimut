@@ -21,7 +21,7 @@ export const MONTE_CARLO_ZERO_ERROR_TOLERANCE = 1e-6;
 // Produits structurés (21) : marge de structuration conservée par l'émetteur sur un capital garanti, en ratio du nominal (4 % : ordre de grandeur de la rémunération d'un émetteur sur une note à capital garanti, hypothèse de pédagogie) ; le budget d'option est ce qui reste du nominal après le zéro-coupon et cette marge (D2)
 export const STRUCTURING_MARGIN = 0.04;
 
-// Autocallable : trajectoires simulées (observation annuelle, un tirage par année : 100 000 × 10 ans reste sous la seconde)
+// Produits structurés simulés (autocallable, option sur panier) : trajectoires simulées ; 100 000 trajectoires × 10 ans d'observations annuelles reste sous la seconde
 export const AUTOCALL_PATHS = 100_000;
 
 // Grille du payoff à l'échéance : variation du sous-jacent de −50 % à +60 %, par pas de 5 points

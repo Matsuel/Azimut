@@ -57,8 +57,8 @@ class PricingService {
 
     /** Produit structuré (21) : calcul pur sur ses seuls paramètres, graine fixe pour l'autocallable. */
     private computeStructured(input: StructuredInput): StructuredResult {
-        if (input.product === "CAPITAL_GUARANTEED") return priceCapitalGuaranteed(input);
-        if (input.product === "REVERSE_CONVERTIBLE") return priceReverseConvertible(input);
+        if (input.product === "CAPITAL_GUARANTEED") return priceCapitalGuaranteed(input, MONTE_CARLO_SEED);
+        if (input.product === "REVERSE_CONVERTIBLE") return priceReverseConvertible(input, MONTE_CARLO_SEED);
         return priceAutocallable(input, MONTE_CARLO_SEED);
     }
 

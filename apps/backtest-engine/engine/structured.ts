@@ -5,14 +5,22 @@ import type {
     ReverseConvertibleResult,
     StructuredBrick,
     StructuredBrickType,
+    StructuredInput,
     StructuredPayoffPoint,
 } from "@azimut/contracts";
 import { round } from "@azimut/utils";
-import { STRUCTURED_PAYOFF_GRID, STRUCTURING_MARGIN } from "../constants/pricing.constants";
+import { AUTOCALL_PATHS, MONTE_CARLO_SEED, STRUCTURED_PAYOFF_GRID, STRUCTURING_MARGIN } from "../constants/pricing.constants";
+import { basketOptions, resolveUnderlyings } from "./basket";
 import { blackScholes } from "./options";
 
 /** Taux continu équivalent au taux annuel composé du contrat : Black-Scholes actualise en continu, les coupons et le zéro-coupon en composé. */
 export const continuousRate = (annualRate: number): number => Math.log(1 + annualRate);
+
+/** Taux d'escompte du zéro-coupon et des coupons : taux + spread de financement de l'émetteur (D17), 0 par défaut. Le sous-jacent dérive au taux sans risque, lui. */
+export const fundingRate = ({ rate, fundingSpreadBps }: Pick<StructuredInput, "rate" | "fundingSpreadBps">): number => rate + (fundingSpreadBps ?? 0) / 10_000;
+
+/** Niveau en ratio du niveau initial : le prix saisi rapporté au cours (D14, D27) s'il y en a un, sinon le ratio. Le contrat garantit `spot` avec un prix. */
+export const levelOf = (ratio: number, price: number | undefined, spot: number | undefined): number => (price === undefined ? ratio : price / spot!);
 
 /** Facteur d'actualisation composé annuel : 1 / (1 + taux)^années. */
 export const discountFactor = (annualRate: number, years: number): number => 1 / (1 + annualRate) ** years;
@@ -57,17 +65,36 @@ export function payoffGrid(payoffAt: (level: number) => number): StructuredPayof
 }
 
 /**
- * Capital garanti (D1, D2) : zéro-coupon + call. Le zéro-coupon rend la garantie à l'échéance ; le budget d'option est le nominal
- * moins ce zéro-coupon moins la marge de structuration ; la participation est ce budget divisé par le prix du call, au strike demandé.
- * Lève si le budget est nul ou négatif (zéro-coupon trop cher : garantie élevée avec un taux bas) ou si Black-Scholes sort de sa plage.
+ * Call et put de strike `strike` (ratio du niveau initial) sur le nominal. Un sous-jacent unique garde la formule fermée de
+ * Black-Scholes ; un panier passe en Monte Carlo sur l'agrégat (D13, graine fixe). Lève si le prix sort de la plage numérique.
  */
-export function priceCapitalGuaranteed(input: CapitalGuaranteedInput): CapitalGuaranteedResult {
-    const { nominal, maturityYears, rate, volatility, dividendYield, guarantee, callStrike } = input;
-    const zeroCoupon = guarantee * nominal * discountFactor(rate, maturityYears);
-    const optionBudget = nominal - zeroCoupon - STRUCTURING_MARGIN * nominal;
-    if (optionBudget <= 0) throw new Error("Option budget is not positive: lower the guarantee or raise the rate");
+function vanillaOptions(input: StructuredInput, strike: number, seed: number): { call: number; put: number } {
+    const { nominal, maturityYears, rate, dividendYield, volatility } = input;
+    if (!input.basket) {
+        const { call, put } = blackScholes({ spot: nominal, strike: strike * nominal, maturityYears, rate: continuousRate(rate), dividendYield, volatility });
+        return { call, put };
+    }
+    const { call, put } = basketOptions(resolveUnderlyings(input), { rate: continuousRate(rate), years: maturityYears, strike, seed, paths: AUTOCALL_PATHS });
+    return { call: call * nominal, put: put * nominal };
+}
 
-    const callPrice = blackScholes({ spot: nominal, strike: callStrike * nominal, maturityYears, rate: continuousRate(rate), dividendYield, volatility }).call;
+/** Matrice de corrélations du panier, publiée avec le résultat ; absente d'un sous-jacent unique. */
+export const basketCorrelations = ({ basket }: StructuredInput) => (basket ? { correlations: basket.correlations } : {});
+
+/**
+ * Capital garanti (D1, D2) : zéro-coupon + call. Le zéro-coupon, escompté à taux + spread (D17), rend la garantie à l'échéance ; le
+ * budget d'option est le nominal moins ce zéro-coupon moins la marge (cible saisie, sinon `STRUCTURING_MARGIN`, D12) ; la participation
+ * est ce budget divisé par le prix du call, au strike demandé (en prix ou en ratio, D27) ; sur un panier, le call porte sur l'agrégat (D13).
+ * Lève si le budget est nul ou négatif (marge inatteignable : garantie élevée avec un taux bas) ou si le prix sort de la plage numérique.
+ */
+export function priceCapitalGuaranteed(input: CapitalGuaranteedInput, seed = MONTE_CARLO_SEED): CapitalGuaranteedResult {
+    const { nominal, maturityYears, guarantee } = input;
+    const callStrike = levelOf(input.callStrike, input.callStrikePrice, input.spot);
+    const zeroCoupon = guarantee * nominal * discountFactor(fundingRate(input), maturityYears);
+    const optionBudget = nominal - zeroCoupon - (input.targetMargin ?? STRUCTURING_MARGIN) * nominal;
+    if (optionBudget <= 0) throw new Error("Option budget is not positive: lower the guarantee or the margin, or raise the rate");
+
+    const callPrice = vanillaOptions(input, callStrike, seed).call;
     if (!(callPrice > 0)) throw new Error("Call price is not positive: parameters out of numeric range");
     const participation = optionBudget / callPrice;
 
@@ -78,25 +105,37 @@ export function priceCapitalGuaranteed(input: CapitalGuaranteedInput): CapitalGu
         callPrice: round(callPrice, 2),
         participation: round(participation, 4),
         payoff: payoffGrid((level) => nominal * (guarantee + participation * Math.max(level - callStrike, 0))),
+        ...basketCorrelations(input),
     };
 }
 
 /**
- * Reverse convertible (D1) : obligation à coupon annuel moins un put vendu. Le coupon est saisi : la marge n'est pas imposée, elle
- * est ce qui reste du prix client après la juste valeur (le coupon d'un produit trop généreux la rend négative).
+ * Reverse convertible (D1) : obligation à coupon annuel moins un put vendu, escomptée à taux + spread (D17). Sans marge cible, le coupon
+ * est saisi et la marge est ce qui reste du prix client après la juste valeur (un coupon trop généreux la rend négative). Avec une marge
+ * cible (D12), le coupon est celui qui la donne : la juste valeur est linéaire en lui, donc résolu exactement. Lève si ce coupon serait
+ * négatif (marge inatteignable). Sur un panier, le put porte sur l'agrégat (D13).
  */
-export function priceReverseConvertible(input: ReverseConvertibleInput): ReverseConvertibleResult {
-    const { nominal, maturityYears, rate, volatility, dividendYield, couponRate, putStrike } = input;
-    let bond = nominal * discountFactor(rate, maturityYears);
-    for (let year = 1; year <= maturityYears; year++) bond += nominal * couponRate * discountFactor(rate, year);
+export function priceReverseConvertible(input: ReverseConvertibleInput, seed = MONTE_CARLO_SEED): ReverseConvertibleResult {
+    const { nominal, maturityYears } = input;
+    const putStrike = levelOf(input.putStrike, input.putStrikePrice, input.spot);
+    const funding = fundingRate(input);
+    const zeroCoupon = nominal * discountFactor(funding, maturityYears);
+    let annuity = 0;
+    for (let year = 1; year <= maturityYears; year++) annuity += discountFactor(funding, year);
 
-    const putPrice = blackScholes({ spot: nominal, strike: putStrike * nominal, maturityYears, rate: continuousRate(rate), dividendYield, volatility }).put;
+    const putPrice = vanillaOptions(input, putStrike, seed).put;
     if (!Number.isFinite(putPrice)) throw new Error("Put price out of numeric range");
+
+    const couponRate = input.targetMargin === undefined ? input.couponRate : (nominal * (1 - input.targetMargin) + putPrice - zeroCoupon) / (nominal * annuity);
+    if (!(couponRate > 0)) throw new Error("Target margin unreachable: the coupon would not be positive");
+    const bond = zeroCoupon + nominal * couponRate * annuity;
 
     return {
         product: "REVERSE_CONVERTIBLE",
         ...assemble(nominal, [brick("BOND", bond, nominal), brick("PUT", -putPrice, nominal)]),
         putPrice: round(putPrice, 2),
+        couponRate: round(couponRate, 6),
         payoff: payoffGrid((level) => nominal * (1 + couponRate * maturityYears - Math.max(putStrike - level, 0))),
+        ...basketCorrelations(input),
     };
 }
