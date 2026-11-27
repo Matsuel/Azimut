@@ -247,8 +247,8 @@ Critères d’acceptation :
 - [x] Choix courts en `FilterTabs` ; repère « barrière touchée » sur la courbe de la fiche Émis et état « Remboursé » dessiné (D26).
 - [x] Champ « Nom du produit » à l'étape 1 et rappel du nom dans le résumé, renommage sur la fiche ;
 - [x] Six étapes (besoin, panier, payoff, marché, marge, résultat), résumé du produit visible, `InfoHint` sur chaque champ et résultat ; cadres déjà présents dans Figma sous le nom `v3 (parcours)`, repérés et documentés le 2026-11-27 sans redessin.
-- [ ] Variantes capital garanti et reverse convertible à l'étape 3 : seul l'autocallable est dessiné (D26 les range en variantes de l'étape 3, sans cadre dédié) ; à trancher avant le code de l'étape 3.
-- [ ] Maquette `v3` validée par l'utilisateur et notée dans `US.md` avec ses node-id : bloque le code web du lot 5b (`apps/web/AGENTS.md`).
+- [x] Variantes capital garanti et reverse convertible à l'étape 3 : sans cadre dédié, comme le dit D26 ; seul l'autocallable est dessiné, validé ainsi le 2026-11-27.
+- [x] Maquette `v3` validée par l'utilisateur le 2026-11-27, notée dans `US.md` avec ses node-id.
 - [x] Écarts à l'état livré listés dans le `README.md`.
 
 ### T-08 · Engine : panier, corrélation et Monte Carlo multi-actifs

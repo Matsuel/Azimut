@@ -95,6 +95,8 @@ Tâches : T-02, T-03, T-04, T-05 (détail dans `TASKS.md`).
 
 Livré en cinq PR (5a à 5e), voir `TASKS.md` : 5a fondations moteur, 5b parcours six étapes et risque, 5c vie du produit, 5d mes produits, 5e suivi automatique.
 
+**Maquette validée le 2026-11-27** : `39 · Constructeur de produit v3 (parcours)`, six étapes, section Figma `465:13337` : 1 Besoin `709:18263`, 2 Sous-jacents `709:18841`, 3 Payoff `709:19436`, 4 Marché `710:18039`, 5 Marge `710:18669`, 6 Résultat `710:19256`. Fiche Émis `714:19590` (renommage `715:19659`, plafond `714:20189`), fiche Remboursé `724:19246`, brouillon `714:19056`, liste `39.1` `712:18645` et `712:19330` (à confirmer avec T-24). Capital garanti et reverse convertible restent des variantes de l'étape 3 sans cadre dédié (D26).
+
 #### US-04 · Viser une marge cible — MUST
 
 **En tant que** structureur, **je veux** saisir la marge que je vise **afin de** voir le prix client et la condition que je peux offrir (participation ou coupon).

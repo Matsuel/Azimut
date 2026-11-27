@@ -60,7 +60,7 @@ D7 à D10 ajoutées en cours de route : prix client constant (champ supprimé), 
 
 ## Écarts de la maquette 39 v2
 
-Maquette `proposée` (T-14), à valider par l'utilisateur avant le code du lot 5b (`apps/web/AGENTS.md`, « Maquette d'abord »). Les cadres existaient déjà dans la section Figma de la feature sous le nom `… v3 (parcours) · …` (pas `v2`) ; ils couvrent le périmètre de T-14 et n'ont pas été redessinés ni renommés. Scénario montré : autocallable worst-of Airbus, LVMH, TotalEnergies, nominal 100 000 €, 5 ans, trimestriel.
+Maquette `v3` validée par l'utilisateur le 2026-11-27 (T-14), le code du lot 5b peut partir (`apps/web/AGENTS.md`, « Maquette d'abord »). Les cadres existaient déjà dans la section Figma de la feature sous le nom `… v3 (parcours) · …` (pas `v2`) ; ils couvrent le périmètre de T-14 et n'ont pas été redessinés ni renommés. Scénario montré : autocallable worst-of Airbus, LVMH, TotalEnergies, nominal 100 000 €, 5 ans, trimestriel.
 
 | Cadre | node-id | Contenu |
 | --- | --- | --- |
