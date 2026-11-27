@@ -18,8 +18,13 @@ const yahoo = (MarketRepository as unknown as { yahooFinance: Yahoo }).yahooFina
 const spies: ReturnType<typeof spyOn>[] = []
 afterEach(() => spies.splice(0).forEach((spy) => spy.mockRestore()))
 
-const mockYahoo = (quote: unknown, chart: unknown) => {
-    spies.push(spyOn(yahoo, "quote").mockResolvedValue(quote), spyOn(yahoo, "chart").mockResolvedValue(chart))
+// Sans chaîne fournie, `options` échoue : l'implicite retombe sur null sans appel réseau
+const mockYahoo = (quote: unknown, chart: unknown, options?: (symbol: unknown, query?: { date?: Date }) => Promise<unknown>) => {
+    spies.push(
+        spyOn(yahoo, "quote").mockResolvedValue(quote),
+        spyOn(yahoo, "chart").mockResolvedValue(chart),
+        spyOn(yahoo, "options").mockImplementation((options ?? (async () => { throw new Error("no chain") })) as never),
+    )
 }
 const quotes = alternating(60).map((close, i) => ({ date: new Date(Date.UTC(2026, 0, 1 + i)), close }))
 
@@ -123,4 +128,55 @@ test("getOptionChain : échéance demandée transmise à Yahoo ; symbole sans ch
     expect(options).toHaveBeenCalledWith("ZZZZ", { date: new Date("2026-12-19T00:00:00Z") })
     expect(error).toBeInstanceOf(NotFoundError)
     expect(error.code).toBe(API_ERROR_CODES.SYMBOL_NOT_FOUND)
+})
+
+const DAY = 86_400_000
+const day = (offset: number) => new Date(Math.floor(Date.now() / DAY) * DAY + offset * DAY)
+const chartOf = { meta: { exchangeTimezoneName: "UTC", currency: "USD" }, quotes }
+const contract = (strike: number, impliedVolatility?: number) => ({ strike, impliedVolatility })
+
+// Chaîne Yahoo simulée : échéances proche (10 j) et lointaines (45 j, 90 j) ; l'option sans date demandée renvoie la plus proche
+const chainOf = (calls: Record<string, unknown>[], puts: Record<string, unknown>[]) => async (_symbol: unknown, query: { date?: Date } = {}) => {
+    const expirationDate = query.date ?? day(10)
+    return {
+        quote: { regularMarketPrice: 100 },
+        expirationDates: [day(10), day(45), day(90)],
+        options: [{ expirationDate, calls: expirationDate.getTime() === day(45).getTime() ? calls : [contract(100, 0.9)], puts: expirationDate.getTime() === day(45).getTime() ? puts : [] }],
+    }
+}
+
+test("getOptionInputs : implicite au strike le plus proche du cours, moyenne call et put, première échéance à 30 jours ou plus", async () => {
+    mockYahoo({ regularMarketPrice: 100 }, chartOf, chainOf([contract(90, 0.5), contract(101, 0.24)], [contract(101, 0.26), contract(110, 0.7)]))
+
+    const inputs = await new MarketRepository().getOptionInputs("AAPL")
+
+    expect(optionInputsSchema.parse(inputs)).toEqual(inputs)
+    expect(inputs.impliedVolatility).toBe(0.25)
+})
+
+test("getOptionInputs : un seul côté coté, ou implicite nulle au strike : repli sur ce qui existe puis null", async () => {
+    mockYahoo({ regularMarketPrice: 100 }, chartOf, chainOf([contract(100, 0.3)], [contract(100, 0)]))
+    expect((await new MarketRepository().getOptionInputs("A")).impliedVolatility).toBe(0.3)
+    spies.splice(0).forEach((spy) => spy.mockRestore())
+
+    mockYahoo({ regularMarketPrice: 100 }, chartOf, chainOf([contract(100)], [contract(100, 0)]))
+    expect((await new MarketRepository().getOptionInputs("A")).impliedVolatility).toBeNull()
+})
+
+test("getOptionInputs : aucune échéance à 30 jours ou plus : implicite null", async () => {
+    mockYahoo({ regularMarketPrice: 100 }, chartOf, async () => ({
+        quote: { regularMarketPrice: 100 },
+        expirationDates: [day(5), day(29)],
+        options: [{ expirationDate: day(5), calls: [contract(100, 0.4)], puts: [] }],
+    }))
+
+    expect((await new MarketRepository().getOptionInputs("A")).impliedVolatility).toBeNull()
+})
+
+test("getOptionInputs : chaîne en erreur : option-inputs répond quand même, implicite null", async () => {
+    mockYahoo({ regularMarketPrice: 100 }, chartOf)
+
+    const inputs = await new MarketRepository().getOptionInputs("A")
+
+    expect(inputs).toMatchObject({ spot: 100, impliedVolatility: null })
 })

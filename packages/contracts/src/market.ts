@@ -72,6 +72,9 @@ export const optionInputsSchema = z.object({
     dividendYield: z.number().min(0),
     // Ratio annuel (0.243 = 24,3 %) : écart-type des rendements logarithmiques journaliers sur 1 an × √252 ; null sans historique suffisant
     volatility: z.number().gt(0).nullable(),
+    // Ratio annuel (0.25 = 25 %) : volatilité implicite publiée par Yahoo pour l'option au strike le plus proche du cours, première échéance à 30 jours ou plus ;
+    // null sans chaîne, sans échéance assez lointaine ou sans implicite. Absente d'un service antérieur à T-16
+    impliedVolatility: z.number().gt(0).nullable().optional(),
 });
 
 // Une cotation d'option de la chaîne du jour : valeurs Yahoo brutes, le filtre de qualité est appliqué par backtest-engine (19, D2)

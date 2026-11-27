@@ -146,13 +146,13 @@ Catalogue des routes internes de market-service (port 8001, données yahoo-finan
 
 - **Auth** : `x-internal-key` (comme toute route). Appelée par le web via le proxy de core-backend (`GET /api/market/option-inputs`, liste blanche).
 - **Entrée** : query `optionInputsQuerySchema` : `symbol` (string non vide après `trim`).
-- **Réponse** : `200`, `OptionInputs` : de quoi préremplir le calculateur d'option (D2, D4). `spot` = dernier cours (`quote`), `currency` = devise principale (`GBp` → `GBP`, montants ÷ 100) ; `dividendYield` = ratio annuel, dividendes des 12 derniers mois / spot (`0` sans dividende) ; `volatility` = ratio annuel, écart-type des rendements logarithmiques journaliers sur 1 an × √252 (`TRADING_DAYS_PER_YEAR`), `null` sous 20 rendements ou sur une série plate. Jamais mis en cache. Le taux sans risque n'y figure pas : le web le lit sur `GET /api/market/rates` (`^IRX`).
+- **Réponse** : `200`, `OptionInputs` : de quoi préremplir le calculateur d'option (D2, D4). `spot` = dernier cours (`quote`), `currency` = devise principale (`GBp` → `GBP`, montants ÷ 100) ; `dividendYield` = ratio annuel, dividendes des 12 derniers mois / spot (`0` sans dividende) ; `volatility` = ratio annuel, écart-type des rendements logarithmiques journaliers sur 1 an × √252 (`TRADING_DAYS_PER_YEAR`), `null` sous 20 rendements ou sur une série plate ; `impliedVolatility` (optionnel) = ratio annuel (0.25 = 25 %), volatilité implicite de Yahoo (`yahooVolatility` de `getOptionChain`) de l'option au strike le plus proche du cours (moyenne call et put s'ils en ont une), sur la première échéance à au moins 30 jours (`IMPLIED_VOLATILITY_MIN_DAYS`) ; `null` sans chaîne, sans échéance assez lointaine ou sans implicite non nulle ; une chaîne en erreur est loggée (`warn`) et ne fait pas échouer la route. Jamais mis en cache. Le taux sans risque n'y figure pas : le web le lit sur `GET /api/market/rates` (`^IRX`).
   ```json
   // GET /api/market/option-inputs?symbol=AAPL
-  { "symbol": "AAPL", "currency": "USD", "spot": 224.4, "dividendYield": 0.005, "volatility": 0.243 }
+  { "symbol": "AAPL", "currency": "USD", "spot": 224.4, "dividendYield": 0.005, "volatility": 0.243, "impliedVolatility": 0.25 }
   ```
 - **Erreurs** : `400 { "code": "INVALID_QUERY", "issues": [ZodIssue] }` → `symbol` absent ; `404 { "code": "SYMBOL_NOT_FOUND" }` → symbole inconnu ou sans cours ; `500` → erreur yahoo-finance2.
-- **Effets** : aucun (lecture yahoo-finance2 : `quote` et `chart` 1 an avec `events: "div"`).
+- **Effets** : aucun (lecture yahoo-finance2 : `quote`, `chart` 1 an avec `events: "div"` et `options` pour l'implicite).
 - **Appelant** : `getOptionInputs(symbol)` de `apps/web/src/features/pricing/api.ts`, hook `useOptionInputs(symbol)`.
 - **Source** : `routes/market/market.routes.ts`, `controller/market.controller.ts` (`getOptionInputs`), `services/market.service.ts`, `repositories/market.repository.ts` (`getOptionInputs`), `utils/option-inputs.ts` (`trailingDividendYield`), `historicalVolatility` de `@azimut/utils`.
 
