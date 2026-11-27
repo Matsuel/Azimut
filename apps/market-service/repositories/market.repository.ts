@@ -17,7 +17,7 @@ export interface IMarketRepository {
     getDailyCloses(symbols: string[], start: Date, end: Date): Promise<DailyCloses>;
     getDividends(symbols: string[], start: Date, end: Date): Promise<Dividends>;
     getRateCurve(): Promise<RateCurve>;
-    getOptionInputs(symbol: string): Promise<OptionInputs>;
+    getOptionInputs(symbol: string, withImpliedVolatility?: boolean): Promise<OptionInputs>;
     getOptionChain(symbol: string, expiration?: string): Promise<OptionChain>;
     ping(symbol: string): Promise<void>;
 }
@@ -176,10 +176,10 @@ class MarketRepository implements IMarketRepository {
     /**
      * Préremplissage du calculateur d'option (D2, D4) : dernier cours (`quote`), volatilité historique 1 an annualisée sur 252 jours
      * et dividendes des 12 derniers mois rapportés au cours (une seule série `chart` avec `events: "div"`). Montants dans la devise
-     * principale (`toMajorCurrency`). `volatility` vaut `null` sans historique suffisant. Un symbole inconnu ou sans cours lève
+     * principale (`toMajorCurrency`). `volatility` vaut `null` sans historique suffisant. `withImpliedVolatility: false` saute la lecture de la chaîne d'options (`impliedVolatility` vaut alors `null`). Un symbole inconnu ou sans cours lève
      * `NotFoundError` (`SYMBOL_NOT_FOUND`).
      */
-    async getOptionInputs(symbol: string): Promise<OptionInputs> {
+    async getOptionInputs(symbol: string, withImpliedVolatility = true): Promise<OptionInputs> {
         const quote = await MarketRepository.yahooFinance.quote(symbol)
         // Un cours nul ou négatif ne se price pas : traité comme un symbole sans cours
         if (!quote || quote.regularMarketPrice == null || quote.regularMarketPrice <= 0) throw new NotFoundError(API_ERROR_CODES.SYMBOL_NOT_FOUND)
@@ -204,7 +204,7 @@ class MarketRepository implements IMarketRepository {
             spot: round(spot, 4),
             dividendYield: round(trailingDividendYield(dividends, spot), 6),
             volatility: volatility == null ? null : round(volatility, 6),
-            impliedVolatility: await this.getImpliedVolatility(symbol),
+            impliedVolatility: withImpliedVolatility ? await this.getImpliedVolatility(symbol) : null,
         }
     }
 

@@ -15,6 +15,7 @@ test("le proxy ne relaie que les routes lues par le web", () => {
         "get /api/market/defaults",
         "get /api/market/rates",
         "get /api/market/option-inputs",
+        "get /api/market/basket-inputs",
     ])
 })
 

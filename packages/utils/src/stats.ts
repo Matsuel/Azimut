@@ -41,3 +41,53 @@ export function historicalVolatility(closes: number[]): number | null {
     const volatility = Math.sqrt(variance * TRADING_DAYS_PER_YEAR);
     return volatility > 0 ? volatility : null;
 }
+
+/** Clôture datée (`date` `YYYY-MM-DD`) d'une série journalière. */
+export interface DatedClose {
+    date: string;
+    close: number;
+}
+
+/**
+ * Matrice de corrélation de Pearson (valeurs entre -1 et 1, arrondies à 4 décimales, diagonale 1, symétrique) des rendements
+ * logarithmiques journaliers de chaque série, calculés entre dates communes consécutives : seules les dates présentes dans toutes les
+ * séries comptent, un rendement n'est jamais pris à cheval sur une date manquante d'une série. Les clôtures sont dans la même
+ * devise de cotation, ordre quelconque. `null` si moins de `minReturns` rendements communs, si une clôture n'est pas positive
+ * ou si une série est plate (corrélation indéfinie) : on ne renvoie jamais une corrélation inventée.
+ */
+export function returnsCorrelation(series: DatedClose[][], minReturns: number): number[][] | null {
+    if (series.length === 0) return null;
+
+    const byDate = series.map((points) => new Map(points.map((point) => [point.date, point.close])));
+    const dates = [...byDate[0]!.keys()].filter((date) => byDate.every((closes) => closes.has(date))).sort();
+    if (dates.length - 1 < Math.max(minReturns, 2)) return null;
+
+    const returns: number[][] = [];
+    for (const closes of byDate) {
+        const values: number[] = [];
+        for (let i = 1; i < dates.length; i++) {
+            const previous = closes.get(dates[i - 1]!)!;
+            const current = closes.get(dates[i]!)!;
+            if (!(previous > 0 && current > 0)) return null;
+            values.push(Math.log(current / previous));
+        }
+        returns.push(values);
+    }
+
+    const means = returns.map((values) => values.reduce((sum, value) => sum + value, 0) / values.length);
+    const deviations = returns.map((values, i) => values.map((value) => value - means[i]!));
+    const norms = deviations.map((values) => Math.sqrt(values.reduce((sum, value) => sum + value * value, 0)));
+    if (norms.some((norm) => norm === 0)) return null;
+
+    const matrix = series.map(() => series.map(() => 1));
+    for (let i = 0; i < series.length; i++) {
+        for (let j = i + 1; j < series.length; j++) {
+            const dot = deviations[i]!.reduce((sum, value, k) => sum + value * deviations[j]![k]!, 0);
+            // Le plafond absorbe l'erreur d'arrondi flottant qui donnerait 1.0000000000000002
+            const correlation = round(Math.max(-1, Math.min(1, dot / (norms[i]! * norms[j]!))), 4);
+            matrix[i]![j] = correlation;
+            matrix[j]![i] = correlation;
+        }
+    }
+    return matrix;
+}

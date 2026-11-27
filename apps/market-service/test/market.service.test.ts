@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
-import type { MarketAsset } from "@azimut/contracts"
+import { API_ERROR_CODES, type MarketAsset } from "@azimut/contracts"
+import { BadGatewayError, NotFoundError } from "@azimut/http"
 import { DEFAULT_TICKERS } from "../constants/market.constants"
 import type { IMarketRepository } from "../repositories/market.repository"
 import MarketService from "../services/market.service"
@@ -123,4 +124,56 @@ test("readiness : un échec est gardé aussi, Yahoo en panne n'est pas martelé"
     await service.isProviderReachable()
     expect(await service.isProviderReachable()).toBe(false)
     expect(calls.ping).toBe(1)
+})
+
+// 90 jours de cotation consécutifs dont les rendements alternent ; `sign` -1 donne la série anticorrélée
+const closesOf = (sign: 1 | -1, days = 90) => {
+    let close = 100
+    return Array.from({ length: days }, (_, i) => {
+        if (i > 0) close *= Math.exp(sign * (i % 3 === 0 ? 0.02 : -0.01))
+        return { date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10), close }
+    })
+}
+const inputOf = (symbol: string) => ({ symbol, currency: "USD", spot: 100, dividendYield: 0, volatility: 0.2, impliedVolatility: 0.3 })
+
+test("getBasketInputs : entrées dans l'ordre demandé sans implicite, matrice des corrélations, sans chaîne d'options", async () => {
+    const asked: boolean[] = []
+    const service = new MarketService()
+    service.repo = {
+        getOptionInputs: async (symbol: string, withImplied?: boolean) => (asked.push(withImplied !== false), inputOf(symbol)),
+        getDailyCloses: async () => ({ B: closesOf(-1), A: closesOf(1) }),
+    } as unknown as IMarketRepository
+
+    const basket = await service.getBasketInputs(["A", "B"])
+
+    expect(basket.underlyings).toEqual([{ symbol: "A", currency: "USD", spot: 100, dividendYield: 0, volatility: 0.2 }, { symbol: "B", currency: "USD", spot: 100, dividendYield: 0, volatility: 0.2 }])
+    expect(basket.correlations).toEqual([[1, -1], [-1, 1]])
+    expect(asked).toEqual([false, false])
+})
+
+test("getBasketInputs : historique commun trop court → BadGatewayError INSUFFICIENT_HISTORY, jamais une corrélation inventée", async () => {
+    const service = new MarketService()
+    service.repo = {
+        getOptionInputs: async (symbol: string) => inputOf(symbol),
+        getDailyCloses: async () => ({ A: closesOf(1), B: closesOf(1, 30) }),
+    } as unknown as IMarketRepository
+
+    const error = await service.getBasketInputs(["A", "B"]).catch((e) => e)
+
+    expect(error).toBeInstanceOf(BadGatewayError)
+    expect(error.data).toMatchObject({ reason: "INSUFFICIENT_HISTORY", symbols: ["A", "B"] })
+})
+
+test("getBasketInputs : symbole inconnu → SYMBOL_NOT_FOUND avant toute lecture de cours", async () => {
+    let closesRead = false
+    const service = new MarketService()
+    service.repo = {
+        getOptionInputs: async () => { throw new NotFoundError(API_ERROR_CODES.SYMBOL_NOT_FOUND) },
+        getDailyCloses: async () => (closesRead = true, {}),
+    } as unknown as IMarketRepository
+
+    const error = await service.getBasketInputs(["A", "ZZZ"]).catch((e) => e)
+
+    expect(error.code).toBe(API_ERROR_CODES.SYMBOL_NOT_FOUND)
+    expect(closesRead).toBe(false)
 })

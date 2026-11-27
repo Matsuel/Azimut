@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { STRUCTURED_BASKET_SIZE } from "./structured";
 
 // Réponses de market-service, relayées telles quelles par le proxy de core-backend jusqu'au web
 
@@ -77,6 +78,18 @@ export const optionInputsSchema = z.object({
     impliedVolatility: z.number().gt(0).nullable().optional(),
 });
 
+// Un sous-jacent du panier : les valeurs d'option-inputs, sans l'implicite (lue sur un seul sous-jacent, pas sur un panier)
+export const basketInputsUnderlyingSchema = optionInputsSchema.omit({ impliedVolatility: true });
+
+// Réponse de GET /api/market/basket-inputs : de quoi préremplir un produit sur panier (21, T-11a)
+export const basketInputsSchema = z.object({
+    // Un élément par symbole demandé, dans l'ordre de la requête
+    underlyings: z.array(basketInputsUnderlyingSchema).min(STRUCTURED_BASKET_SIZE.min).max(STRUCTURED_BASKET_SIZE.max),
+    // Matrice n×n (même ordre que `underlyings`) : corrélation de Pearson, entre -1 et 1 (0.35 = 35 %), des rendements logarithmiques
+    // journaliers sur 1 an, sur les dates de cotation communes aux symboles ; diagonale 1, symétrique, arrondie à 4 décimales
+    correlations: z.array(z.array(z.number().min(-1).max(1))),
+});
+
 // Une cotation d'option de la chaîne du jour : valeurs Yahoo brutes, le filtre de qualité est appliqué par backtest-engine (19, D2)
 export const optionQuoteSchema = z.object({
     // Devise du sous-jacent (> 0) : prix d'exercice
@@ -116,5 +129,6 @@ export type Dividend = z.infer<typeof dividendSchema>;
 export type SymbolDividends = z.infer<typeof symbolDividendsSchema>;
 export type Dividends = z.infer<typeof dividendsSchema>;
 export type OptionInputs = z.infer<typeof optionInputsSchema>;
+export type BasketInputs = z.infer<typeof basketInputsSchema>;
 export type OptionQuote = z.infer<typeof optionQuoteSchema>;
 export type OptionChain = z.infer<typeof optionChainSchema>;

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_CLOSES_SYMBOLS } from "@azimut/contracts";
+import { MAX_CLOSES_SYMBOLS, STRUCTURED_BASKET_SIZE } from "@azimut/contracts";
 
 export const searchMarketSchema = z.object({
     query: z.string().trim().min(2),
@@ -30,4 +30,13 @@ export const optionChainQuerySchema = z.object({
 // ?symbol=AAPL : symbole dont on préremplit le calculateur d'option
 export const optionInputsQuerySchema = z.object({
     symbol: z.string().trim().min(1),
+});
+
+// ?symbols=AAPL,MSFT,KO : 2 à 5 symboles distincts d'un panier ; un doublon est refusé (une corrélation à soi-même n'a pas de sens)
+export const basketInputsQuerySchema = z.object({
+    symbols: z
+        .string()
+        .transform((value) => value.split(",").map((symbol) => symbol.trim()))
+        .pipe(z.array(z.string().min(1)).min(STRUCTURED_BASKET_SIZE.min).max(STRUCTURED_BASKET_SIZE.max))
+        .refine((symbols) => new Set(symbols).size === symbols.length),
 });
