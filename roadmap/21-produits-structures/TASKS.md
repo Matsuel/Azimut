@@ -1,6 +1,6 @@
 # 21 · Produits structurés : décomposition, juste valeur, marge — Tâches
 
-> Décisions : `US.md`. Échelle de points, statuts et définition de terminé commune : [`roadmap/README.md`](../README.md). Points prévus, réalisés = prévus. Le lot 5 est livré en cinq PR (5a à 5e), une par lot, chacune utilisable seule. T-05 : pas de table ni de routes dédiées (D8), la persistance est celle du pipeline `pricing.*`.
+> Décisions : `US.md`. Échelle de points, statuts et définition de terminé commune : [`roadmap/README.md`](../README.md). Points prévus, réalisés = prévus. Le lot 5 se développe en cinq lots (5a à 5e) sur la même branche `feat/21-produits-structures`, une seule PR vers `develop` à la fin. T-05 : pas de table ni de routes dédiées (D8), la persistance est celle du pipeline `pricing.*`.
 
 ## Synthèse
 
@@ -39,19 +39,19 @@
 
 **Total** : 117 points — MUST 117, SHOULD 0 (29 livrés, 88 de l'évolution du 2026-11-25 ; 84 avant le découpage en lots, T-11, T-12 et T-21 gagnent chacune 1 à 2 points une fois scindées).
 
-| Lot | Tâches | Points | PR (branche) |
+| Lot | Tâches | Points | État |
 | --- | --- | --- | --- |
 | 1. Moteur | T-01 → T-03 | 13 | livré |
 | 2. Contrat | T-04 | 3 | livré |
 | 3. Service | T-05 | 5 | livré |
 | 4. Écrans | T-06 → T-07 | 8 | livré |
-| 5a. Fondations moteur | T-10, T-14, T-08, T-09, T-15, T-16, T-11a | 27 | `feat/21a-moteur-panier` |
-| 5b. Parcours six étapes et risque | T-17, T-11b, T-12a, T-12b, T-13, T-18 | 20 | `feat/21b-parcours-six-etapes` |
-| 5c. Vie du produit | T-20, T-19a, T-19b | 11 | `feat/21c-vie-du-produit` |
-| 5d. Mes produits | T-24, T-21a, T-21b, T-22, T-23 | 23 | `feat/21d-mes-produits` |
-| 5e. Suivi automatique | T-25, T-26 | 7 | `feat/21e-suivi-automatique` |
+| 5a. Fondations moteur | T-10, T-14, T-08, T-09, T-15, T-16, T-11a | 27 | fait (`9abc61b` → `b354d9a`) |
+| 5b. Parcours six étapes et risque | T-17, T-11b, T-12a, T-12b, T-13, T-18 | 20 | à faire |
+| 5c. Vie du produit | T-20, T-19a, T-19b | 11 | à faire |
+| 5d. Mes produits | T-24, T-21a, T-21b, T-22, T-23 | 23 | à faire |
+| 5e. Suivi automatique | T-25, T-26 | 7 | à faire |
 
-**Livraison par lot** : une branche et une PR vers `develop` par lot, ouverte depuis `develop` à jour une fois le lot précédent mergé (lot 5b après 5a, etc.), un commit par étape verte. Un lot est mergeable seul : l'écran existant continue de fonctionner (champs ajoutés optionnels) et `bun run verify` passe. Un lot sans écran (5a, 5c) se prouve par ses tests et, côté route, par `API.md`. Services à redémarrer signalés à chaque PR (contrat Kafka ou migration).
+**Livraison par lot** : une seule branche, `feat/21-produits-structures`, et une seule PR vers `develop` à la fin de la feature ; les lots 5a à 5e sont des étapes de développement, chacune finie quand `bun run verify` passe et que ses commits sont poussés. Un commit par étape verte. Un lot sans écran (5a, 5c) se prouve par ses tests et, côté route, par `API.md`. Services à redémarrer signalés à la fin de chaque lot (contrat Kafka ou migration).
 
 **Chemin critique** (13 points, lots 1 à 4) : T-01 → T-03 → T-02. T-02 : l'autocallable est la tâche la plus lourde en tests ; elle doit reproduire un cas à remboursement certain (test de bord).
 
@@ -226,7 +226,7 @@ Critères d’acceptation :
 
 ## Lot 5a — Fondations moteur
 
-> Branche `feat/21a-moteur-panier`. **Livre** : contrat, moteur de pricing multi-actifs, marge cible, spread, coupon mémoire, volatilité implicite et historique du panier, plus la maquette 39 v2. **Utilisable seul** : aucun écran ne change (champs optionnels, la page livrée continue de fonctionner) ; la preuve est dans les tests des engines et dans les routes de `API.md`. **Redémarrer** : backtest-engine, core-backend.
+> Lot de développement. **Livre** : contrat, moteur de pricing multi-actifs, marge cible, spread, coupon mémoire, volatilité implicite et historique du panier, plus la maquette 39 v2. **Utilisable seul** : aucun écran ne change (champs optionnels, la page livrée continue de fonctionner) ; la preuve est dans les tests des engines et dans les routes de `API.md`. **Redémarrer** : backtest-engine, core-backend.
 
 ### T-10 · Contrat : panier, nominal en devise, marge cible
 
@@ -301,7 +301,7 @@ Critères d’acceptation :
 
 ## Lot 5b — Parcours six étapes et risque
 
-> Branche `feat/21b-parcours-six-etapes`, après le merge du lot 5a. **Livre** : le constructeur en six étapes avec panier, marge cible et carte Risque. **Utilisable seul** : l'utilisateur structure un panier du besoin au résultat ; « Enregistrer » n'existe pas encore (lot 5d), le résultat reste dans l'historique des calculs (D8). **Redémarrer** : backtest-engine, core-backend. **Avant le code web** : T-14 mergée dans Figma (`apps/web/AGENTS.md`).
+> Lot de développement, après le lot 5a. **Livre** : le constructeur en six étapes avec panier, marge cible et carte Risque. **Utilisable seul** : l'utilisateur structure un panier du besoin au résultat ; « Enregistrer » n'existe pas encore (lot 5d), le résultat reste dans l'historique des calculs (D8). **Redémarrer** : backtest-engine, core-backend. **Avant le code web** : T-14 mergée dans Figma (`apps/web/AGENTS.md`).
 
 ### T-17 · Engine : risque du produit (delta, vega, corrélation, marge nette)
 
@@ -360,7 +360,7 @@ Critères d’acceptation :
 
 ## Lot 5c — Vie du produit
 
-> Branche `feat/21c-vie-du-produit`, après le lot 5b (ou en parallèle du 5b, la dépendance réelle étant T-17). **Livre** : le contrat du produit enregistré et le moteur qui rejoue la vie d'un produit. **Utilisable seul** : aucun écran, aucune route ; deux briques pures prouvées par leurs tests, que le lot 5d branche. **Redémarrer** : backtest-engine.
+> Lot de développement, après le lot 5b (ou en parallèle du 5b, la dépendance réelle étant T-17). **Livre** : le contrat du produit enregistré et le moteur qui rejoue la vie d'un produit. **Utilisable seul** : aucun écran, aucune route ; deux briques pures prouvées par leurs tests, que le lot 5d branche. **Redémarrer** : backtest-engine.
 
 ### T-20 · Contrat : produit enregistré, statut et instantanés
 
@@ -390,7 +390,7 @@ Critères d’acceptation :
 
 ## Lot 5d — Mes produits
 
-> Branche `feat/21d-mes-produits`, après les lots 5b et 5c. **Livre** : enregistrer, lister, émettre, revaloriser et suivre un produit. **Utilisable seul** : sans suivi automatique, la revalorisation se lance à la main. **Redémarrer** : core-backend (migration additive), backtest-engine. **Avant le code web** : T-24 faite dans Figma.
+> Lot de développement, après les lots 5b et 5c. **Livre** : enregistrer, lister, émettre, revaloriser et suivre un produit. **Utilisable seul** : sans suivi automatique, la revalorisation se lance à la main. **Redémarrer** : core-backend (migration additive), backtest-engine. **Avant le code web** : T-24 faite dans Figma.
 
 ### T-24 · Maquette : liste « Mes produits » et fiche produit
 
@@ -441,7 +441,7 @@ Critères d’acceptation :
 
 ## Lot 5e — Suivi automatique
 
-> Branche `feat/21e-suivi-automatique`, après le lot 5d. **Livre** : revalorisation quotidienne et alertes d'événements. **Utilisable seul** : interrupteur par produit, désactivé par défaut. **Redémarrer** : core-backend (champ `autoTrack`, additif) et notification-service si de nouveaux types sont ajoutés.
+> Lot de développement, après le lot 5d. **Livre** : revalorisation quotidienne et alertes d'événements. **Utilisable seul** : interrupteur par produit, désactivé par défaut. **Redémarrer** : core-backend (champ `autoTrack`, additif) et notification-service si de nouveaux types sont ajoutés.
 
 ### T-25 · Core-backend : job quotidien de suivi et alertes d'événements
 

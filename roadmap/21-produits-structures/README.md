@@ -3,7 +3,7 @@
 - **Statut** : En cours (évolution : panier, marge cible, niveaux en prix)
 - **Roadmap** : Mois 10 — Mois 10 — Pricing et produits structurés (capital garanti, reverse convertible, autocallable, juste valeur et marge)
 - **Période** : 2026-11-25
-- **Branche / PR** : lots 1 à 4 : `feat/21-produits-structures` ; évolution en une PR vers `develop` par lot : `feat/21a-moteur-panier`, `feat/21b-parcours-six-etapes`, `feat/21c-vie-du-produit`, `feat/21d-mes-produits`, `feat/21e-suivi-automatique` (découpage du 2026-11-27, voir `TASKS.md`)
+- **Branche / PR** : `feat/21-produits-structures`, une seule PR vers `develop` ; l'évolution se développe en cinq lots (5a à 5e) sur cette branche (décision du 2026-11-27)
 - **Points** : 117 (MUST 117, SHOULD 0) — 29 livrés (T-01 à T-07), 88 prévus (T-08 à T-26, lots 5a à 5e)
 - **Maquettes** : `39 · Constructeur de produit` (créée, node `465:13338`, état Capital garanti) ; états `· Reverse convertible` (node `689:16456`) et `· Autocallable` (node `689:16894`) dessinés et validés le 2026-11-25 (état livré). Maquette 39 v2 (T-14, `proposée`, à valider) : parcours en six étapes, cadres nommés `39 · Constructeur de produit v3 (parcours) · <n> <étape>` dans la section de la feature, voir « Écarts de la maquette 39 v2 »
 - **Écrans modifiés** : aucun (page `Structuration` de la sidebar existante)
