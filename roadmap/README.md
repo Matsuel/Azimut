@@ -61,7 +61,7 @@ Les dossiers des features 02 à 08 citent les anciens numéros ; cette table les
 | 18 | [Options vanilles : payoffs et Black-Scholes](18-options-vanilles/) | 9 | 2026-11-23 | #21 | Livrée | 21 |
 | 19 | [Grecques, volatilité implicite et smile](19-grecques-volatilite-implicite/) | 9 | 2026-11-23 → 2026-11-24 | #22 | Livrée | 27 |
 | 20 | [Pricing Monte Carlo et option à barrière](20-pricing-monte-carlo-barriere/) | 10 | 2026-11-24 | — | Livrée | 22 |
-| 21 | [Produits structurés : décomposition, juste valeur, marge](21-produits-structures/) | 10 | 2026-11-25 | — | Livrée | 29 |
+| 21 | [Produits structurés : décomposition, juste valeur, marge](21-produits-structures/) | 10 | 2026-11-25 | — | En cours (évolution, lots 5a à 5e) | 117 |
 | fix-08 | [Correctifs après les taux et obligations](fix-08-taux-pricing-et-ci/) | — | 2026-11-21 | — | Livrée | 8 ᵃ |
 | fix-10 | [Paramètres : profil, notifications et réinitialisation des données](fix-10-parametres-profil/) | — | 2026-11-24 | — | Livrée | 46 |
 
