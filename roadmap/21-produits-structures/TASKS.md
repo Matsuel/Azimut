@@ -13,13 +13,13 @@
 | T-05 | 3 | Persistance et route de produit | US-01, US-02, US-03 | core-backend | MUST | 5 | T-04 | `4a44cbe` |
 | T-06 | 4 | Constructeur de produit | US-01, US-02 | web | MUST | 5 | T-05 | `69be2a1` |
 | T-07 | 4 | Décomposition affichée | US-01 | web | MUST | 3 | T-05 | `69be2a1` |
-| T-10 | 5a | Contrat : panier, nominal en devise, marge cible | US-04, US-05, US-06 | contracts | MUST | 3 | — | — |
-| T-14 | 5a | Maquette 39 v2 : parcours en six étapes (D19) | US-04, US-05, US-06 | design | MUST | 3 | — | — |
-| T-08 | 5a | Engine : panier, corrélation et Monte Carlo multi-actifs | US-05, US-06 | backtest-engine | MUST | 5 | T-10 | — |
-| T-09 | 5a | Engine : marge cible et prix client déduit | US-04 | backtest-engine | MUST | 5 | T-10 | — |
-| T-15 | 5a | Engine : spread de financement, fréquence d'observation et coupon mémoire | US-04, US-07 | backtest-engine | MUST | 5 | T-10 | — |
-| T-16 | 5a | Volatilité implicite préremplie par sous-jacent | US-05 | market-service | MUST | 3 | T-10 | — |
-| T-11a | 5a | Market-service : historique du panier (volatilités, dividendes, corrélations) | US-05 | market-service | MUST | 3 | T-10, T-16 | — |
+| T-10 | 5a | Contrat : panier, nominal en devise, marge cible | US-04, US-05, US-06 | contracts | MUST | 3 | — | `9abc61b` |
+| T-14 | 5a | Maquette 39 v2 : parcours en six étapes (D19) | US-04, US-05, US-06 | design | MUST | 3 | — | `80df5e8` |
+| T-08 | 5a | Engine : panier, corrélation et Monte Carlo multi-actifs | US-05, US-06 | backtest-engine | MUST | 5 | T-10 | `40b8625` |
+| T-09 | 5a | Engine : marge cible et prix client déduit | US-04 | backtest-engine | MUST | 5 | T-10 | `40b8625` |
+| T-15 | 5a | Engine : spread de financement, fréquence d'observation et coupon mémoire | US-04, US-07 | backtest-engine | MUST | 5 | T-10 | `40b8625` |
+| T-16 | 5a | Volatilité implicite préremplie par sous-jacent | US-05 | market-service | MUST | 3 | T-10 | `1505fc9` |
+| T-11a | 5a | Market-service : historique du panier (volatilités, dividendes, corrélations) | US-05 | market-service | MUST | 3 | T-10, T-16 | `2e9c2dd` |
 | T-17 | 5b | Engine : risque du produit (delta, vega, corrélation, marge nette) | US-08 | backtest-engine | MUST | 5 | T-10, T-08, T-15 | — |
 | T-11b | 5b | Core-backend : validation, pipeline et anciens résultats | US-04, US-05, US-06 | core-backend | MUST | 3 | T-08, T-09, T-10, T-15, T-17, T-11a | — |
 | T-12a | 5b | Parcours : squelette, résumé, nom, étapes 1 et 2 (besoin, panier) | US-05, US-06 | web | MUST | 3 | T-11b, T-14 | — |
@@ -230,72 +230,74 @@ Critères d’acceptation :
 
 ### T-10 · Contrat : panier, nominal en devise, marge cible
 
-- **US** : US-04, US-05, US-06 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : —
+- **US** : US-04, US-05, US-06 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : `9abc61b`
 - **Fichiers** : `packages/contracts/src/structured.ts`
 
 Critères d’acceptation :
-- [ ] Sous-jacents (2 à 5), mode du panier, nominal, marge cible, niveaux en prix ; unités commentées.
-- [ ] Champs ajoutés optionnels pour que les résultats déjà stockés restent lisibles.
-- [ ] Sorties de risque (delta et vega par sous-jacent, sensibilité à la corrélation, coût de couverture, marge nette) avec unités commentées (D20).
+- [x] Sous-jacents (2 à 5), mode du panier, nominal, marge cible, niveaux en prix ; unités commentées.
+- [x] Champs ajoutés optionnels pour que les résultats déjà stockés restent lisibles.
+- [x] Sorties de risque (delta et vega par sous-jacent, sensibilité à la corrélation, coût de couverture, marge nette) avec unités commentées (D20).
 
 ### T-14 · Maquette 39 v2 : parcours en six étapes (D19)
 
-- **US** : US-04, US-05, US-06 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : —
+- **US** : US-04, US-05, US-06 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : — · **Commits** : `80df5e8`
 - **Fichiers** : Figma, trois cadres de la section de la feature (nouvelles versions)
 
 Critères d’acceptation :
-- [ ] Choix courts en `FilterTabs` ; repère « barrière touchée » sur la courbe de la fiche Émis et état « Remboursé » dessiné (D26).
-- [ ] Champ « Nom du produit » à l'étape 1 et rappel du nom dans le résumé, renommage sur la fiche ;
-- [ ] Six étapes (besoin, panier, payoff, marché, marge, résultat), résumé du produit visible, `InfoHint` sur chaque champ et résultat ; variantes capital garanti, reverse convertible, autocallable à l'étape 3.
-- [ ] Écarts à l'état livré listés dans le `README.md`.
+- [x] Choix courts en `FilterTabs` ; repère « barrière touchée » sur la courbe de la fiche Émis et état « Remboursé » dessiné (D26).
+- [x] Champ « Nom du produit » à l'étape 1 et rappel du nom dans le résumé, renommage sur la fiche ;
+- [x] Six étapes (besoin, panier, payoff, marché, marge, résultat), résumé du produit visible, `InfoHint` sur chaque champ et résultat ; cadres déjà présents dans Figma sous le nom `v3 (parcours)`, repérés et documentés le 2026-11-27 sans redessin.
+- [ ] Variantes capital garanti et reverse convertible à l'étape 3 : seul l'autocallable est dessiné (D26 les range en variantes de l'étape 3, sans cadre dédié) ; à trancher avant le code de l'étape 3.
+- [ ] Maquette `v3` validée par l'utilisateur et notée dans `US.md` avec ses node-id : bloque le code web du lot 5b (`apps/web/AGENTS.md`).
+- [x] Écarts à l'état livré listés dans le `README.md`.
 
 ### T-08 · Engine : panier, corrélation et Monte Carlo multi-actifs
 
-- **US** : US-05, US-06 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-10 · **Commits** : —
+- **US** : US-05, US-06 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-10 · **Commits** : `40b8625`
 - **Fichiers** : `apps/backtest-engine/engine/structured.ts`, `structured-mc.ts`, `basket.ts` (nouveau), tests
 
 Critères d’acceptation :
-- [ ] Trajectoires corrélées par Cholesky, graine 42 ; agrégat worst-of / best-of / moyenne.
-- [ ] Un panier à un seul sous-jacent redonne le prix actuel (test de non-régression).
-- [ ] Niveaux en prix et nominal en devise ramenés en % du niveau initial (D14).
+- [x] Trajectoires corrélées par Cholesky, graine 42 ; agrégat worst-of / best-of / moyenne.
+- [x] Un panier à un seul sous-jacent redonne le prix actuel (test de non-régression).
+- [x] Niveaux en prix et nominal en devise ramenés en % du niveau initial (D14).
 
 ### T-09 · Engine : marge cible et prix client déduit
 
-- **US** : US-04 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-10 · **Commits** : —
+- **US** : US-04 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-10 · **Commits** : `40b8625`
 - **Fichiers** : `apps/backtest-engine/engine/structured.ts`, tests
 
 Critères d’acceptation :
-- [ ] Capital garanti : participation = budget d'option ÷ prix du call, budget = nominal − zéro-coupon − marge cible.
-- [ ] Reverse convertible et autocallable : coupon résolu pour que prix client − juste valeur = marge cible (graine fixe, reproductible).
-- [ ] Marge inatteignable : erreur explicite, jamais un coupon négatif.
+- [x] Capital garanti : participation = budget d'option ÷ prix du call, budget = nominal − zéro-coupon − marge cible.
+- [x] Reverse convertible et autocallable : coupon résolu pour que prix client − juste valeur = marge cible (graine fixe, reproductible).
+- [x] Marge inatteignable : erreur explicite, jamais un coupon négatif.
 
 ### T-15 · Engine : spread de financement, fréquence d'observation et coupon mémoire
 
-- **US** : US-04, US-07 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-10 · **Commits** : —
+- **US** : US-04, US-07 · **Priorité** : MUST · **Points** : 5 · **Dépend de** : T-10 · **Commits** : `40b8625`
 - **Fichiers** : `apps/backtest-engine/engine/structured.ts`, `structured-mc.ts`, tests
 
 Critères d’acceptation :
-- [ ] Zéro-coupon escompté à taux + spread (D17) ; spread 0 redonne le prix actuel.
-- [ ] Observation annuelle, semestrielle ou trimestrielle, coupon mémoire, période de non-rappel (D18).
+- [x] Zéro-coupon escompté à taux + spread (D17) ; spread 0 redonne le prix actuel.
+- [x] Observation annuelle, semestrielle ou trimestrielle, coupon mémoire, période de non-rappel (D18).
 
 ### T-16 · Volatilité implicite préremplie par sous-jacent
 
-- **US** : US-05 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-10 · **Commits** : —
+- **US** : US-05 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-10 · **Commits** : `1505fc9`
 - **Fichiers** : `apps/market-service/` (repository, interfaces), `packages/contracts/src/market.ts`, `apps/market-service/API.md`, tests
 
 Critères d’acceptation :
-- [ ] `GET /api/market/option-inputs` renvoie en plus `impliedVolatility` (D29) : volatilité implicite publiée par Yahoo pour l'option la plus proche du cours, échéance à 30 jours au moins ; `null` sans chaîne exploitable, l'historique reste le repli côté web (D16).
-- [ ] Champ ajouté optionnel au contrat ; unité commentée ; `API.md` à jour dans le même diff.
+- [x] `GET /api/market/option-inputs` renvoie en plus `impliedVolatility` (D29) : volatilité implicite publiée par Yahoo pour l'option la plus proche du cours, échéance à 30 jours au moins ; `null` sans chaîne exploitable, l'historique reste le repli côté web (D16).
+- [x] Champ ajouté optionnel au contrat ; unité commentée ; `API.md` à jour dans le même diff.
 
 ### T-11a · Market-service : historique du panier (volatilités, dividendes, corrélations)
 
-- **US** : US-05 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-10, T-16 · **Commits** : —
+- **US** : US-05 · **Priorité** : MUST · **Points** : 3 · **Dépend de** : T-10, T-16 · **Commits** : `2e9c2dd`
 - **Fichiers** : `apps/market-service/` (route, controller, service, repository), `packages/utils/src/stats.ts` (`returnsCorrelation`), `packages/contracts/src/market.ts`, `apps/market-service/API.md`, `apps/core-backend` (proxy, `API.md` si la route y figure), tests
 
 Critères d’acceptation :
-- [ ] `GET /api/market/basket-inputs?symbols=A,B,C` (2 à 5 symboles) renvoie par symbole le cours, la volatilité et le dividende de `option-inputs`, et la matrice de corrélations des rendements journaliers sur 1 an, alignés sur les dates communes (D13, D29) ; unités commentées.
-- [ ] Un symbole inconnu ou sans historique suffisant : erreur explicite, jamais une corrélation inventée. Calcul pur `returnsCorrelation` testé dans `packages/utils`.
-- [ ] Relayée par le proxy de core-backend ; `API.md` à jour dans le même diff.
+- [x] `GET /api/market/basket-inputs?symbols=A,B,C` (2 à 5 symboles) renvoie par symbole le cours, la volatilité et le dividende de `option-inputs`, et la matrice de corrélations des rendements journaliers sur 1 an, alignés sur les dates communes (D13, D29) ; unités commentées.
+- [x] Un symbole inconnu ou sans historique suffisant : erreur explicite, jamais une corrélation inventée. Calcul pur `returnsCorrelation` testé dans `packages/utils`.
+- [x] Relayée par le proxy de core-backend ; `API.md` à jour dans le même diff.
 
 ## Lot 5b — Parcours six étapes et risque
 
